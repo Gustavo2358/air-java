@@ -19,7 +19,7 @@ public final class Envelopes {
         }
 
     }
-    public record ResourceUse(String action, Interactions.Target target, Control.ProgramPoint point, OriginId origin) {
+    public record ResourceUse(String action, Interactions.ResourceDescription target, Control.ProgramPoint point, OriginId origin) {
         public ResourceUse {
             action = text(action, "action");
             target = Objects.requireNonNull(target, "target");
@@ -37,7 +37,7 @@ public final class Envelopes {
         }
 
     }
-    public record Envelope(MemoryEnvelope memory, Control.Envelope control, DependencyEnvelope dependencies) {
+    public record Envelope(MemoryEnvelope memory, Control.ControlEnvelope control, DependencyEnvelope dependencies) {
         public Envelope {
             memory = Objects.requireNonNull(memory, "memory");
             control = Objects.requireNonNull(control, "control");

@@ -14,20 +14,21 @@ public final class Memory {
     public sealed interface Codec permits IdentityBytes, AsciiText, BinaryCodec, ExtensionCodec, UnknownCodec {}
     public enum IdentityBytes implements Codec { INSTANCE }
     public enum AsciiText implements Codec { INSTANCE }
-    public record BinaryCodec(boolean signed, int width, ByteOrder order) implements Codec {
+    public record BinaryCodec(boolean signed, BigInteger width, ByteOrder order) implements Codec {
         public BinaryCodec {
+            width = Objects.requireNonNull(width, "width");
             nonNegative(width, "width");
             order = Objects.requireNonNull(order, "order");
-            if (width==0 || width%8!=0) throw new IllegalArgumentException("width must be positive multiple of eight");
+            if (width.signum()==0 || !width.mod(BigInteger.valueOf(8)).equals(BigInteger.ZERO))
+                throw new IllegalArgumentException("width must be positive multiple of eight");
         }
 
     }
-    public record ExtensionCodec(String name, SemanticVersion version, Types.TypeRef logicalType, ContractId contract) implements Codec {
+    public record ExtensionCodec(String name, String version, Types.TypeRef logicalType) implements Codec {
         public ExtensionCodec {
             name = text(name, "name");
-            version = Objects.requireNonNull(version, "version");
+            version = text(version, "version");
             logicalType = Objects.requireNonNull(logicalType, "logicalType");
-            contract = Objects.requireNonNull(contract, "contract");
             
         }
 
@@ -124,12 +125,11 @@ public final class Memory {
         }
 
     }
-    public record ByteRange(StorageId region, Expression offset, Expression extent, Optional<PremiseId> boundsProof) {
+    public record ByteRange(StorageId region, Expression offset, Expression extent) {
         public ByteRange {
             region = Objects.requireNonNull(region, "region");
             offset = Objects.requireNonNull(offset, "offset");
             extent = Objects.requireNonNull(extent, "extent");
-            boundsProof = Objects.requireNonNull(boundsProof, "boundsProof");
             
         }
 

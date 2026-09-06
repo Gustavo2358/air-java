@@ -24,14 +24,14 @@ public final class Values {
         }
         public Types.Type type() { return Types.Builtin.INT; }
     }
-    public record DecimalValue(BigInteger coefficient, int scale) implements LiteralValue {
+    public record DecimalValue(BigInteger coefficient, BigInteger scale) implements LiteralValue {
         public DecimalValue {
             coefficient = Objects.requireNonNull(coefficient, "coefficient");
+            scale = Objects.requireNonNull(scale, "scale");
             nonNegative(scale, "scale");
             
         }
         public Types.Type type() { return Types.Builtin.DECIMAL; }
-        public BigDecimal decimal() { return new BigDecimal(coefficient,scale); }
     }
     /** Text permits empty strings but rejects invalid Unicode scalar sequences. */
     public record TextValue(String value) implements LiteralValue {
@@ -66,8 +66,23 @@ public final class Values {
     }
     /** Semantic equality for dispatch keys, not Java record equality of decimal spellings. */
     public static java.lang.Object semanticKey(LiteralValue value) {
-        if(value instanceof DecimalValue d) return d.decimal().stripTrailingZeros();
+        if(value instanceof DecimalValue d) return decimalKey(d);
         return value;
     }
+
+    private static DecimalKey decimalKey(DecimalValue value) {
+        BigInteger coefficient=value.coefficient();
+        BigInteger scale=value.scale();
+        if(coefficient.signum()==0) return new DecimalKey(BigInteger.ZERO,BigInteger.ZERO);
+        while(scale.signum()>0) {
+            BigInteger[] division=coefficient.divideAndRemainder(BigInteger.TEN);
+            if(division[1].signum()!=0) break;
+            coefficient=division[0];
+            scale=scale.subtract(BigInteger.ONE);
+        }
+        return new DecimalKey(coefficient,scale);
+    }
+
+    private record DecimalKey(BigInteger coefficient, BigInteger scale) {}
 
 }

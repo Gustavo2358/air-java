@@ -21,9 +21,6 @@ final class Require {
         }
         return s;
     }
-    static void nonNegative(int n, String name) {
-        if(n<0) throw new IllegalArgumentException(name+" must be non-negative");
-    }
     static void nonNegative(java.math.BigInteger n,String name) {
         if(n.signum()<0) throw new IllegalArgumentException(name+" must be non-negative");
     }

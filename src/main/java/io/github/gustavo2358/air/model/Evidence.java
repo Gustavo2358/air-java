@@ -47,10 +47,10 @@ public final class Evidence {
         }
 
     }
-    public record Elimination(PremiseId justification, String rule) {
+    public record Elimination(String rule, OriginId origin) {
         public Elimination {
-            justification = Objects.requireNonNull(justification, "justification");
             rule = text(rule, "rule");
+            origin = Objects.requireNonNull(origin, "origin");
             
         }
 

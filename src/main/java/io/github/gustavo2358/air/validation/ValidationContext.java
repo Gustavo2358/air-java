@@ -37,7 +37,7 @@ final class ValidationContext {
                     capability(Capabilities.INDIRECT_CONTROL,owner);
                 } else if(k.type() instanceof Types.ExtensionType e) {
                     if(e.name().equals("unknown")) error("I-50",owner,"opaque_type cannot disguise unknown_type");
-                    capability(new Capabilities.Capability(e.name(),e.version().major()),owner);
+                    capability(new Capabilities.Capability(e.name(),e.version()),owner);
                 }
             }
         }

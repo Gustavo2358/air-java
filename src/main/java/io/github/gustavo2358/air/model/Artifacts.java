@@ -23,7 +23,8 @@ public final class Artifacts {
         }
 
     }
-    public record Relation(RelationId id, ArtifactId source, RelationTarget destination, String kind, OriginId origin, Evidence.CoverageStatus coverage) {
+    public record Relation(ArtifactRelationId id, ArtifactId source, RelationTarget destination,
+                           String kind, OriginId origin, Evidence.CoverageStatus coverage) {
         public Relation {
             id = Objects.requireNonNull(id, "id");
             source = Objects.requireNonNull(source, "source");

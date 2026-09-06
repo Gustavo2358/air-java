@@ -33,7 +33,6 @@ public final class Operands {
             case Operations.Nop ignored -> { }
             case Operations.CopyBytes c -> {
                 range(result,c.destination()); range(result,c.source());
-                dependencies(result,c.fallback());
             }
             case Operations.Jump ignored -> { }
             case Operations.Branch b -> result.add(b.predicate());
@@ -46,19 +45,19 @@ public final class Operands {
                     case Interactions.ReferenceArgument a -> result.add(a.place());
                 }
                 result.addAll(i.results());
+                result.addAll(i.effectOperands());
             }
             case Operations.Return r -> result.addAll(r.values());
             case Operations.Raise r -> result.addAll(r.values());
             case Operations.Halt ignored -> { }
             case Operations.Opaque o -> {
-                result.addAll(o.knownOperands()); result.addAll(o.valueResults());
-                dependencies(result,o.envelope());
+                result.addAll(o.knownOperands());
             }
-            case Operations.LocalInvoke l -> dependencies(result,l.fallback());
-            case Operations.LocalBoundary l -> dependencies(result,l.fallback());
-            case Operations.LocalResume l -> dependencies(result,l.fallback());
-            case Operations.LocalUnwind l -> dependencies(result,l.fallback());
-            case Operations.IndirectJump i -> { result.add(i.target()); dependencies(result,i.fallback()); }
+            case Operations.LocalInvoke ignored -> { }
+            case Operations.LocalBoundary ignored -> { }
+            case Operations.LocalResume ignored -> { }
+            case Operations.LocalUnwind ignored -> { }
+            case Operations.IndirectJump i -> result.add(i.target());
         }
         return List.copyOf(result);
     }
@@ -67,15 +66,5 @@ public final class Operands {
     }
     private static void target(List<Operand> out,Interactions.Target target) {
         if(target instanceof Interactions.ComputedTarget c) out.add(c.name());
-    }
-    private static void dependencies(List<Operand> out,Envelopes.Envelope e) {
-        // A dependency envelope can refer to an already-owned target occurrence.
-        // Identical IDs are reference aliases here, not additional evaluations.
-        java.util.Set<Ids.OperandId> seen=new java.util.HashSet<>();
-        for(Operand operand:out) seen.add(operand.header().id());
-        for(Envelopes.ResourceUse use:e.dependencies().known()) {
-            if(use.target() instanceof Interactions.ComputedTarget c && seen.add(c.name().header().id()))
-                out.add(c.name());
-        }
     }
 }

@@ -57,10 +57,11 @@ public final class Expressions {
         }
 
     }
-    public record Quantize(Operand.Header header, Expression value, int scale, Rounding rounding) implements Expression {
+    public record Quantize(Operand.Header header, Expression value, BigInteger scale, Rounding rounding) implements Expression {
         public Quantize {
             header = Objects.requireNonNull(header, "header");
             value = Objects.requireNonNull(value, "value");
+            scale = Objects.requireNonNull(scale, "scale");
             nonNegative(scale, "scale");
             rounding = Objects.requireNonNull(rounding, "rounding");
             
@@ -77,13 +78,13 @@ public final class Expressions {
         }
 
     }
-    public record SliceText(Operand.Header header, Expression value, Expression start, Expression count, Optional<PremiseId> boundsProof) implements Expression {
+    public record SliceText(Operand.Header header, Expression value, Expression start,
+                            Expression count) implements Expression {
         public SliceText {
             header = Objects.requireNonNull(header, "header");
             value = Objects.requireNonNull(value, "value");
             start = Objects.requireNonNull(start, "start");
             count = Objects.requireNonNull(count, "count");
-            boundsProof = Objects.requireNonNull(boundsProof, "boundsProof");
             
         }
 
