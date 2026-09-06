@@ -22,7 +22,9 @@ public class MinimalPublication {
                 Evidence.CoverageStatus.MODELED,precision,List.of()),Operations.HaltKind.NORMAL);
         Sequence sequence = new Sequence(start,List.of(),halt,origin);
         Entries.Entry entry = new Entries.Entry(new EntryId(unit,"main"),Optional.of(start),
-                new Interactions.Signature(List.of(),List.of(),Optional.empty()),
+                new Interactions.Signature(
+                        new Interactions.ParameterInventory(List.of(),Interactions.NoRemainder.INSTANCE),
+                        new Interactions.ResultInventory(List.of(),Interactions.NoRemainder.INSTANCE),origin),
                 new Entries.EntryState(List.of(),List.of()),origin);
         Evidence.CoverageItem item = new Evidence.CoverageItem("synthetic-stop",origin,
                 Evidence.CoverageStatus.MODELED,List.of(stop),List.of(),Optional.empty());
@@ -36,7 +38,7 @@ public class MinimalPublication {
                 List.of(new Origins.Unavailable(origin,"handwritten AIR fixture, no source file")),
                 new Evidence.Coverage(Evidence.InventoryStatus.COMPLETE,
                         new Scopes.PublicationScope(publication),List.of(item),List.of()),
-                List.of(),List.of(),List.of());
+                List.of(),List.of());
     }
     public static void main(String[] args) {
         Publication publication=create();

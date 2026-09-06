@@ -16,10 +16,12 @@ final class Fixtures {
     final List<Proofs.Premise> premises=new ArrayList<>();
     final List<Evidence.Uncertainty> uncertainties=new ArrayList<>();
     final List<Capabilities.Capability> capabilities=new ArrayList<>();
+    final List<Origins.Artifact> artifacts=new ArrayList<>();
+    final List<Interactions.Resource> resources=new ArrayList<>();
+    final List<Artifacts.Relation> artifactRelations=new ArrayList<>();
     final List<Origins.Origin> origins=new ArrayList<>();
-    final List<Interactions.Contract> contracts=new ArrayList<>();
     final List<Entries.CompletionPort> completionPorts=new ArrayList<>();
-    Interactions.Signature signature=new Interactions.Signature(List.of(),List.of(),Optional.empty());
+    Interactions.Signature signature=signature(List.of(),List.of());
     Entries.EntryState state=new Entries.EntryState(List.of(),List.of());
     Fixtures() { origins.add(new Origins.Unavailable(origin,"synthetic normative fixture")); }
     OperationId op(String name) { return new OperationId(unit,name); }
@@ -60,16 +62,21 @@ final class Fixtures {
     }
     Envelopes.Envelope envelope(LabelId normal) {
         return new Envelopes.Envelope(new Envelopes.MemoryEnvelope(List.of(),new Scopes.WithinMemory(new Scopes.VisibleMemory(unit,true)),List.of(),new Scopes.WithinMemory(new Scopes.VisibleMemory(unit,true)),List.of()),
-                new Control.Envelope(normal==null?List.of():List.of(new Control.Normal(normal)),new Scopes.WithinControl(new Scopes.AllControl(pub))),
+                new Control.ControlEnvelope(normal==null?List.of():List.of(new Control.Normal(normal)),new Scopes.WithinControl(new Scopes.AllControl(pub))),
                 new Envelopes.DependencyEnvelope(List.of(),Scopes.AnyResource.INSTANCE));
     }
     Interactions.EffectBound effects() { return new Interactions.EffectBound(new Interactions.ForeignEffects(new Scopes.WithinMemory(new Scopes.VisibleMemory(unit,true)),new Scopes.WithinMemory(new Scopes.VisibleMemory(unit,true)),List.of()),List.of()); }
     Evidence.Coverage coverage(Scopes.FactScope scope) { return new Evidence.Coverage(Evidence.InventoryStatus.COMPLETE,scope,List.of(),List.of()); }
+    Interactions.Signature signature(List<Interactions.Parameter> parameters,List<Interactions.ResultSlot> results) {
+        return new Interactions.Signature(
+                new Interactions.ParameterInventory(parameters,Interactions.NoRemainder.INSTANCE),
+                new Interactions.ResultInventory(results,Interactions.NoRemainder.INSTANCE),origin);
+    }
     Publication build() {
         Entries.Entry entry=new Entries.Entry(entry(),sequences.isEmpty()?Optional.empty():Optional.of(sequences.get(0).label()),signature,state,origin);
         Unit u=new Unit(unit,Optional.empty(),objects,List.of(),List.of(entry),sequences,completionPorts,Unit.BodyAvailability.AVAILABLE,Optional.empty(),coverage(new Scopes.UnitScope(unit)),origin);
-        return new Publication(pub,SemanticVersion.AIR_2_0_0,new Capabilities.Manifest(capabilities,capabilities),List.of(),List.of(u),storage,List.of(),List.of(),origins,coverage(new Scopes.PublicationScope(pub)),uncertainties,premises,contracts);
+        return new Publication(pub,SemanticVersion.AIR_2_0_0,new Capabilities.Manifest(capabilities,capabilities),artifacts,List.of(u),storage,resources,artifactRelations,origins,coverage(new Scopes.PublicationScope(pub)),uncertainties,premises);
     }
-    static Publication withUnits(Publication p,List<Unit> units) { return new Publication(p.id(),p.airVersion(),p.capabilities(),p.artifacts(),units,p.storage(),p.resources(),p.artifactRelations(),p.origins(),p.coverage(),p.uncertainties(),p.premises(),p.contracts()); }
+    static Publication withUnits(Publication p,List<Unit> units) { return new Publication(p.id(),p.airVersion(),p.capabilities(),p.artifacts(),units,p.storage(),p.resources(),p.artifactRelations(),p.origins(),p.coverage(),p.uncertainties(),p.premises()); }
     static Types.Known known(Types.Type type) { return new Types.Known(type); }
 }

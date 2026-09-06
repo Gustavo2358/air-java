@@ -11,7 +11,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Compile, falsify contracts and inspect bytecode dependencies
+      - name: Compile contract checks and inspect bytecode dependencies
         run: ./scripts/check.sh
       - name: Maven lifecycle
         run: mvn --batch-mode --no-transfer-progress verify
