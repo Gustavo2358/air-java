@@ -1,0 +1,22 @@
+{
+  "analysis_ir": {
+    "repository": "Gustavo2358/analysis-ir",
+    "ref": "0b2fbce7046010b22b32efa8cbc3e75ccba09442",
+    "semantic_version": "2.0.0",
+    "role": "normative",
+    "sections": [
+      "especificacao/01-modelo-e-identidades.md",
+      "especificacao/02-tipos-valores-e-operandos.md",
+      "especificacao/03-memoria-e-aliases.md",
+      "especificacao/04-operacoes.md",
+      "especificacao/05-controle-e-invocacoes.md",
+      "especificacao/06-incompletude-e-proveniencia.md",
+      "especificacao/07-contrato-de-produtores.md",
+      "especificacao/09-extensibilidade-e-compatibilidade.md",
+      "conformidade/01-invariantes.md",
+      "conformidade/02-oraculos.md"
+    ]
+  },
+  "library_version": "0.1.0-SNAPSHOT",
+  "json_binding_status": "proposal only; no codec in this library"
+}

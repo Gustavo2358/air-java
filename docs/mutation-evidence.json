@@ -1,0 +1,32 @@
+{
+  "mutations": [
+    {
+      "mutation": "domain",
+      "file": "src/main/java/io/github/gustavo2358/air/validation/OperationChecks.java",
+      "exit_code": 1,
+      "detected_by": [
+        "FAIL - assign different concrete domains rejected"
+      ],
+      "restored_sha256": "9a932446ae56598752ebea6576fe0b15b55aa8be39f853d357fcbf04725b3b7e"
+    },
+    {
+      "mutation": "reference",
+      "file": "src/main/java/io/github/gustavo2358/air/validation/ReferenceChecks.java",
+      "exit_code": 1,
+      "detected_by": [
+        "FAIL - missing label rejected"
+      ],
+      "restored_sha256": "4f3c3ebca68eade0c8bdd8fd989c608249e62123a0f9328b903c67daac4462bd"
+    },
+    {
+      "mutation": "architecture",
+      "file": "src/main/java/io/github/gustavo2358/air/model/Publication.java",
+      "exit_code": 1,
+      "detected_by": [
+        "FAIL - pure core has no JSON/frontend imports"
+      ],
+      "restored_sha256": "586e1155199b9f96fc96f5fe852733160de52e029ac39ab2ca58be482f5a38b4"
+    }
+  ],
+  "temporary_mutations_present": false
+}

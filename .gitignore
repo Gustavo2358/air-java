@@ -1,0 +1,6 @@
+/target/
+.idea/
+*.iml
+.vscode/
+# Temporary delivery document: promote to analysis-ir/bindings/json-v1.md.
+/handoff/

@@ -1,0 +1,17 @@
+name: Java contract checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Compile, falsify contracts and inspect bytecode dependencies
+        run: ./scripts/check.sh
+      - name: Maven lifecycle
+        run: mvn --batch-mode --no-transfer-progress verify
