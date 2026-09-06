@@ -1,79 +1,90 @@
 # air-java
 
-Modelo Java imutável e validação estática para **Analysis IR 2.0.0**.
-A autoridade semântica é o repositório `Gustavo2358/analysis-ir`, fixado no commit
-`0b2fbce7046010b22b32efa8cbc3e75ccba09442`. Esta biblioteca implementa uma
-representação Java; não substitui nem modifica aquela especificação.
+Modelo Java imutável e Validator estrutural para **Analysis IR 2.0.0**.
+A autoridade semântica é `Gustavo2358/analysis-ir`, cuja `main` está fixada em
+`122ce54e1b9ef9b00646f93ece409ca8b63bc933` por
+`docs/sources.lock.json`. Este repositório implementa a AIR; não a redefine.
 
-**JDK:** 21 ou superior, compilando com `--release 21`. **Coordenadas Maven:**
-`io.github.gustavo2358:air-java:0.1.0-SNAPSHOT`. A versão da biblioteca não é a
-versão semântica da AIR. A API inicial ainda deve passar por review antes de ser
-estabilizada como release pública.
+```text
+analysis-ir (autoridade normativa)
+        ↓
+air-java (implementação Java)
+        ↓
+produtores e consumidores
+```
+
+**JDK:** 21 ou superior, compilado com `--release 21`.
+**Coordenadas:** `io.github.gustavo2358:air-java:0.1.0-SNAPSHOT`.
+A versão da biblioteca é independente da versão semântica da AIR.
 
 ## Fronteira
 
-```text
-analysis-ir (especificação normativa; sem código)
-                     |
-                  air-java
-           modelo + validação estática
-              /                  \
-     cobol-lowering          analysis-cfg
-```
+`src/main` depende somente de `java.base`. Não contém Jackson, Gson, JSON,
+filesystem, rede, CLI, frontend COBOL, CFG, cálculo de effects, reaching
+definitions ou possible values. Nenhum campo semântico é um payload livre como
+`Map<String,Object>`.
 
-`src/main` depende **somente de java.base**. Não contém Jackson, Gson, JSON,
-acesso a arquivos, CLI, COBOL, parser, CFG builder, resolução de nomes, reaching
-definitions ou avaliação de valores. Nenhum campo do modelo é `Map<String,Object>`.
-
-O lowerer retorna `Publication`; o CFG recebe esse mesmo tipo. O driver pode
-chamar um adapter JSON de saída/entrada sem mudar o core. A biblioteca não cria
-`Publish`/`Repository`/`MemoryReader` artificiais só para transportar um objeto.
+O modelo é transport-independent. `analysis-ir/bindings/json-v1.md` é uma
+especificação de transporte **DRAFT** e não é implementada por esta biblioteca.
+Adapters de transporte pertencem aos produtores/consumidores, fora do domínio.
 
 ## Conteúdo
 
-- `model`: identidades tipadas, publicação/unidades/entradas/sequências, todas as
-  variantes de operações core desta entrega, operandos, tipos/valores, memória,
-  origens, gaps, cobertura, precisão e premissas `sameDomain` com escopos estáticos.
-- `validation`: índices por identidade, assinaturas, integridade, verificações de
-  tipo, prova finita de domínio comum e diagnósticos de limites/obrigações.
-- `src/test`: suíte determinística sem dependência de framework de teste.
-- `examples/MinimalPublication.java`: construção e validação executável de uma
-  publicação sem transporte nem frontend.
-- `docs/implementation-status.md`: cobertura real e limites do validador.
-- `docs/model-catalog.md`: catálogo de tipos e campos desta implementação.
-- `handoff/json-v1.md`: **proposta de contrato de transporte**, para mover para
-  `analysis-ir/bindings/json-v1.md`; não é codec nem dependência da biblioteca.
-  `handoff/` está ignorado pelo Git para evitar publicação acidental neste repo.
+- `model`: identidades tipadas, publicação, unidades, entradas, sequências,
+  operações, ocorrências de operandos, tipos/valores, memória, interações,
+  proveniência, coverage, uncertainties e premissas normativas;
+- `validation`: índices por identidade, checks de fechamento/ownership/tipos,
+  prova finita de `sameDomain` e diagnósticos explícitos de limites/obrigações;
+- `src/test`: suíte determinística sem framework externo;
+- `examples/MinimalPublication.java`: construção e validação sem transporte;
+- `docs/reconciliation-air-2.md`: discovery AIR ↔ Java e evidência da migração;
+- `docs/model-catalog.md`: catálogo informativo da API Java atual;
+- `docs/implementation-status.md`: cobertura e limites efetivamente implementados.
+
+## Mudanças normativas desta reconciliação
+
+A API acompanha a AIR normativa, mesmo quando isso quebra a API Java anterior:
+
+- não existem `Publication.contracts`, `ContractId` ou entidade `Contract`;
+- `ContractRef` é valor de autoridade/versão/evidência, e a assinatura externa
+  é materializada em cada `invoke`;
+- targets executáveis são somente internal, literal e computed; `ResourceId`
+  continua identidade declarativa;
+- `disjoint_storage` contém bases distintas e vale universalmente, sem `FactScope`;
+- não existem `SafetyAssertion`, `SafetyProperty` ou certificados privados em
+  slices, ranges e choices;
+- parâmetros e resultados possuem inventários/restantes independentes;
+- `InvocationOutcomes` e `ControlEnvelope` são tipos distintos;
+- `return` não possui seletor de entradas;
+- relações usam `ArtifactRelationId`, subjects externos pertencem ao site e
+  ocorrências exclusivas de effects continuam materializadas por `OperandId`;
+- naturais AIR usam `BigInteger` quando não possuem teto semântico;
+- localização preserva linha/coluna **ou** offsets com unidade explícita.
+
+Não há aliases/deprecated wrappers para a semântica removida.
 
 ## Compilar e testar
 
-Sem Maven, sem rede e sem bibliotecas de teste:
+Gate offline, sem dependências de teste:
 
 ```sh
 ./scripts/check.sh
 java -cp target/air-java-0.1.0-SNAPSHOT.jar examples/MinimalPublication.java
 ```
 
-O script compila código e testes com warnings tratados como erros, executa a
-suíte e inspeciona o JAR com `jdeps`: somente `java.base` é permitido.
+O script compila main e testes com warnings como erros, executa a suíte, gera o
+JAR e confirma com `jdeps` que o runtime depende apenas de `java.base`.
 
 Com Maven:
 
 ```sh
 mvn verify
-mvn install
 ```
 
-A suíte `ContractSuite` é executada na fase `test` pelo `exec-maven-plugin`.
-Ela usa verificações explícitas, não depende de `assert` habilitado nem de JUnit.
-Não confundir eventual relatório vazio do Surefire com ausência desses testes:
-a linha `PASS: ... deterministic contract checks` vem do runner obrigatório.
-`-DskipTests=true` pula a suíte de forma explícita. Plugins Maven podem precisar
-de download na primeira execução; o domínio não recebe essas dependências.
-
-O build Maven está fornecido, mas **não foi executado no ambiente de geração**, que
-não tinha Maven. O gate JDK, o exemplo e a inspeção de dependências foram executados;
-veja `docs/validation-evidence.md` para a evidência exata.
+`ContractSuite` roda na fase `test` via `exec-maven-plugin`; um relatório vazio
+do Surefire não significa que a suíte não executou. A saída contém
+`PASS: ... deterministic contract checks`. Plugins Maven podem precisar de rede
+apenas no primeiro uso; eles não se tornam dependências do domínio.
 
 ## Consumir
 
@@ -87,52 +98,46 @@ veja `docs/validation-evidence.md` para a evidência exata.
 
 ```java
 Publication publication = lowerer.lower(semanticInput);
-ValidationResult check = AirValidator.validate(publication);
-if (!check.isStructurallyValid()) {
-    // INVALID_IR ou INCOMPLETE_VALIDATION: propagar diagnóstico; não reparar por texto.
-    throw new IllegalStateException(check.toString());
+ValidationResult result = AirValidator.validate(publication);
+if (!result.isStructurallyValid()) {
+    throw new IllegalStateException(result.toString());
 }
-// Obrigações semânticas ainda pertencem ao produtor; não são certificadas pelo check.
+// SEMANTIC_OBLIGATION continua exigindo evidência do produtor/autoridade.
 CfgBuildResult cfg = cfgBuilder.build(publication, options);
 ```
 
-Os nomes `lowerer`, `cfgBuilder` e `CfgBuildResult` ilustram os outros projetos;
-eles **não são implementados por esta biblioteca**.
+`lowerer`, `cfgBuilder` e `CfgBuildResult` ilustram componentes externos; não são
+fornecidos aqui.
 
-## Contrato de validação
+## Contrato do Validator
 
-Construtores verificam forma local: campos obrigatórios, listas imutáveis,
-intervalos/valores locais etc. Referências cruzadas e provas exigem
-`AirValidator.validate(publication)`. Uma instância construível não é garantia
-de AIR válida. O validador não modifica a publicação.
+Construtores verificam forma local e imutabilidade. Referências cruzadas,
+ownership, posições e precondições decidíveis exigem
+`AirValidator.validate(publication)`. O Validator nunca repara nem modifica a
+publicação.
 
-`STRUCTURALLY_VALID` significa aprovação dos checks estáticos implementados.
-`INVALID_IR` identifica contradição detectada. `INCOMPLETE_VALIDATION` indica
-versão/capacidade não interpretada, limite de recursos ou precondição que este
-validador ainda não consegue verificar. **Nenhum desses nomes é certificação
-integral de perfil `AIR-STRUCTURE@2` ou `AIR-SCALAR-FLOW@2`.**
+- `STRUCTURALLY_VALID`: nenhum erro estrutural ou limite do Validator foi detectado;
+- `INVALID_IR`: contradição estrutural detectada;
+- `INCOMPLETE_VALIDATION`: capacidade/versão não interpretada, limite operacional
+  ou precondição que esta implementação não conseguiu decidir;
+- `SEMANTIC_OBLIGATION`: `ValidationIssue.Kind` que preserva uma obrigação da
+  autoridade/produtor sem transformá-la em fato ou certificado Java.
 
-A veracidade de uma premissa, a equivalência de lowering com uma linguagem,
-a pureza de uma abstração e os resultados de CFG/dataflow exigem suas próprias
-provas/oráculos. `SEMANTIC_OBLIGATION` mantém essa distinção visível.
+`STRUCTURALLY_VALID` não certifica automaticamente um perfil AIR. A verdade de
+premissas, a correspondência com a entrada do produtor, a cobertura de effects e
+outcomes e os resultados de análises derivadas exigem seus próprios oráculos.
 
 ## Decisões de representação
 
-As listas são snapshots imutáveis. `ObjectId` não é `StorageId`.
-`Sequence` contém instruções e exatamente um `Terminator` separado por tipo.
-`TypeRef` não é um tipo universal; compartilhar `UncertaintyId` não prova
-compatibilidade. Não há inferência de valores pela identidade de expressões.
+Records, sealed types, `Optional`, listas e índices internos são detalhes Java.
+Eles não definem semântica AIR nem namespace por nome de classe. Identidades usam
+seu proprietário completo; `ObjectId` não é `StorageId`, e `localId` isolado não
+é chave global.
 
-A notação `sameDomain` é validada sobre identidades e premissas de escopo estático:
-publicação, unidade, entrada, operação, invocação e interseção. Cópias não ganham
-conversão/padding implícitos. `opaque`, efeitos externos e controles abertos
-carregam envelopes explícitos. As extensões padronizadas têm variantes próprias
-com fallback; não são executadas por esta biblioteca.
+`unknown_type` não é wildcard. Compartilhar uma lacuna não prova `sameDomain`.
+O Validator só usa identidade, domínio conhecido, célula/alias/leitura e premissa
+normativa aplicável ao site. Não escolhe candidato, entrada de retorno, storage ou
+fallthrough para tornar uma publicação válida.
 
-## Antes de fazer push
-
-Copie **o conteúdo** desta pasta para a raiz do novo repositório, preservando
-arquivos ocultos. Mova `handoff/json-v1.md` para o repositório da especificação,
-revise a proposta lá e remova `handoff/` daqui. Execute o gate no seu ambiente,
-revise o diff e faça commit. Este pacote não contém `.git`, não faz push nem
-publica artefatos automaticamente.
+Antes de propor mudanças, execute os dois gates, revise o diff completo,
+dependências e estado do Git. Não publique artefatos nem faça merge sem autorização.

@@ -8,11 +8,10 @@ import static io.github.gustavo2358.air.model.Require.*;
 /** Typed AIR 2.0 values. Collections are defensively copied; no transport dependencies. */
 public final class Capabilities {
     private Capabilities() {}
-    public record Capability(String name, int major) {
+    public record Capability(String name, String version) {
         public Capability {
             name = text(name, "name");
-            nonNegative(major, "major");
-            if (major == 0) throw new IllegalArgumentException("capability major must be positive");
+            version = text(version, "version");
         }
 
     }
@@ -24,8 +23,8 @@ public final class Capabilities {
         }
 
     }
-    public static final Capability MEMORY_REGIONS = new Capability("memory.regions",1);
-    public static final Capability LOCAL_CONTROL = new Capability("control.local",1);
-    public static final Capability INDIRECT_CONTROL = new Capability("control.indirect",1);
+    public static final Capability MEMORY_REGIONS = new Capability("memory.regions","1");
+    public static final Capability LOCAL_CONTROL = new Capability("control.local","1");
+    public static final Capability INDIRECT_CONTROL = new Capability("control.indirect","1");
 
 }

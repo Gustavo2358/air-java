@@ -10,27 +10,52 @@ public final class Origins {
     private Origins() {}
     public sealed interface Origin permits Written, Derived, Contractual, Unavailable { OriginId id(); }
     public enum ColumnUnit { UNICODE_SCALAR, UTF16_CODE_UNIT, OCTET }
-    public record Position(int line, int column) {
+    public sealed interface Location permits LineColumns, Offsets {}
+    public record Position(BigInteger line, BigInteger column) {
         public Position {
+            line = Objects.requireNonNull(line, "line");
+            column = Objects.requireNonNull(column, "column");
             nonNegative(line, "line");
             nonNegative(column, "column");
             
         }
 
     }
-    public record Span(Position start, Position end, int lineBase, int columnBase, ColumnUnit columnUnit, boolean endExclusive) {
+    public record Span(Position start, Position end, BigInteger lineBase, BigInteger columnBase, ColumnUnit columnUnit, boolean endExclusive) {
         public Span {
             start = Objects.requireNonNull(start, "start");
             end = Objects.requireNonNull(end, "end");
+            lineBase = Objects.requireNonNull(lineBase, "lineBase");
+            columnBase = Objects.requireNonNull(columnBase, "columnBase");
             nonNegative(lineBase, "lineBase");
             nonNegative(columnBase, "columnBase");
             columnUnit = Objects.requireNonNull(columnUnit, "columnUnit");
-            if (lineBase>1 || columnBase>1) throw new IllegalArgumentException("coordinate bases must be zero or one");
-            if (start.line()<lineBase || end.line()<lineBase || start.column()<columnBase || end.column()<columnBase || start.line()>end.line() || (start.line()==end.line() && start.column()>end.column())) throw new IllegalArgumentException("invalid source span");
+            if (lineBase.compareTo(BigInteger.ONE)>0 || columnBase.compareTo(BigInteger.ONE)>0)
+                throw new IllegalArgumentException("coordinate bases must be zero or one");
+            if (start.line().compareTo(lineBase)<0 || end.line().compareTo(lineBase)<0
+                    || start.column().compareTo(columnBase)<0 || end.column().compareTo(columnBase)<0
+                    || start.line().compareTo(end.line())>0
+                    || (start.line().equals(end.line()) && start.column().compareTo(end.column())>0))
+                throw new IllegalArgumentException("invalid source span");
         }
 
     }
-    public record IncludeFrame(ArtifactId including, ArtifactId included, String requestedName, Optional<Span> site) {
+    public record LineColumns(Span span) implements Location {
+        public LineColumns {
+            span = Objects.requireNonNull(span, "span");
+        }
+    }
+    public record Offsets(BigInteger start, BigInteger end, String unit, boolean endExclusive) implements Location {
+        public Offsets {
+            start = Objects.requireNonNull(start, "start");
+            end = Objects.requireNonNull(end, "end");
+            unit = text(unit, "unit");
+            nonNegative(start, "start");
+            nonNegative(end, "end");
+            if(start.compareTo(end)>0) throw new IllegalArgumentException("offset end precedes start");
+        }
+    }
+    public record IncludeFrame(ArtifactId including, ArtifactId included, String requestedName, Optional<Location> site) {
         public IncludeFrame {
             including = Objects.requireNonNull(including, "including");
             included = Objects.requireNonNull(included, "included");
@@ -40,11 +65,11 @@ public final class Origins {
         }
 
     }
-    public record Written(OriginId id, ArtifactId artifact, Optional<Span> span, List<IncludeFrame> includes, boolean exact) implements Origin {
+    public record Written(OriginId id, ArtifactId artifact, Optional<Location> location, List<IncludeFrame> includes, boolean exact) implements Origin {
         public Written {
             id = Objects.requireNonNull(id, "id");
             artifact = Objects.requireNonNull(artifact, "artifact");
-            span = Objects.requireNonNull(span, "span");
+            location = Objects.requireNonNull(location, "location");
             includes = List.copyOf(includes);
             
         }

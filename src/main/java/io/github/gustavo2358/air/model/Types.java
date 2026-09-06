@@ -11,10 +11,10 @@ public final class Types {
     public sealed interface Type permits Builtin, ExtensionType, LabelType {}
     public enum Builtin implements Type { BOOL, INT, DECIMAL, TEXT, BYTES }
     public sealed interface TypeRef permits Known, UnknownType {}
-    public record ExtensionType(String name, SemanticVersion version) implements Type {
+    public record ExtensionType(String name, String version) implements Type {
         public ExtensionType {
             name = text(name, "name");
-            version = Objects.requireNonNull(version, "version");
+            version = text(version, "version");
             
         }
 

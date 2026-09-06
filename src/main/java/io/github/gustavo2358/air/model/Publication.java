@@ -15,8 +15,7 @@ public record Publication(Ids.PublicationId id, SemanticVersion airVersion,
                           java.util.List<Origins.Origin> origins,
                           Evidence.Coverage coverage,
                           java.util.List<Evidence.Uncertainty> uncertainties,
-                          java.util.List<Proofs.Premise> premises,
-                          java.util.List<Interactions.Contract> contracts) {
+                          java.util.List<Proofs.Premise> premises) {
     public Publication {
         java.util.Objects.requireNonNull(id,"id"); java.util.Objects.requireNonNull(airVersion,"airVersion");
         java.util.Objects.requireNonNull(capabilities,"capabilities");
@@ -25,6 +24,5 @@ public record Publication(Ids.PublicationId id, SemanticVersion airVersion,
         artifactRelations=java.util.List.copyOf(artifactRelations); origins=java.util.List.copyOf(origins);
         java.util.Objects.requireNonNull(coverage,"coverage");
         uncertainties=java.util.List.copyOf(uncertainties); premises=java.util.List.copyOf(premises);
-        contracts=java.util.List.copyOf(contracts);
     }
 }

@@ -16,18 +16,19 @@ public final class Places {
         }
 
     }
-    public record Choice(Operand.Header header, List<Place> candidates, Scopes.MemoryBound remainder, Types.TypeRef typeRef, Optional<PremiseId> knownRemainderDomainProof) implements Place {
+    public record Choice(Operand.Header header, List<Place> candidates, Scopes.MemoryBound remainder,
+                         Types.TypeRef typeRef) implements Place {
         public Choice {
             header = Objects.requireNonNull(header, "header");
             candidates = List.copyOf(candidates);
             remainder = Objects.requireNonNull(remainder, "remainder");
             typeRef = Objects.requireNonNull(typeRef, "typeRef");
-            knownRemainderDomainProof = Objects.requireNonNull(knownRemainderDomainProof, "knownRemainderDomainProof");
             if (candidates.isEmpty() && remainder instanceof Scopes.NoMemory) throw new IllegalArgumentException("empty closed choice");
         }
 
     }
-    public record RegionSlice(Operand.Header header, StorageId region, Expression offset, Expression length, Memory.Codec codec, Types.TypeRef typeRef, Optional<PremiseId> accessProof) implements Place {
+    public record RegionSlice(Operand.Header header, StorageId region, Expression offset,
+                              Expression length, Memory.Codec codec, Types.TypeRef typeRef) implements Place {
         public RegionSlice {
             header = Objects.requireNonNull(header, "header");
             region = Objects.requireNonNull(region, "region");
@@ -35,7 +36,6 @@ public final class Places {
             length = Objects.requireNonNull(length, "length");
             codec = Objects.requireNonNull(codec, "codec");
             typeRef = Objects.requireNonNull(typeRef, "typeRef");
-            accessProof = Objects.requireNonNull(accessProof, "accessProof");
             
         }
 

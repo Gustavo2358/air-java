@@ -1,96 +1,108 @@
 # Cobertura implementada e limites
 
-Baseline: AIR 2.0.0, commit `0b2fbce7046010b22b32efa8cbc3e75ccba09442`.
-A biblioteca 0.1.0-SNAPSHOT é uma implementação inicial revisável. **Não declara
-conformidade integral de Producer, Validator ou Consumer com todos os perfis AIR.**
+Baseline normativo: Analysis IR 2.0.0, `Gustavo2358/analysis-ir@122ce54e1b9ef9b00646f93ece409ca8b63bc933`.
+A biblioteca `0.1.0-SNAPSHOT` é uma implementação Java revisável. Ela não declara
+conformidade integral de Producer, Validator ou Consumer com todos os perfis AIR.
+
+O discovery e a migração do baseline Java anterior estão em
+`docs/reconciliation-air-2.md`.
 
 ## Modelo materializado
 
-| Área normativa | Representação Java |
+| Área normativa | Representação Java atual |
 | --- | --- |
-| Publicação/identidades | `Publication`, `Unit`, `Sequence`, `Ids`, `Entries` |
-| Conhecimento de tipo | `Types.Known`, `Types.UnknownType`, `Types.ExtensionType` |
-| Expressões/locais | `Expression`, `Expressions`, `Place`, `Places`, `Operand` |
-| Valores | bool/int/decimal/text/bytes/label; inteiros arbitrários e bytes imutáveis |
-| Armazenamento | célula, região, vista, alias, alternativas, associação desconhecida |
+| Publicação e identidades | `Publication`, `Unit`, `Sequence`, `Ids`, `ArtifactRelationId` |
+| Entradas | assinatura normalizada, inventários/restantes independentes e `EntryState` |
+| Tipos e valores | `known(T)`, `unknown_type(u)`, core/extension/label; naturais AIR por `BigInteger` |
+| Expressões e locais | ocorrências por `OperandId`, inclusive owners de operação ou entrada |
+| Armazenamento | célula, região, view/codec, alias, alternativas e binding desconhecido |
 | Operações comuns | assign, havoc.must, havoc.may, nop, copy_bytes |
 | Terminadores core | jump, branch, dispatch, invoke, return, raise, halt, opaque |
-| Extensões padronizadas | local.invoke/boundary/resume/unwind e indirect.jump, com fallback |
-| Incompletude | cinco dimensões de precisão, cobertura, incertezas e três envelopes |
-| Origem | escrita, derivada, contratual e indisponível; coordenadas com unidade/base |
-| Provas de domínio | sujeitos de objeto/célula/operando/assinatura e escopos fechados |
-| Relações estruturais | artefatos, recursos e relações sem ponto de execução fictício |
+| Extensões padronizadas | local.invoke/boundary/resume/unwind e indirect.jump, com capability/fallback |
+| Interações | targets internal/literal/computed, assinatura por site, effects, outcomes e `ContractRef` |
+| Controle incompleto | `InvocationOutcomes` separado de `ControlEnvelope` |
+| Incompletude | precisão, coverage, uncertainties, memory/control/dependency envelopes |
+| Proveniência | escrita, derivada, contratual, indisponível; linha/coluna ou offsets com unidade |
+| Premissas | `sameDomain` com subjects/scopes; `disjoint_storage` universal |
+| Relações estruturais | artifacts, resources declarativos e artifact relations sem execução fictícia |
 
-`contracts` é uma forma Java explícita de materializar conteúdo de contratos externos;
-não autoriza consulta preguiçosa. `ContractId`/`RelationId` dão identidades àquelas
-publicações. Esses detalhes de organização não ampliam a semântica AIR.
+Não existem no domínio atual `Publication.contracts`, `ContractId`, entidade
+`Contract`, `ResourceTarget`, `SafetyAssertion`, `SafetyProperty`, certificados
+privados de bounds/acesso/choice ou `return.entryScope`.
 
 ## Checks estáticos implementados
 
-Identidades completas/únicas; fechamento de referências; ownership de operações e
-operandos; terminação por tipo; entradas e labels; visibilidade explícita; ciclos de
-origem/alias/contenção; assinaturas ordenadas; tipo de operações; tipos de codec;
-intervalos constantes; resultados somente quando existe retorno normal; alternativas
-e tags de invocação; domínios de labels; fechamento de gaps/proveniência/coverage;
-razões distintas para tipo e valor desconhecidos; capacidades requeridas.
+O Validator cobre, na parcela decidível a partir de uma publicação isolada:
 
-`sameDomain` verifica bases de domínio conhecido, identidade, célula/alias exato,
-leitura, premissas, composição e escopos. Os escopos não usam CFG nem ativações.
-Uma premissa universal sobre um `choice` cobre candidatos e restante; provas
-somente de candidatos não bastam para uma escolha aberta. Contradições conhecidas
-são rejeitadas. A relação não altera os `TypeRef`, não prova valores iguais e não
-libera aritmética/comparação de domínio desconhecido.
+- unicidade, namespace completo e fechamento de identidades/referências;
+- owners de unidade, entrada, label, operação, objeto, porta e operando;
+- body disponível/indisponível e fechamento de labels;
+- ciclos de origem, contenção e aliases exatos;
+- visibilidade explícita e associação object/storage/codec;
+- assinatura ordenada, posição contígua quando fechada, modo, binding e restos
+  independentes de parâmetros/resultados;
+- assinatura interna igual ao target e assinatura externa materializada no site;
+- `ContractRef` com evidência existente e `CONTRACT_UNKNOWN` tipado;
+- target calculado `known(text)` e ausência de `ResourceId` executável;
+- cardinalidade quando o inventário é fechado; com precisão de valores `EXACT`,
+  transmissão de todo slot conhecido cujo modo permite precisão, mesmo com restante
+  de aridade aberto; `sameDomain` não promove `unknown_type` a `known(T)`;
+- derivação finita de `sameDomain`, aplicação de scopes, choices universais e
+  contradições de domínios concretos;
+- `disjoint_storage` com pelo menos duas bases existentes distintas;
+- unicidade de normal/tag/catch-all e de effect bound por outcome;
+- distinção de `InvocationOutcomes`/`ControlEnvelope`, labels locais e regra de
+  `continue` apenas em fallback de operação comum;
+- ocorrência única para effect-only Places e referências de resultados `opaque`;
+- precondições constantes de slice, faixas, codecs core e escrita literal;
+- capabilities/versionamento exatos para extensões conhecidas;
+- provenance, coverage, elimination e razões tipadas de incompletude;
+- limites operacionais observáveis e determinismo/reentrância do Validator.
 
-Os checks correspondem a partes verificáveis de I-01–I-13, I-17/I-18, I-20,
-I-23/I-26, I-28–I-32, I-36/I-43/I-46 e I-49–I-53. Os identificadores nos diagnósticos
-identificam a obrigação afetada; **não significam que todo esse invariant foi
-certificado em todas as suas dimensões semânticas**.
+Os diagnósticos citam invariantes como I-01–I-13, I-17/I-20, I-23/I-26,
+I-28–I-32, I-36/I-43/I-46, I-49–I-61. A citação identifica a regra aplicada;
+não alega certificação de todas as dimensões semânticas daquele invariável.
 
-## O que permanece explicitamente fora
+## Obrigações e limites explícitos
 
-1. **Preservação da linguagem de origem e verdade das premissas.** Pureza,
-   ausência de conversão, independência física, totalidade e bounds contratuais
-   precisam de autoridade do produtor. O validador registra `SEMANTIC_OBLIGATION`.
-2. **Resultados de análise.** Nenhum oracle que exige CFG, matching de retornos
-   em execução, efeitos calculados, strong/weak update, RD, possible values ou
-   dependências finais é implementado por esta biblioteca.
-3. **Todos os casos de memória/conversão.** Faixas simbólicas, validade de codec
-   sobre conteúdo não literal, inicializações conflitantes em vistas parcialmente
-   sobrepostas e domínio do restante em associações de storage abertas não são
-   decididos integralmente. As formas pertinentes geram `INCOMPLETE_VALIDATION`
-   quando falta evidência aplicável; contradição constante detectável gera `INVALID_IR`.
-4. **Extensões arbitrárias.** Não existe payload livre semanticamente interpretado.
-   Tipo/codec de extensão desconhecida não vira `TYPE_UNKNOWN`; permanece nomeado
-   com incompatibilidade explícita. Literais/operações precisas de extensões próprias
-   exigem representação e validador especializados antes de uma nova release.
-5. **Limites superiores de envelopes e claims globais.** O código verifica forma,
-   referências e assinaturas, não prova que limites declarados incluem todos os
-   comportamentos do produtor nem calcula uma síntese global de precisão.
-6. **Cobertura de entrada.** A biblioteca verifica os itens publicados, mas não
-   conhece a entrada do lowerer para provar que nenhum statement-fonte foi omitido.
-   Essa bijeção/correlação exige oráculo bilateral no `cobol-lowering`.
-7. **Transporte.** JSON, schema checker, reader/writer e compatibilidade de bytes
-   pertencem aos adapters. `handoff/json-v1.md` é proposta documental, não código.
+1. **Verdade do produtor e das premissas.** O Validator não observa a entrada do
+   lowerer nem certifica `sameDomain`, `disjoint_storage`, pureza, coverage ou a
+   correspondência de facts com linguagem/ambiente. Registra
+   `SEMANTIC_OBLIGATION`.
+2. **Contrato materializado.** Forma, fechamento e contradições locais de
+   assinatura/effects/outcomes são verificados. A completude em relação à
+   autoridade externa ou a um corpo requer evidência própria (I-56).
+3. **Precondições simbólicas.** Bounds não literais, conteúdo de codecs não
+   decidido, igualdade de domínio de extensão e views parcialmente sobrepostas
+   podem produzir `VALIDATION_LIMIT`; não são aceitos como provados.
+4. **Return com múltiplas entradas.** Inventários estaticamente iguais são
+   verificados para todas as entradas. Se a compatibilidade depende de
+   alcançabilidade, o Validator registra limite/I-61 e não escolhe uma entrada.
+5. **Análises derivadas.** Não há CFG, strong/weak update, cálculo de effects,
+   reaching definitions, possible values ou grafo final de dependências.
+6. **Perfis.** Claims de perfil exigem execução dos oráculos correspondentes fora
+   deste check estrutural. A suíte local não é certificação integral dos perfis.
+7. **Extensões arbitrárias.** Tipo/codec/política nomeada permanece identificada.
+   Sem implementação do manifesto, o resultado é unsupported/limit, nunca
+   `TYPE_UNKNOWN` ou semântica inventada.
+8. **Transporte.** JSON, schema, reader/writer, filesystem e round-trip ficam em
+   adapters. O binding JSON DRAFT da AIR não foi implementado.
 
-## Decisões adicionais da representação Java
+## Detalhes Java sem autoridade semântica
 
-`Optional<PremiseId>` em acessos/recortes permite apontar a evidência de precondições
-sem inventar análise local. `SafetyAssertion` explicita a alegação e seu site; é uma
-forma de premissa rastreável da implementação, não uma prova da verdade externa.
+Records, sealed interfaces, enums, `Optional`, listas defensivas, representação
+de bytes como `List<Integer>`, o booleano interno de signedness de codec e índices
+do Validator são escolhas de implementação. `ProofSite` representa o site estático
+usado internamente para aplicar a regra AIR; não é inventário publicado.
 
-Um `Entry` de corpo disponível precisa de label. Unidade sem corpo pode permanecer
-sem entradas e ser referida como recurso/contrato externo. Formas de assinatura
-sem corpo devem ser revisadas à luz do contrato antes de ganhar garantias adicionais.
+`ValidationOptions` usa limites finitos do processo. Ao atingi-los, o resultado é
+`INCOMPLETE_VALIDATION`; a AIR não recebe teto de cardinalidade e nenhum inventário
+é silenciosamente truncado.
 
-`ReferenceChecks`, `TypeResolver` e `DomainProofEngine` são internos ao validator;
-não constituem uma API alternativa ao modelo. Diagnósticos não são inseridos na AIR
-recebida. O caller decide se rejeita, reporta limitação ou usa outra implementação
-para verificar uma publicação que este slice não conseguiu certificar.
+## Consumo por cobol-lowering
 
-## Próximos slices recomendados
-
-Review do modelo e desta matriz; aprovação do binding em `analysis-ir`; adapters
-externos e prova arquivo/memória; corpus de conformidade normativo ampliado; checks
-estáticos adicionais de memória e contratos. Só promover versionamento estável e
-claims de perfil depois dos oráculos correspondentes, sem tornar JSON dependência
-do modelo nem mover regras específicas de COBOL para esta biblioteca.
+Não há blocker conhecido no modelo reconciliado. Um produtor precisa, porém,
+migrar para a API incompatível: materializar assinatura/effects/outcomes por
+`invoke`, fornecer `ContractRef`/lacunas e subjects por site, definir ocorrências
+de effects e não emitir as formas removidas. Isso é trabalho de adapter/lowering,
+não uma compatibilidade retroativa dentro de `air-java`.

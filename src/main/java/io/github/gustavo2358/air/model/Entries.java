@@ -25,8 +25,9 @@ public final class Entries {
         }
 
     }
-    public record ParameterInitial(int position) implements InitialValue {
+    public record ParameterInitial(BigInteger position) implements InitialValue {
         public ParameterInitial {
+            position = Objects.requireNonNull(position, "position");
             nonNegative(position, "position");
             
         }

@@ -10,7 +10,7 @@ public final class Ids {
     private Ids() {}
     public sealed interface Id permits PublicationId, UnitId, EntryId, LabelId,
             OperationId, OperandId, ObjectId, StorageId, ResourceId, ArtifactId,
-            OriginId, UncertaintyId, PremiseId, ContractId, RelationId, CompletionPortId {
+            ArtifactRelationId, OriginId, UncertaintyId, PremiseId, CompletionPortId {
         PublicationId publication();
         String localId();
     }
@@ -81,16 +81,8 @@ public final class Ids {
         }
 
     }
-    public record ContractId(PublicationId publication, String localId) implements Id {
-        public ContractId {
-            publication = Objects.requireNonNull(publication, "publication");
-            localId = text(localId, "localId");
-            
-        }
-
-    }
-    public record RelationId(PublicationId publication, String localId) implements Id {
-        public RelationId {
+    public record ArtifactRelationId(PublicationId publication, String localId) implements Id {
+        public ArtifactRelationId {
             publication = Objects.requireNonNull(publication, "publication");
             localId = text(localId, "localId");
             

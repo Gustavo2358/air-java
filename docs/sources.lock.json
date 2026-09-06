@@ -1,10 +1,11 @@
 {
   "analysis_ir": {
     "repository": "Gustavo2358/analysis-ir",
-    "ref": "0b2fbce7046010b22b32efa8cbc3e75ccba09442",
+    "ref": "122ce54e1b9ef9b00646f93ece409ca8b63bc933",
     "semantic_version": "2.0.0",
     "role": "normative",
-    "sections": [
+    "normative_sections": [
+      "README.md",
       "especificacao/01-modelo-e-identidades.md",
       "especificacao/02-tipos-valores-e-operandos.md",
       "especificacao/03-memoria-e-aliases.md",
@@ -13,10 +14,14 @@
       "especificacao/06-incompletude-e-proveniencia.md",
       "especificacao/07-contrato-de-produtores.md",
       "especificacao/09-extensibilidade-e-compatibilidade.md",
+      "especificacao/10-perfis-de-conformidade.md",
+      "especificacao/11-rastreabilidade-bilateral.md",
       "conformidade/01-invariantes.md",
       "conformidade/02-oraculos.md"
-    ]
+    ],
+    "implementation_handoff": "bindings/revisao-json-v1.md",
+    "consulted_draft_transport": "bindings/json-v1.md"
   },
   "library_version": "0.1.0-SNAPSHOT",
-  "json_binding_status": "proposal only; no codec in this library"
+  "json_binding_status": "DRAFT transport specification; not implemented by this library"
 }

@@ -19,8 +19,8 @@ final class PublicationIndex {
     final Map<OriginId,Origins.Origin> origins=new LinkedHashMap<>();
     final Map<UncertaintyId,Evidence.Uncertainty> uncertainties=new LinkedHashMap<>();
     final Map<PremiseId,Proofs.Premise> premises=new LinkedHashMap<>();
-    final Map<ContractId,Interactions.Contract> contracts=new LinkedHashMap<>();
     final Map<ResourceId,Interactions.Resource> resources=new LinkedHashMap<>();
+    final Map<ArtifactRelationId,Artifacts.Relation> artifactRelations=new LinkedHashMap<>();
     final ValidationContext context;
 
     PublicationIndex(Publication p,ValidationContext context) { this.publication=p; this.context=context; }
@@ -30,9 +30,10 @@ final class PublicationIndex {
         for(Origins.Origin o:publication.origins()) { add(o.id()); origins.putIfAbsent(o.id(),o); }
         for(Evidence.Uncertainty u:publication.uncertainties()) { add(u.id()); uncertainties.putIfAbsent(u.id(),u); }
         for(Proofs.Premise p:publication.premises()) { add(p.id()); premises.putIfAbsent(p.id(),p); }
-        for(Interactions.Contract c:publication.contracts()) { add(c.id()); contracts.putIfAbsent(c.id(),c); }
         for(Interactions.Resource r:publication.resources()) { add(r.id()); resources.putIfAbsent(r.id(),r); }
-        for(Artifacts.Relation r:publication.artifactRelations()) add(r.id());
+        for(Artifacts.Relation r:publication.artifactRelations()) {
+            add(r.id()); artifactRelations.putIfAbsent(r.id(),r);
+        }
         for(Memory.Storage s:publication.storage()) { add(s.header().id()); storage.putIfAbsent(s.header().id(),s); }
         for(Unit u:publication.units()) {
             add(u.id()); units.putIfAbsent(u.id(),u);

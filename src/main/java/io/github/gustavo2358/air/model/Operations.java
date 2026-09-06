@@ -100,26 +100,30 @@ public final class Operations {
         }
         @Override public String kind() { return "dispatch"; }
     }
-    public record Invoke(Header header, String action, Interactions.Target target, List<Interactions.Argument> arguments, List<Place> results, Interactions.EffectBound effectBound, Control.Envelope outcomes, Interactions.ContractKnowledge contract, List<UncertaintyId> signatureGaps) implements Terminator {
+    public record Invoke(Header header, String action, Interactions.Target target,
+                         List<Interactions.Argument> arguments, List<Place> results,
+                         Interactions.InvocationSignature signature, List<Place> effectOperands,
+                         Interactions.EffectBound effectBound, Control.InvocationOutcomes outcomes,
+                         Interactions.ContractKnowledge contract) implements Terminator {
         public Invoke {
             header = Objects.requireNonNull(header, "header");
             action = text(action, "action");
             target = Objects.requireNonNull(target, "target");
             arguments = List.copyOf(arguments);
             results = List.copyOf(results);
+            signature = Objects.requireNonNull(signature, "signature");
+            effectOperands = List.copyOf(effectOperands);
             effectBound = Objects.requireNonNull(effectBound, "effectBound");
             outcomes = Objects.requireNonNull(outcomes, "outcomes");
             contract = Objects.requireNonNull(contract, "contract");
-            signatureGaps = List.copyOf(signatureGaps);
             
         }
         @Override public String kind() { return "invoke"; }
     }
-    public record Return(Header header, List<Expression> values, List<EntryId> entryScope) implements Terminator {
+    public record Return(Header header, List<Expression> values) implements Terminator {
         public Return {
             header = Objects.requireNonNull(header, "header");
             values = List.copyOf(values);
-            entryScope = List.copyOf(entryScope);
             
         }
         @Override public String kind() { return "return"; }
@@ -142,7 +146,8 @@ public final class Operations {
         }
         @Override public String kind() { return "halt"; }
     }
-    public record Opaque(Header header, String observedKind, List<Operand> knownOperands, List<Place> valueResults, Envelopes.Envelope envelope) implements Terminator {
+    public record Opaque(Header header, String observedKind, List<Operand> knownOperands,
+                         List<OperandId> valueResults, Envelopes.Envelope envelope) implements Terminator {
         public Opaque {
             header = Objects.requireNonNull(header, "header");
             observedKind = text(observedKind, "observedKind");
@@ -182,9 +187,10 @@ public final class Operations {
         }
         @Override public String kind() { return "local.resume"; }
     }
-    public record LocalUnwind(Header header, int count, LabelId destination, Envelopes.Envelope fallback) implements Terminator {
+    public record LocalUnwind(Header header, BigInteger count, LabelId destination, Envelopes.Envelope fallback) implements Terminator {
         public LocalUnwind {
             header = Objects.requireNonNull(header, "header");
+            count = Objects.requireNonNull(count, "count");
             nonNegative(count, "count");
             destination = Objects.requireNonNull(destination, "destination");
             fallback = Objects.requireNonNull(fallback, "fallback");
