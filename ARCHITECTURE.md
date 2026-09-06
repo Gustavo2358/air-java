@@ -1,32 +1,70 @@
-# Fronteiras
+# Arquitetura e fronteiras
 
-`model` não depende de `validation`; `validation` depende de `model`. Ambos usam
-somente JDK. Testes/exemplos dependem de ambos. Não há porta de infraestrutura
-obrigatória porque `Publication` e `ValidationResult` são valores devolvidos ao caller.
-
-A integração inicial é:
+## Autoridade
 
 ```text
-Semantic Product JSON -> adapter de entrada do cobol-lowering
--> lowerer -> Publication -> adapter AIR JSON de saída
--> arquivo -> adapter AIR JSON do analysis-cfg -> Publication -> BuildCfg
+Gustavo2358/analysis-ir
+        ↓ especificação normativa
+air-java
+        ↓ modelo Java compartilhado
+produtores e consumidores
 ```
 
-A integração em memória troca apenas o wiring e remove serialização intermediária.
-Os adapters podem usar DTOs próprios, mix-ins ou serializers; não adicionam anotações
-JSON ao modelo compartilhado. A especificação do binding é separada da implementação.
+Uma classe ou conveniência Java não pode criar semântica ausente da AIR. Records,
+sealed interfaces, `Optional`, coleções e índices são representação. A versão
+normativa consultada está em `docs/sources.lock.json`.
 
-O validador constrói índices tipados uma vez. Resolução de `sameDomain` usa união de
-classes de domínio e overlays por escopo estático, sem unificar lacunas de tipo.
-Esse cálculo verifica um requisito de validade; não é resolução nominal, storage
-analysis, reaching definitions ou análise de valores. Envelopes não são executados.
+## Dependências
 
-Os modelos são agrupados em classes de vocabulário (`Types`, `Operations`, `Memory`,
-`Proofs` etc.) para manter nomes explícitos e contratos pequenos. Essa organização
-Java não é uma nova taxonomia normativa e não deve aparecer como nome de classe num
-payload JSON. Toda decisão de codificação é do binding/adapters.
+`model` não depende de `validation`; `validation` depende de `model`. Ambos usam
+somente JDK/`java.base`. Testes e exemplos dependem dos dois.
 
-A API inicial não inclui uma interface universal de extensões com payload livre.
-As três extensões padronizadas são tipadas. Extensões de domínio/codec desconhecidas
-conservam identidade/contrato e geram incompatibilidade de validação, não semântica
-precisa inventada. Novas extensões precisas exigem contrato e slice próprio.
+Não há porta de infraestrutura obrigatória: `Publication` e `ValidationResult`
+são valores entregues ao caller. JSON, arquivo, rede, CLI e frameworks ficam em
+adapters externos. O binding JSON da AIR continua DRAFT e não define o runtime
+desta biblioteca.
+
+Uma integração possível é:
+
+```text
+entrada semântica → produtor → Publication → consumidor
+                         ↘ adapter externo opcional ↗
+```
+
+## Modelo compartilhado
+
+O modelo preserva identidade completa e ocorrências de operandos. Targets de
+execução não são resolvidos por inventário: são internal por `EntryId`, literal ou
+computed. `ResourceId` descreve recurso declarado. Da mesma forma, `ContractRef`
+é evidência de autoridade/versão, não chave de lookup. Assinatura externa, effects
+e outcomes ficam na própria ocorrência de `invoke`.
+
+`InvocationOutcomes` e `ControlEnvelope` são somas distintas. O primeiro tem
+unicidade própria de chamada; o segundo representa também `jump`, `return` e,
+somente no fallback de operação comum autorizado, `continue`. Terminadores nunca
+ganham fallthrough pela ordem de sequências.
+
+## Validator
+
+O Validator constrói índices tipados uma vez. A resolução de `sameDomain` usa
+união de classes de domínio e overlays por escopo estático, sem unificar lacunas
+de tipo. Subjects de chamadas carregam o `OperationId` do site; evidência de uma
+chamada não se transfere a outra por autoridade ou assinatura igual.
+
+O cálculo verifica requisitos estruturais; não é lookup nominal, storage analysis,
+CFG, effects analysis, reaching definitions ou possible values. `disjoint_storage`
+é checado quanto a forma/fechamento, mas sua verdade física permanece obrigação da
+autoridade. Envelopes são validados, não executados.
+
+Limites operacionais de profundidade, entidades e diagnósticos pertencem ao
+Validator e produzem `INCOMPLETE_VALIDATION`. Eles não truncam inventários nem
+mudam naturais AIR em `int`/`long` semântico.
+
+## Extensões
+
+As capacidades padronizadas existentes são tipadas. Nome, versão e manifesto de
+uma extensão governam tipos, codecs e políticas especializadas; uma autoridade de
+chamada não fornece automaticamente normalização, codec ou igualdade.
+
+Não existe payload semântico livre. Nova variante exige autoridade normativa,
+capacidade/versionamento, traversal, validação, testes e catálogo atualizados.
