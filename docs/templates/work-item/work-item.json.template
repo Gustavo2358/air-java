@@ -1,0 +1,32 @@
+{
+  "id": "WORK-AIR-AREA-000",
+  "title": "PREENCHER",
+  "status": "active",
+  "authorization": "discovery",
+  "authorization_evidence": "PREENCHER com instrução recebida",
+  "goal": "PREENCHER",
+  "checkpoint": "PREENCHER",
+  "base_commit": "PREENCHER_SHA_COMPLETO",
+  "branch": "PREENCHER_BRANCH",
+  "must_read": [
+    "AGENTS.md"
+  ],
+  "change_scope": [
+    "PREENCHER"
+  ],
+  "must_not_change": [
+    "src/",
+    "pom.xml"
+  ],
+  "invariants": [
+    "INV-AIR-001"
+  ],
+  "evals": [
+    "EVAL-AIR-001"
+  ],
+  "gates": [
+    "fast",
+    "git"
+  ],
+  "stop_condition": "PREENCHER limite autorizado"
+}

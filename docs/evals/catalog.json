@@ -1,0 +1,103 @@
+[
+  {
+    "id": "EVAL-AIR-001",
+    "title": "Integridade documental e lifecycle",
+    "gate": "docs",
+    "invariants": [
+      "INV-AIR-001",
+      "INV-AIR-007"
+    ],
+    "status": "implemented",
+    "document": "docs/evals/index.md"
+  },
+  {
+    "id": "EVAL-AIR-002",
+    "title": "Fronteira real de bytecode",
+    "gate": "architecture",
+    "invariants": [
+      "INV-AIR-002"
+    ],
+    "status": "implemented",
+    "document": "docs/evals/index.md"
+  },
+  {
+    "id": "EVAL-AIR-003",
+    "title": "Contratos existentes do modelo e Validator",
+    "gate": "semantic",
+    "invariants": [
+      "INV-AIR-003",
+      "INV-AIR-004",
+      "INV-AIR-005",
+      "INV-AIR-006"
+    ],
+    "status": "implemented",
+    "document": "docs/evals/index.md"
+  },
+  {
+    "id": "EVAL-AIR-004",
+    "title": "Maven executa a suíte completa",
+    "gate": "maven",
+    "invariants": [
+      "INV-AIR-002",
+      "INV-AIR-003",
+      "INV-AIR-007"
+    ],
+    "status": "implemented",
+    "document": "docs/evals/index.md"
+  },
+  {
+    "id": "EVAL-AIR-005",
+    "title": "Contracasos do próprio harness",
+    "gate": "harness",
+    "invariants": [
+      "INV-AIR-002",
+      "INV-AIR-007"
+    ],
+    "status": "implemented",
+    "document": "docs/evals/index.md"
+  },
+  {
+    "id": "EVAL-AIR-006",
+    "title": "Branch, base e escopo completos",
+    "gate": "git",
+    "invariants": [
+      "INV-AIR-007"
+    ],
+    "status": "implemented",
+    "document": "docs/evals/index.md"
+  },
+  {
+    "id": "EVAL-AIR-007",
+    "title": "Codec contra binding pinado",
+    "gate": "transport",
+    "invariants": [
+      "INV-AIR-001",
+      "INV-AIR-002",
+      "INV-AIR-004"
+    ],
+    "status": "planned",
+    "document": "docs/evals/index.md"
+  },
+  {
+    "id": "EVAL-AIR-008",
+    "title": "Equivalência arquivo/memória",
+    "gate": "integration",
+    "invariants": [
+      "INV-AIR-003",
+      "INV-AIR-004",
+      "INV-AIR-005"
+    ],
+    "status": "planned",
+    "document": "docs/evals/index.md"
+  },
+  {
+    "id": "EVAL-AIR-009",
+    "title": "Propriedades focalizadas de escala",
+    "gate": "performance",
+    "invariants": [
+      "INV-AIR-006"
+    ],
+    "status": "planned",
+    "document": "docs/evals/index.md"
+  }
+]
