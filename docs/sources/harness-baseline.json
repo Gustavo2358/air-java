@@ -1,0 +1,41 @@
+{
+  "observed_date": "2026-09-07",
+  "method": "git fetch --prune origin; all five clean HEADs equal origin/main before branch creation",
+  "repositories": [
+    {
+      "repository": "Gustavo2358/proleap-poc",
+      "commit": "c8a891e0827ae1dc1140246f625fd16c2ac9bd97",
+      "observed_ref": "origin/main"
+    },
+    {
+      "repository": "Gustavo2358/cobol-lower",
+      "commit": "e2488a362478057de7d59cdf9ae2b38b1f4040d3",
+      "observed_ref": "origin/main"
+    },
+    {
+      "repository": "Gustavo2358/analysis-cfg",
+      "commit": "7edb1cd7827531ab30548d878cea3a06a483bc04",
+      "observed_ref": "origin/main"
+    },
+    {
+      "repository": "Gustavo2358/analysis-ir",
+      "commit": "122ce54e1b9ef9b00646f93ece409ca8b63bc933",
+      "observed_ref": "origin/main"
+    },
+    {
+      "repository": "Gustavo2358/air-java",
+      "commit": "6a4091e5394fc22b3d2ada9abbdb530eb3572a58",
+      "observed_ref": "origin/main"
+    }
+  ],
+  "roadmap": {
+    "source": "workspace roadmap.md (external, user-provided; not normative AIR)",
+    "sha256": "9d92d3fd4e0c6ffce8c5d2d0adc1caae32c15c70cb46cb5b5a717eba657a9e32",
+    "sections": [
+      "1.3–1.5",
+      "7 (0C-D, 0C-I, gates)",
+      "8 (1A)",
+      "18"
+    ]
+  }
+}

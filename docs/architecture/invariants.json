@@ -1,0 +1,44 @@
+[
+  {
+    "id": "INV-AIR-001",
+    "title": "Autoridade e versões",
+    "rule": "AIR normativa pinada; versão Java e binding independentes.",
+    "document": "docs/architecture/invariants.md"
+  },
+  {
+    "id": "INV-AIR-002",
+    "title": "Fronteira do núcleo",
+    "rule": "model não depende de validation ou infraestrutura; validation depende de model.",
+    "document": "docs/architecture/invariants.md"
+  },
+  {
+    "id": "INV-AIR-003",
+    "title": "Identidades e imutabilidade",
+    "rule": "Owners completos, snapshots defensivos, sem normalização de IDs.",
+    "document": "docs/architecture/invariants.md"
+  },
+  {
+    "id": "INV-AIR-004",
+    "title": "Incerteza e obrigações",
+    "rule": "Unknown/partial/limites não viram certeza, vazio ou certificação.",
+    "document": "docs/architecture/invariants.md"
+  },
+  {
+    "id": "INV-AIR-005",
+    "title": "Validação sem reparo",
+    "rule": "Validator não escolhe storage/candidatos/retorno nem infere controle.",
+    "document": "docs/architecture/invariants.md"
+  },
+  {
+    "id": "INV-AIR-006",
+    "title": "Capacidade e escala",
+    "rule": "Capacidade limita formas; indexação e limites explícitos preservam inventários.",
+    "document": "docs/architecture/invariants.md"
+  },
+  {
+    "id": "INV-AIR-007",
+    "title": "Evidência e escopo",
+    "rule": "Expected independente, gates executados, branch e mudança autorizada verificáveis.",
+    "document": "docs/architecture/invariants.md"
+  }
+]

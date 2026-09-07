@@ -1,0 +1,15 @@
+{
+  "docs": "implemented",
+  "harness": "implemented",
+  "fast": "implemented",
+  "architecture": "implemented",
+  "semantic": "implemented",
+  "maven": "implemented",
+  "git": "implemented",
+  "scope": "implemented",
+  "full": "implemented",
+  "performance": "unavailable",
+  "transport": "unavailable",
+  "integration": "unavailable",
+  "ci-scope": "implemented"
+}
