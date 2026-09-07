@@ -52,8 +52,10 @@ Os dois steps são obrigatórios, sem continue-on-error ou condição de skip; f
 do scope impede full. O oracle em test_execution.py protege ordem e obrigatoriedade.
 CI exige um item ativo explícito; sem ativo, aceita somente
 encerramento documental dos itens da base do evento, com registro histórico e
-ancestralidade do merge. Essa exceção não admite código, POM ou source lock. O outro workflow permanece
-intacto e executa check.sh e Maven, agora adaptados ao reactor. Sem path filter que ignore novos arquivos,
+ancestralidade do merge. Essa exceção não admite código, POM ou source lock.
+O workflow Java contract checks executa check.sh e Maven, adaptados ao reactor.
+Ambos os workflows configuram explicitamente Python 3.12: o build Maven requer
+python3 já em validate, além dos gates do harness. Sem path filter que ignore novos arquivos,
 sem permissões de escrita, publicação ou merge. Scope não presume branch em CI.
 
 Limites: links externos não são consultados; Markdown suportado usa links inline ou

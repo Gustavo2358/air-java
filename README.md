@@ -14,6 +14,7 @@ produtores e consumidores
 ```
 
 **JDK:** 21 ou superior, compilado com `--release 21`.
+**Python:** 3.10 ou superior, disponível como `python3`, para build e verificação.
 **Coordenadas:** `io.github.gustavo2358:air-java:0.1.0-SNAPSHOT`.
 A versão da biblioteca é independente da versão semântica da AIR.
 
@@ -78,6 +79,11 @@ A API acompanha a AIR normativa, mesmo quando isso quebra a API Java anterior:
 Não há aliases/deprecated wrappers para a semântica removida.
 
 ## Compilar e testar
+
+Python é pré-requisito tanto de `./scripts/check.sh` quanto do build Maven:
+o reactor executa `python3` desde a fase `validate`, inclusive em
+`mvn package`, `mvn verify` e `mvn install`. Os dois workflows de CI configuram
+explicitamente Python 3.12.
 
 Gate offline, sem dependências de teste:
 
