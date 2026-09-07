@@ -10,11 +10,21 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from common import Failure, run
-from contracts import inspect_output
+from contracts import inspect_output, inspect_reactor_output
 import run as runner
 
 
 class ContractOutputTests(unittest.TestCase):
+    def test_reactor_cannot_pass_with_missing_duplicated_or_reordered_modules(self):
+        root = 'PASS: reactor topology 0.1.0-SNAPSHOT\n'
+        model = 'PASS: compiled module air-model; checked\n'
+        codec = 'PASS: compiled module air-json; empty\n'
+        inspect_reactor_output(root + model + codec)
+        for output in ('BUILD SUCCESS', root + model, root + codec, root + codec + model,
+                       root + model + codec + codec, root + root + model + codec):
+            with self.subTest(output=output), self.assertRaises(Failure):
+                inspect_reactor_output(output)
+
     def test_real_output_shape(self):
         self.assertEqual(2, inspect_output("ok 1 - first\nok 2 - second\nPASS: 2 deterministic contract checks\n", ["first", "second"]))
 

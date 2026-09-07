@@ -86,7 +86,7 @@ def validate_work(root, item, invariants, evals):
         require("full" in item["gates"], "Harness work requires full gate")
     if item["authorization"] in {"harness", "discovery"}:
         for scope in item["change_scope"]:
-            require(not scope.startswith(("src/", "examples/", "pom.xml")),
+            require(not scope.startswith(("src/", "air-model/", "air-json/", "examples/", "pom.xml")),
                     "Harness/discovery scope cannot authorize product changes")
 
 

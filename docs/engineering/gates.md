@@ -6,12 +6,12 @@ diretório. Requer Python 3.10+, Git e JDK 21+ (java/javac/jar/jdeps); Maven par
 
 | Gate | Contrato |
 | --- | --- |
-| docs | links/anchors locais, JSON sem chaves duplicadas, locks, IDs, evals, lifecycle e manifesto |
+| docs | links/anchors locais, JSON sem chaves duplicadas, locks, IDs, evals, lifecycle, MANIFEST hashes/cobertura |
 | harness | unittest com contracasos documentais, Git, saída de testes e bytecode sintético |
 | fast | docs + harness; inclui JDK para contracasos compilados, sem Maven |
-| architecture | compilação limpa temporária + classfiles 21 + jdeps por classe e direção model/validation |
-| semantic | executa scripts/check.sh intacto, confere cada check nominal, ordem, numeração e resumo |
-| maven | Maven clean verify, mesma conferência da suíte, exige BUILD SUCCESS |
+| architecture | topologia/POMs fechados + compilação isolada + ownership/classfiles 21/jdeps; JSON vazio explícito |
+| semantic | script offline do reactor, confere cada check nominal, ordem, numeração e resumo |
+| maven | root clean verify, owners completos, effective POM/grafo/bytecode/JAR e suíte nominal |
 | git | branch/base/origin main local e diff no scope do --work explícito |
 | scope | mesmo diff/scope sem política de branch; adequado a detached HEAD de CI |
 | ci-scope | scope + diff da base do evento GitHub; permite encerramento só documental sem item ativo |
@@ -52,8 +52,10 @@ Os dois steps são obrigatórios, sem continue-on-error ou condição de skip; f
 do scope impede full. O oracle em test_execution.py protege ordem e obrigatoriedade.
 CI exige um item ativo explícito; sem ativo, aceita somente
 encerramento documental dos itens da base do evento, com registro histórico e
-ancestralidade do merge. Essa exceção não admite código, POM ou source lock. O workflow anterior permanece
-intacto e executa os gates originais. Sem path filter que ignore novos arquivos,
+ancestralidade do merge. Essa exceção não admite código, POM ou source lock.
+O workflow Java contract checks executa check.sh e Maven, adaptados ao reactor.
+Ambos os workflows configuram explicitamente Python 3.12: o build Maven requer
+python3 já em validate, além dos gates do harness. Sem path filter que ignore novos arquivos,
 sem permissões de escrita, publicação ou merge. Scope não presume branch em CI.
 
 Limites: links externos não são consultados; Markdown suportado usa links inline ou
@@ -61,3 +63,7 @@ definições simples e headings, sem parser completo CommonMark. Docs não compr
 prosa, prova autenticidade da autorização ou estado remoto. jdeps inspeciona
 referências diretas e não é análise de reflexão dinâmica. O inventário de testes
 não prova as assertions. Review humano e oráculos de domínio continuam necessários.
+
+Detalhes da implementação e contracasos por owner em
+[modularization-gates](modularization-gates.md). `air-model` produz `air-java`;
+`air-json` vazio é verificado, sem declarar transporte disponível.

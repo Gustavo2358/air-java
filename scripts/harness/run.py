@@ -15,6 +15,7 @@ import architecture
 import contracts
 import docs
 import git_checks
+import manifest
 from common import ROOT, Failure, git, read_json, require, run
 from pathlib import Path
 
@@ -25,7 +26,7 @@ GROUPS = {"fast": ["docs", "harness"],
 
 def execute(name, root, work):
     if name == "docs":
-        return docs.check(root)
+        return docs.check(root) + "; " + manifest.check(root)
     if name == "architecture":
         return architecture.check(root)
     if name in {"semantic", "maven"}:
@@ -40,7 +41,7 @@ def execute(name, root, work):
             base = git(root, "rev-parse", "origin/main")
         return git_checks.check_ci(root, base)
     if name == "harness":
-        for file in ("test_docs.py", "test_architecture.py", "test_execution.py", "test_git.py"):
+        for file in ("test_docs.py", "test_architecture.py", "test_modules.py", "test_manifest.py", "test_execution.py", "test_git.py"):
             require((root / "scripts/harness/tests" / file).is_file(), f"Missing harness suite: {file}")
         output = run([sys.executable, "-B", "-m", "unittest", "discover", "-s",
                       "scripts/harness/tests", "-v"], root).strip()

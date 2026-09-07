@@ -4,51 +4,102 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.gustavo2358</groupId>
-  <artifactId>air-java</artifactId>
+  <artifactId>air-java-parent</artifactId>
   <version>0.1.0-SNAPSHOT</version>
-  <name>Analysis IR Java Model</name>
-  <description>Transport-independent Java model and static validation for Analysis IR 2.0.0.</description>
+  <packaging>pom</packaging>
+  <name>Analysis IR Java Parent</name>
+  <modules>
+    <module>air-model</module>
+    <module>air-json</module>
+  </modules>
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <skipTests>false</skipTests>
+    <maven.test.skip>false</maven.test.skip>
+    <maven.main.skip>false</maven.main.skip>
+    <exec.skip>false</exec.skip>
     <project.build.outputTimestamp>2026-09-05T00:00:00Z</project.build.outputTimestamp>
   </properties>
-  <!-- Intentionally no domain, runtime or test-library dependencies. -->
+  <!-- No inherited library dependencies. Plugin executions below only inspect builds. -->
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.13.0</version>
+          <configuration>
+            <showWarnings>true</showWarnings>
+            <compilerArgs><arg>-Xlint:all</arg><arg>-Werror</arg></compilerArgs>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>3.4.2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>3.5.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-help-plugin</artifactId>
+          <version>3.5.1</version>
+          <executions>
+            <execution>
+              <id>effective-module</id>
+              <phase>verify</phase>
+              <goals><goal>effective-pom</goal></goals>
+              <configuration><output>${project.build.directory}/effective-pom.xml</output></configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>3.8.1</version>
+          <executions>
+            <execution>
+              <id>resolved-module</id>
+              <phase>verify</phase>
+              <goals><goal>tree</goal></goals>
+              <configuration>
+                <outputType>json</outputType>
+                <outputFile>${project.build.directory}/dependency-tree.json</outputFile>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.13.0</version>
-        <configuration>
-          <showWarnings>true</showWarnings>
-          <compilerArgs><arg>-Xlint:all</arg><arg>-Werror</arg></compilerArgs>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
-        <version>3.5.0</version>
+        <inherited>false</inherited>
         <executions>
           <execution>
-            <id>air-contract-suite</id>
-            <phase>test</phase>
-            <goals><goal>java</goal></goals>
+            <id>reactor-topology</id>
+            <phase>validate</phase>
+            <goals><goal>exec</goal></goals>
             <configuration>
-              <mainClass>io.github.gustavo2358.air.validation.ContractSuite</mainClass>
-              <classpathScope>test</classpathScope>
-              <skip>${skipTests}</skip>
-              <cleanupDaemonThreads>false</cleanupDaemonThreads>
+              <executable>python3</executable>
+              <skip>false</skip>
+              <arguments>
+                <argument>-B</argument>
+                <argument>${project.basedir}/scripts/harness/architecture.py</argument>
+                <argument>--topology</argument>
+                <argument>--build-flags</argument>
+                <argument>${skipTests}</argument><argument>${maven.test.skip}</argument>
+                <argument>${maven.main.skip}</argument><argument>${exec.skip}</argument>
+              </arguments>
             </configuration>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.4.2</version>
       </plugin>
     </plugins>
   </build>

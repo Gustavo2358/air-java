@@ -11,6 +11,9 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Compile contract checks and inspect bytecode dependencies
         run: ./scripts/check.sh
       - name: Maven lifecycle
