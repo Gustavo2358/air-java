@@ -27,6 +27,6 @@ public final class AirJsonException extends RuntimeException {
     public Code code() { return code; }
     /** JSON path for transport/local shape failures; $ for publication validation. */
     public String path() { return path; }
-    /** Original AIR rule, subject and detail, when failure came from AirValidator. */
+    /** AIR diagnostics: explicit local rule/site via path(), or unchanged AirValidator issues. */
     public List<ValidationIssue> issues() { return issues; }
 }

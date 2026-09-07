@@ -3,7 +3,7 @@
   "title": "1A: codec AIR JSON compartilhado no módulo air-json",
   "status": "ready_for_review",
   "authorization": "implementation",
-  "authorization_evidence": "Solicitação explícita do usuário em 2026-09-07: executar exclusivamente checkpoint 1A em air-java após merge real de PR #4; codec, golden manual, testes/challenges, gates, lifecycle, commits/push/CI/PR; parar para review humano, sem merge, integração ou alterações nos quatro repos irmãos.",
+  "authorization_evidence": "Solicitação explícita do usuário em 2026-09-07: executar exclusivamente checkpoint 1A em air-java após merge real de PR #4; codec, golden manual, testes/challenges, gates, lifecycle, commits/push/CI/PR; parar para review humano, sem merge, integração ou alterações nos quatro repos irmãos. Remediação explicitamente solicitada em review humano nesta retomada: corrigir somente tokens wire derivados de Enum.name e INVALID_IR local sem regra/site; mesma branch/PR #5, sem rebase/force-push ou mudança do model/golden/pin/cobertura. Decisão humana desta continuação: classificar explicitamente como IMPLEMENTATION_LIMIT os três gaps de representabilidade conhecidos (bases Natural >1, EntityScope vazio, Text blank sem norma específica contrária); sem catch genérico, sem inferir regra por mensagem, registrar AIR-MODEL-DRIFT e preservar todo patch local.",
   "goal": "Publication ⇄ bytes UTF-8 canônicos para as formas transitivas GOBACK do 0B, com preservação integral e falhas tipadas sem publicação parcial.",
   "checkpoint": "1A",
   "base_commit": "71937dfe88bac4dae10f6f195731acac638c2d29",

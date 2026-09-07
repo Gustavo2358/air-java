@@ -24,8 +24,8 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     mutations = [
-        ('partial-to-complete', 'BindingWriter.java', '"inventory", c.inventory().name()', '"inventory", "COMPLETE"'),
-        ('unavailable-to-exact', 'BindingWriter.java', '"status", c.status().name()', '"status", "EXACT"'),
+        ('partial-to-complete', 'BindingWriter.java', '"inventory", inventoryStatus(c.inventory())', '"inventory", "COMPLETE"'),
+        ('unavailable-to-exact', 'BindingWriter.java', '"status", precisionStatus(c.status())', '"status", "EXACT"'),
         ('drop-uncertainty', 'BindingWriter.java', 'array(p.uncertainties(), this::uncertainty)', 'array(p.uncertainties().stream().skip(1).toList(), this::uncertainty)'),
         ('drop-origin', 'BindingWriter.java', 'array(p.origins(), this::origin)', 'array(p.origins().stream().skip(1).toList(), this::origin)'),
         ('sort-artifacts', 'BindingWriter.java', 'array(p.artifacts(), this::artifact)', 'array(p.artifacts().stream().sorted(java.util.Comparator.comparing(a -> a.id().localId())).toList(), this::artifact)'),
@@ -38,6 +38,25 @@ def main():
         ('noncanonical-nonascii-escaping', 'Json.java', 'else out.append(c);', 'else if (c == \'á\') out.append("\\\\u00e1"); else out.append(c);'),
         ('ignore-valid-halt', 'BindingReader.java', 'if (!kind.equals("return")) throw a.unsupported("Operation " + kind);',
          'if (!kind.equals("return")) return new Operations.Return(header(a.child("header")), List.of());'),
+        ('runtime-enum-name', 'BindingWriter.java', '"inventory", inventoryStatus(c.inventory())', '"inventory", c.inventory().name()'),
+        ('runtime-enum-to-string', 'BindingWriter.java', '"inventory", inventoryStatus(c.inventory())', '"inventory", c.inventory().toString()'),
+        ('runtime-string-value-of', 'BindingWriter.java', '"inventory", inventoryStatus(c.inventory())', '"inventory", String.valueOf(c.inventory())'),
+        ('local-invalid-without-rule', 'BindingReader.java', 'ValidationIssue.Kind.INVALID_IR, rule, Optional.empty(), detail',
+         'ValidationIssue.Kind.INVALID_IR, "", Optional.empty(), detail'),
+        ('line-base-limit-as-invalid', 'BindingReader.java',
+         's.child("lineBase").representability("Span only supports bases 0 or 1; binding admits Natural")',
+         's.child("lineBase").invalid("I-36", "mutation: Java base restriction misclassified as AIR")'),
+        ('column-base-limit-as-invalid', 'BindingReader.java',
+         's.child("columnBase").representability("Span only supports bases 0 or 1; binding admits Natural")',
+         's.child("columnBase").invalid("I-36", "mutation: Java base restriction misclassified as AIR")'),
+        ('empty-entities-limit-as-invalid', 'BindingReader.java',
+         'a.child("entities").representability("EntityScope requires nonempty entities; binding admits Id[]")',
+         'a.child("entities").invalid("I-32", "mutation: Java entities restriction misclassified as AIR")'),
+        ('blank-text-limit-as-invalid', 'BindingReader.java',
+         'representability("Require.text rejects blank Text admitted by the pinned binding")',
+         'invalid("AIR-06 §4", "mutation: Java blank restriction misclassified as AIR")'),
+        ('generic-constructor-as-limit', 'BindingReader.java', 'return constructor.get();',
+         'try { return constructor.get(); } catch (IllegalArgumentException error) { throw Json.limit(path, "mutation: generic constructor limit"); }'),
     ]
     expected_checks = json.loads((ROOT / 'docs/evals/transport-checks.json').read_text())['checks']
     report = {'baseline': '71937dfe88bac4dae10f6f195731acac638c2d29', 'mutations': []}

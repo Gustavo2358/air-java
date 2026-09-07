@@ -67,7 +67,7 @@ final class BindingWriter {
         return object("kind", "return", "header", header(r.header()), "values", empty(r.values(), "$.return.values"));
     }
     private Value header(Operations.Header h) {
-        return object("id", id(h.id()), "origin", id(h.origin()), "coverage", h.coverage().name(),
+        return object("id", id(h.id()), "origin", id(h.origin()), "coverage", coverageStatus(h.coverage()),
                 "precision", precision(h.precision()), "uncertainties", array(h.uncertainties(), this::id));
     }
     private Value precision(Evidence.Precision p) {
@@ -75,19 +75,19 @@ final class BindingWriter {
                 "values", claim(p.values()), "dependencies", claim(p.dependencies()));
     }
     private Value claim(Evidence.Claim c) {
-        return object("scope", scope(c.scope()), "status", c.status().name(), "reasons", array(c.reasons(), this::id));
+        return object("scope", scope(c.scope()), "status", precisionStatus(c.status()), "reasons", array(c.reasons(), this::id));
     }
     private Value uncertainty(Evidence.Uncertainty u) {
-        return object("id", id(u.id()), "code", u.code(), "dimensions", array(u.dimensions(), d -> value(d.name())),
+        return object("id", id(u.id()), "code", u.code(), "dimensions", array(u.dimensions(), d -> value(dimension(d))),
                 "scope", scope(u.scope()), "reason", u.reason(), "origin", id(u.origin()));
     }
     private Value coverage(Evidence.Coverage c) {
-        return object("inventory", c.inventory().name(), "scope", scope(c.scope()),
+        return object("inventory", inventoryStatus(c.inventory()), "scope", scope(c.scope()),
                 "items", array(c.items(), this::item), "uncertainties", array(c.uncertainties(), this::id));
     }
     private Value item(Evidence.CoverageItem i) {
         if (i.elimination().isPresent()) throw limit("$.coverage.items.elimination", "Elimination not implemented");
-        return object("sourceKey", i.sourceKey(), "origin", id(i.origin()), "status", i.status().name(),
+        return object("sourceKey", i.sourceKey(), "origin", id(i.origin()), "status", coverageStatus(i.status()),
                 "outputs", array(i.outputs(), this::id), "uncertainties", array(i.uncertainties(), this::id), "elimination", null);
     }
     private Value scope(Scopes.FactScope scope) {
@@ -110,7 +110,7 @@ final class BindingWriter {
         if (!(location instanceof Origins.LineColumns l)) throw limit("$.location", "Location.offsets not implemented");
         var s = l.span();
         return object("kind", "line_columns", "span", object("start", position(s.start()), "end", position(s.end()),
-                "lineBase", s.lineBase(), "columnBase", s.columnBase(), "columnUnit", s.columnUnit().name(), "endExclusive", s.endExclusive()));
+                "lineBase", s.lineBase(), "columnBase", s.columnBase(), "columnUnit", columnUnit(s.columnUnit()), "endExclusive", s.endExclusive()));
     }
     private Value position(Origins.Position p) { return object("line", p.line(), "column", p.column()); }
     private Value include(Origins.IncludeFrame f) {
@@ -143,6 +143,25 @@ final class BindingWriter {
             }
         };
     }
+    // Binding §10.4 fixes these lexemes independently of Java enum spellings.
+    private String dimension(Evidence.Dimension value) { return switch (value) {
+        case CONTROL -> "CONTROL"; case STORAGE -> "STORAGE"; case EFFECTS -> "EFFECTS";
+        case VALUES -> "VALUES"; case DEPENDENCIES -> "DEPENDENCIES";
+    }; }
+    private String precisionStatus(Evidence.PrecisionStatus value) { return switch (value) {
+        case EXACT -> "EXACT"; case CONSERVATIVE -> "CONSERVATIVE"; case OPEN -> "OPEN";
+        case UNAVAILABLE -> "UNAVAILABLE"; case NOT_APPLICABLE -> "NOT_APPLICABLE";
+    }; }
+    private String coverageStatus(Evidence.CoverageStatus value) { return switch (value) {
+        case MODELED -> "MODELED"; case ABSTRACTED -> "ABSTRACTED";
+        case UNSUPPORTED -> "UNSUPPORTED"; case INPUT_MISSING -> "INPUT_MISSING";
+    }; }
+    private String inventoryStatus(Evidence.InventoryStatus value) { return switch (value) {
+        case COMPLETE -> "COMPLETE"; case PARTIAL -> "PARTIAL"; case UNAVAILABLE -> "UNAVAILABLE";
+    }; }
+    private String columnUnit(Origins.ColumnUnit value) { return switch (value) {
+        case UNICODE_SCALAR -> "UNICODE_SCALAR"; case UTF16_CODE_UNIT -> "UTF16_CODE_UNIT"; case OCTET -> "OCTET";
+    }; }
     private Value global(String domain, Id i) {
         return object("domain", domain, "publication", i.publication().localId(), "localId", i.localId());
     }

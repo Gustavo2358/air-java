@@ -7,7 +7,7 @@
       "failing_check": "encode equals independent canonical golden",
       "last_passed": "zero known publication remains explicitly complete",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: canonical bytes differ",
-      "restored_sha256": "1491ae4d2df063491a46e2f00bc85268f300a3c0c2f19ae62ce5fd3a5c9a0eb9"
+      "restored_sha256": "b446029592af7d08d417193f9a2ef87299b7183528e282173e96dcddbc4820e4"
     },
     {
       "name": "unavailable-to-exact",
@@ -15,7 +15,7 @@
       "failing_check": "encode equals independent canonical golden",
       "last_passed": "zero known publication remains explicitly complete",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: canonical bytes differ",
-      "restored_sha256": "1491ae4d2df063491a46e2f00bc85268f300a3c0c2f19ae62ce5fd3a5c9a0eb9"
+      "restored_sha256": "b446029592af7d08d417193f9a2ef87299b7183528e282173e96dcddbc4820e4"
     },
     {
       "name": "drop-uncertainty",
@@ -23,7 +23,7 @@
       "failing_check": "encode equals independent canonical golden",
       "last_passed": "zero known publication remains explicitly complete",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: canonical bytes differ",
-      "restored_sha256": "1491ae4d2df063491a46e2f00bc85268f300a3c0c2f19ae62ce5fd3a5c9a0eb9"
+      "restored_sha256": "b446029592af7d08d417193f9a2ef87299b7183528e282173e96dcddbc4820e4"
     },
     {
       "name": "drop-origin",
@@ -31,7 +31,7 @@
       "failing_check": "encode equals independent canonical golden",
       "last_passed": "zero known publication remains explicitly complete",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: canonical bytes differ",
-      "restored_sha256": "1491ae4d2df063491a46e2f00bc85268f300a3c0c2f19ae62ce5fd3a5c9a0eb9"
+      "restored_sha256": "b446029592af7d08d417193f9a2ef87299b7183528e282173e96dcddbc4820e4"
     },
     {
       "name": "sort-artifacts",
@@ -39,7 +39,7 @@
       "failing_check": "encode equals independent canonical golden",
       "last_passed": "zero known publication remains explicitly complete",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: canonical bytes differ",
-      "restored_sha256": "1491ae4d2df063491a46e2f00bc85268f300a3c0c2f19ae62ce5fd3a5c9a0eb9"
+      "restored_sha256": "b446029592af7d08d417193f9a2ef87299b7183528e282173e96dcddbc4820e4"
     },
     {
       "name": "accept-duplicate",
@@ -63,7 +63,7 @@
       "failing_check": "all envelope versions require exact identity",
       "last_passed": "canonical Natural lexemes enforced",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected VERSION_MISMATCH, operation succeeded",
-      "restored_sha256": "5460da2d7cf69be3ddb79d9a3afe3116e500948009e573fec3970f67cf96bb40"
+      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
     },
     {
       "name": "accept-unknown-field",
@@ -71,7 +71,7 @@
       "failing_check": "unknown fields rejected throughout supported tree",
       "last_passed": "every catalogued field required including nullable fields",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected INPUT_ERROR, operation succeeded",
-      "restored_sha256": "5460da2d7cf69be3ddb79d9a3afe3116e500948009e573fec3970f67cf96bb40"
+      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
     },
     {
       "name": "final-newline",
@@ -95,11 +95,83 @@
       "failing_check": "valid Halt unsupported and Return never silently changed",
       "last_passed": "process timestamp and private model fields forbidden",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, operation succeeded",
-      "restored_sha256": "5460da2d7cf69be3ddb79d9a3afe3116e500948009e573fec3970f67cf96bb40"
+      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
+    },
+    {
+      "name": "runtime-enum-name",
+      "exit_code": 1,
+      "failing_check": "writer never derives wire tokens from runtime enum",
+      "last_passed": "all supported wire tokens have independent binding oracles",
+      "failure": "Exception in thread \"main\" java.lang.AssertionError: Runtime token authority: name",
+      "restored_sha256": "b446029592af7d08d417193f9a2ef87299b7183528e282173e96dcddbc4820e4"
+    },
+    {
+      "name": "runtime-enum-to-string",
+      "exit_code": 1,
+      "failing_check": "writer never derives wire tokens from runtime enum",
+      "last_passed": "all supported wire tokens have independent binding oracles",
+      "failure": "Exception in thread \"main\" java.lang.AssertionError: Runtime token authority: toString",
+      "restored_sha256": "b446029592af7d08d417193f9a2ef87299b7183528e282173e96dcddbc4820e4"
+    },
+    {
+      "name": "runtime-string-value-of",
+      "exit_code": 1,
+      "failing_check": "writer never derives wire tokens from runtime enum",
+      "last_passed": "all supported wire tokens have independent binding oracles",
+      "failure": "Exception in thread \"main\" java.lang.AssertionError: Runtime String.valueOf token authority",
+      "restored_sha256": "b446029592af7d08d417193f9a2ef87299b7183528e282173e96dcddbc4820e4"
+    },
+    {
+      "name": "local-invalid-without-rule",
+      "exit_code": 1,
+      "failing_check": "incomplete ID and foreign or wrong domain IDs rejected",
+      "last_passed": "all envelope versions require exact identity",
+      "failure": "Exception in thread \"main\" java.lang.AssertionError: incomplete AIR diagnostic",
+      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
+    },
+    {
+      "name": "line-base-limit-as-invalid",
+      "exit_code": 1,
+      "failing_check": "local AIR constraints and Java representability limits stay distinct",
+      "last_passed": "PARTIAL without reason is INVALID_IR with AIR rule",
+      "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, actual INVALID_IR",
+      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
+    },
+    {
+      "name": "column-base-limit-as-invalid",
+      "exit_code": 1,
+      "failing_check": "Natural span bases beyond Java range are representability limits",
+      "last_passed": "Validator issues preserve exact rule subject detail and site",
+      "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, actual INVALID_IR",
+      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
+    },
+    {
+      "name": "empty-entities-limit-as-invalid",
+      "exit_code": 1,
+      "failing_check": "empty FactScope entities is a Java representability limit",
+      "last_passed": "Natural span bases beyond Java range are representability limits",
+      "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, actual INVALID_IR",
+      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
+    },
+    {
+      "name": "blank-text-limit-as-invalid",
+      "exit_code": 1,
+      "failing_check": "admitted blank Text is a field-specific representability limit",
+      "last_passed": "empty FactScope entities is a Java representability limit",
+      "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, actual INVALID_IR",
+      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
+    },
+    {
+      "name": "generic-constructor-as-limit",
+      "exit_code": 1,
+      "failing_check": "unexpected constructor exceptions are never classified generically",
+      "last_passed": "admitted blank Text is a field-specific representability limit",
+      "failure": "Exception in thread \"main\" java.lang.AssertionError: Unexpected constructor exception was classified generically: io.github.gustavo2358.air.json.AirJsonException: mutation: generic constructor limit",
+      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
     }
   ],
-  "initial_green": "PASS: 43 deterministic transport checks",
-  "restored_green": "PASS: 43 deterministic transport checks",
+  "initial_green": "PASS: 51 deterministic transport checks",
+  "restored_green": "PASS: 51 deterministic transport checks",
   "gate_challenges": {
     "cases": [
       {
@@ -139,5 +211,8 @@
     "command": "mvn -o -B -ntp -Dmaven.repo.local=/tmp/air-0ci/m2 -DskipTests=true verify",
     "exit_code": 1,
     "diagnostic": "Skipped build/ContractSuite flags forbidden: ['true', 'false', 'false', 'false']"
-  }
+  },
+  "remediation_base": "b2c923230b2a857a5cb3beb8baadcb5eb9f77aef",
+  "gate_evidence_scope": "Six topology mutations and Maven skip probe below are retained 1A evidence; permanent harness countercases remain mandatory.",
+  "remediation_status": "Runtime tokens explicit; INVALID_IR carries pinned rule/site; three human-authorized Java representability gaps fail explicitly without a generic constructor catch. 51 checks and 21 killed mutations."
 }

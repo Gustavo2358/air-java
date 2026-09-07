@@ -39,7 +39,7 @@
     "incomplete ID and foreign or wrong domain IDs rejected",
     "duplicate definitions dangling references and missing evidence rejected",
     "PARTIAL without reason is INVALID_IR with AIR rule",
-    "local model constraints are AIR failures not lexical errors",
+    "local AIR constraints and Java representability limits stay distinct",
     "closed tokens are checked explicitly",
     "process timestamp and private model fields forbidden",
     "valid Halt unsupported and Return never silently changed",
@@ -48,6 +48,14 @@
     "capability nonempty manifest distinguished from invalid AIR",
     "document and depth limits explicit in both directions",
     "Validator limits remain INCOMPLETE_VALIDATION",
-    "all complete ID wire shapes including future operand references"
+    "all complete ID wire shapes including future operand references",
+    "all supported wire tokens have independent binding oracles",
+    "writer never derives wire tokens from runtime enum",
+    "local AIR failures carry pinned rule and site",
+    "Validator issues preserve exact rule subject detail and site",
+    "Natural span bases beyond Java range are representability limits",
+    "empty FactScope entities is a Java representability limit",
+    "admitted blank Text is a field-specific representability limit",
+    "unexpected constructor exceptions are never classified generically"
   ]
 }

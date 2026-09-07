@@ -2,46 +2,65 @@
 
 ## Onde estamos
 
-Implementação 1A preparada para review na branch feat/air-json-codec-mvp.
-Baseline main limpa sincronizada: 71937dfe88bac4dae10f6f195731acac638c2d29,
-PR #4 / 0C-I confirmado MERGED por gh direto às 2026-09-07T18:08:56Z e por ls-remote.
-Lifecycle anterior arquivado após confirmação real; autorização implementation
-registrada antes do produto. Codec/API/testes somente em air-json; modelo intacto.
+Remediação solicitada em review humano no PR #5, mesma branch
+feat/air-json-codec-mvp. Head de entrada local/remoto confirmado:
+b2c923230b2a857a5cb3beb8baadcb5eb9f77aef; working tree inicialmente limpa.
+O patch local da rodada interrompida foi preservado nesta continuação.
+Sem checkout de main, rebase, force-push ou nova branch/PR.
+Baseline 0C-I: 71937dfe88bac4dae10f6f195731acac638c2d29, merge real do PR #4
+confirmado às 2026-09-07T18:08:56Z; lifecycle anterior arquivado após confirmação.
+Item ready_for_review após implementação/testes locais; commit/push e recibo do
+novo head/CI são etapas restantes, não aprovação humana ou merge.
 
 ## Verde conhecido
 
-0B PR #3 confirmado MERGED em 51b4d9a8ae0364232bd97103cd73a77e1a34996c;
-handoff lido nesse merge por API. Normativos/binding resolvidos só no pin
-122ce54e1b9ef9b00646f93ece409ca8b63bc933; analysis-ir-json / 1.0.0 / AIR 2.0.0 DRAFT.
-Nenhuma dependência externa adicionada; grafos model vazio e JSON → air-java compile.
+0B PR #3 mergeado em 51b4d9a8ae0364232bd97103cd73a77e1a34996c;
+handoff operacional nesse merge, autoridade apenas analysis-ir pin
+122ce54e1b9ef9b00646f93ece409ca8b63bc933: analysis-ir-json / 1.0.0 / AIR 2.0.0 DRAFT.
 
-Golden manual anterior ao encoder + Publication oracle independente; encode/decode
-exatos, round-trips, PARTIAL/evidence/scopes/ordem, UTF-8/Unicode e negativos.
-Full local exit 0: docs/MANIFEST, 86 harness tests, 308 model/16 JSON classfiles,
-4664/408 arestas, 172 model + 43 transport checks via check.sh e root clean verify.
-12 mutações do codec e 6 de gate RED, restauração byte a byte e segundo GREEN.
-Maven real com skipTests=true foi RED mesmo após build GREEN com logs presentes.
+Finding 1: mappings explícitos para 20 tokens, oracle literal e guarda de bytecode
+contra name/toString/String.valueOf. Finding 2: INVALID_IR local com ValidationIssue
+regra/detail explícitos e path do site; issues originais do AirValidator intactos.
+Decisão humana recebida para três gaps de representabilidade: bases >1,
+EntityScope vazio e Text blank admitido pelo pin retornam IMPLEMENTATION_LIMIT
+por condições explícitas. Nenhum catch genérico classifica falha de construtor.
+
+Full final local exit 0: docs/MANIFEST, 86 harness tests, 308 model + 17 JSON classes,
+4664/420 arestas, 172 model + 51 transport via check.sh e root clean verify.
+Transport exit 0, 51 checks (43 originais preservados, 8 acrescentados na remediação).
+Docs/MANIFEST, Git/scope e diff --check passaram após atualização da evidência.
+21 mutações de codec RED, fontes restauradas byte a byte e segundo GREEN de 51.
+Seis challenges de gate e probe Maven skip preservados como evidência anterior;
+os contracasos permanentes do harness continuam executados no full atual.
+Golden, air-model e pin intactos; grafos externos vazios e JSON → air-java compile.
 [Evidência](../../../quality/air-json-implementation.md) e
-[recibo de challenges](../../../quality/air-json-challenges.json).
+[recibo dos challenges](../../../quality/air-json-challenges.json).
 
 ## Restante
 
-Git/scope/MANIFEST passaram e o diff integral/staged recebeu self-review.
-Restam commit/push autorizados e confirmação de SHA remoto e CI do head no PR;
-parar para review humano. Recibo remoto fica no PR, sem gravar SHA futuro ou CI
-ainda não executada no próprio commit.
-Sem merge/auto-merge, publicação Maven remota, integração lower/CFG, 2A/2B ou E2E.
+Diff integral recebeu self-review; revisar staged diff e fazer commit focalizado
+de remediation, seguido de push normal nesta branch.
+Confirmar SHA remoto, CI desse head e atualizar PR #5. Recibo remoto pertence ao PR,
+sem autoinscrever SHA futuro neste commit. Retomar review independente no head
+publicado e corrigir request changes, conforme solicitação anterior do usuário.
+Parar para novo review humano. Sem merge/auto-merge, publicação Maven, integração
+lower/CFG, 2A/2B/E2E, nova forma de codec ou segunda implementação.
 
 ## Descobertas que afetam o plano
 
-Primeira consulta de PR #4 retornou OPEN; consulta direta subsequente resolveu
-estado MERGED real antes de iniciar produto. Nenhum blocker de merge permanece.
-Challenge encontrou duplicata com null mascarando ausência da guarda por erro de
-tipo posterior: contracaso corrigido para duplicar mesmo valor válido e exigir
-regra de duplicatas, incluindo chave escapada. Mutação então ficou RED.
+O blocker anterior foi resolvido por decisão explícita do usuário: AIR válida no
+pin mas não representável pelos três predicados extras conhecidos do Java é limite
+de implementação, nunca INVALID_IR sem regra inventada. A investigação normativa
+incluiu consulta independente; AIR 06 §5 não restringe bases a 0/1, Text não recebe
+nonBlank genérico, e FactScope não herda a restrição de DomainProofScope de I-52.
+[BACKLOG-AIR-006 / AIR-MODEL-DRIFT](../../backlog.md#backlog-air-006--air-model-drift)
+registra as três dívidas e alternativas futuras. Não modifica o model nem bloqueia
+o GOBACK E2E atual; execução desse backlog permanece não autorizada.
 
-JSON sem biblioteca externa mantém check.sh offline; parser/canonical writer explícitos
-exigem manter contracasos. Tetos configuráveis de bytes/profundidade são operacionais.
-Formas fora da cobertura falham; Base64/decimal/literais e catálogo ampliado DEFERRED.
-Namespace/IDs/sourceKeys do golden são manuais/opacos; não simula IDs do lower.
-Nenhuma segunda implementação, qualificação §13 inteira ou promoção DRAFT alegada.
+Novas falhas inesperadas de constructor mantêm identidade para investigação;
+não são reinterpretadas pelo texto da exception. Teste de injeção e challenge
+contra catch genérico protegem essa fronteira. Campos Text auditados estão na
+política; contentDigest blank representável é preservado e tokens/versões mantêm
+seus diagnósticos. Limite identificado não certifica os demais fatos da entrada.
+JSON segue sem biblioteca externa, check.sh offline; formas ampliadas, Base64 e
+decimal DEFERRED. Binding continua DRAFT, sem claim de interoperabilidade integral.

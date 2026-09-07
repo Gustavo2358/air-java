@@ -176,10 +176,10 @@ public final class CodecSuite {
             var error = fails(INVALID_IR, changed("publication.coverage.uncertainties", new Json.Arr(List.of())));
             require(error.issues().stream().anyMatch(i -> i.rule().equals("I-28")), "missing I-28 diagnostic");
         });
-        check("local model constraints are AIR failures not lexical errors", () -> {
+        check("local AIR constraints and Java representability limits stay distinct", () -> {
             fails(INVALID_IR, changed("publication.origins.2.inputs", new Json.Arr(List.of())));
             fails(INVALID_IR, changed("publication.units.0.entries", new Json.Arr(List.of())));
-            fails(INVALID_IR, changed("publication.origins.0.location.span.lineBase", Json.value("2")));
+            fails(IMPLEMENTATION_LIMIT, changed("publication.origins.0.location.span.lineBase", Json.value("2")));
             fails(INVALID_IR, changed("publication.units.0.entries.0.initialLabel", Json.Nil.INSTANCE));
         });
         check("closed tokens are checked explicitly", () -> {
@@ -221,6 +221,65 @@ public final class CodecSuite {
             failure(INCOMPLETE_VALIDATION, () -> small.encode(EXPECTED));
         });
         check("all complete ID wire shapes including future operand references", CodecSuite::ids);
+        check("all supported wire tokens have independent binding oracles", CodecSuite::tokens);
+        check("writer never derives wire tokens from runtime enum", CodecSuite::noRuntimeTokens);
+        check("local AIR failures carry pinned rule and site", () -> {
+            localRule("I-36", "$.publication.origins[2].inputs", changed("publication.origins.2.inputs", new Json.Arr(List.of())));
+            localRule("AIR-01 §2", "$.publication.units[0].entries", changed("publication.units.0.entries", new Json.Arr(List.of())));
+            localRule("AIR-01 §3", "$.publication.units[0].sequences", changed("publication.units.0.sequences", new Json.Arr(List.of())));
+            localRule("AIR-06 §4", "$.publication.uncertainties[0].dimensions", changed("publication.uncertainties.0.dimensions", new Json.Arr(List.of())));
+            localRule("I-02", "$.publication.units[0].id", changed("publication.units.0.id.domain", Json.value("artifact")));
+            localRule("I-04", "$.publication.units[0].sequences[0].instructions[0]",
+                    changed("publication.units.0.sequences.0.instructions", new Json.Arr(List.of(at("publication.units.0.sequences.0.terminator")))));
+            localRule("I-04", "$.publication.units[0].sequences[0].terminator",
+                    changed("publication.units.0.sequences.0.terminator", Json.object("kind", "nop", "header", at("publication.units.0.sequences.0.terminator.header"))));
+        });
+        check("Validator issues preserve exact rule subject detail and site", () -> {
+            for (String path : List.of("publication.coverage.uncertainties", "publication.units.0.entries.0.initialLabel.unit")) {
+                var bytes = changed(path, path.endsWith(".unit") ? Json.value("foreign-owner") : new Json.Arr(List.of()));
+                var p = new BindingReader().envelope(Json.parse(bytes, AirJson.Limits.defaults()));
+                var original = AirValidator.validate(p).issues();
+                require(!original.isEmpty(), "invalid oracle has no Validator issues");
+                require(original.stream().anyMatch(i -> i.subject().isPresent() && !i.rule().isBlank() && !i.detail().isBlank()), "incomplete original issue");
+                var decoded = fails(INVALID_IR, bytes); var encoded = failure(INVALID_IR, () -> CODEC.encode(p));
+                equal(original, decoded.issues()); equal(original, encoded.issues());
+                equal("$", decoded.path()); equal("$", encoded.path());
+            }
+        });
+        check("Natural span bases beyond Java range are representability limits", () -> {
+            for (String field : List.of("lineBase", "columnBase")) {
+                String path = "publication.origins.0.location.span." + field;
+                for (String base : List.of("2", "123456789012345678901234567890"))
+                    representability("$.publication.origins[0].location.span." + field, changed(path, Json.value(base)));
+                for (String bad : List.of("-1", "-0", "+1", "01", "1.0")) fails(INPUT_ERROR, changed(path, Json.value(bad)));
+                fails(INPUT_ERROR, utf8(text.replaceAll("\"" + field + "\":\"[01]\"", "\"" + field + "\":2")));
+            }
+        });
+        check("empty FactScope entities is a Java representability limit", () -> {
+            // Complete zero-known coverage isolates Id[] from claims requiring evidence.
+            var coverage = Json.object("inventory", "COMPLETE", "scope", Json.object("kind", "entities", "entities", new Json.Arr(List.of())),
+                    "items", new Json.Arr(List.of()), "uncertainties", new Json.Arr(List.of()));
+            representability("$.publication.coverage.scope.entities", changed("publication.coverage", coverage));
+        });
+        check("admitted blank Text is a field-specific representability limit", () -> {
+            // Binding §§3/4/10.3 gives these Text fields no nonBlank lexical predicate.
+            for (String blank : List.of("", " ", "\t\n", "\u2003")) {
+                for (String path : List.of("publication.artifacts.0.logicalName", "publication.coverage.items.0.sourceKey",
+                        "publication.uncertainties.0.code", "publication.uncertainties.0.reason", "publication.origins.2.rule",
+                        "publication.id.localId", "publication.units.0.id.publication", "publication.units.0.id.localId",
+                        "publication.units.0.entries.0.id.unit"))
+                    representability("$." + path.replaceAll("\\.([0-9]+)", "[$1]"), changed(path, Json.value(blank)));
+                var frame = Json.object("including", at("publication.artifacts.0.id"), "included", at("publication.artifacts.1.id"),
+                        "requestedName", blank, "site", null);
+                representability("$.publication.origins[0].includes[0].requestedName",
+                        changed("publication.origins.0.includes", new Json.Arr(List.of(frame))));
+                // contentDigest is Text? but has no Java nonBlank restriction: preserve it.
+                byte[] input = changed("publication.artifacts.0.contentDigest", Json.value(blank));
+                var p = CODEC.decode(input); equal(Optional.of(blank), p.artifacts().get(0).contentDigest());
+                bytes(input, CODEC.encode(p));
+            }
+        });
+        check("unexpected constructor exceptions are never classified generically", CodecSuite::unexpectedConstructor);
         System.out.println("PASS: " + checks + " deterministic transport checks");
     }
     private static void check(String name, Runnable body) {
@@ -234,15 +293,120 @@ public final class CodecSuite {
         var out = new java.io.ByteArrayOutputStream(); for (byte[] c : chunks) out.writeBytes(c); return out.toByteArray();
     }
     private static AirJsonException failure(AirJsonException.Code expected, Runnable action) {
-        try { action.run(); } catch (AirJsonException e) { equal(expected, e.code()); require(!e.path().isEmpty(), "missing error site"); return e; }
+        try { action.run(); } catch (AirJsonException e) {
+            equal(expected, e.code()); require(!e.path().isEmpty(), "missing error site");
+            if (expected == INVALID_IR) {
+                require(!e.issues().isEmpty(), "INVALID_IR missing AIR rule");
+                require(e.issues().stream().allMatch(i -> !i.rule().isBlank() && !i.detail().isBlank()), "incomplete AIR diagnostic");
+            }
+            return e;
+        }
         throw new AssertionError("Expected " + expected + ", operation succeeded");
     }
     private static AirJsonException fails(AirJsonException.Code code, byte[] input) { return failure(code, () -> CODEC.decode(input)); }
+    private static void representability(String path, byte[] input) {
+        var error = fails(IMPLEMENTATION_LIMIT, input);
+        equal(path, error.path()); equal(List.of(), error.issues());
+        require(error.getMessage().contains("air-java representability limit"), "missing representability diagnostic");
+    }
+    /** Fault injection at the private construction boundary, independent of constructor messages. */
+    private static void unexpectedConstructor() {
+        var sentinel = new IllegalArgumentException("unanalysed constructor failure");
+        try {
+            Class<?> at = Class.forName("io.github.gustavo2358.air.json.BindingReader$At");
+            var constructor = at.getDeclaredConstructor(Json.Value.class, String.class); constructor.setAccessible(true);
+            var construct = at.getDeclaredMethod("construct", java.util.function.Supplier.class); construct.setAccessible(true);
+            var site = constructor.newInstance(tree, "$.injected");
+            java.util.function.Supplier<Object> fail = () -> { throw sentinel; };
+            try { construct.invoke(site, fail); throw new AssertionError("Unexpected constructor succeeded"); }
+            catch (java.lang.reflect.InvocationTargetException error) {
+                require(error.getCause() == sentinel, "Unexpected constructor exception was classified generically: " + error.getCause());
+            }
+        } catch (ReflectiveOperationException error) { throw new AssertionError("Cannot inject constructor failure", error); }
+    }
+    private static void localRule(String rule, String path, byte[] input) {
+        var e = fails(INVALID_IR, input);
+        equal(path, e.path()); equal(1, e.issues().size());
+        var issue = e.issues().get(0);
+        equal(ValidationIssue.Kind.INVALID_IR, issue.kind()); equal(rule, issue.rule());
+        require(!issue.detail().isBlank(), "missing local AIR detail");
+    }
     private static void roundTrip(Publication p) { equal(p, CODEC.decode(CODEC.encode(p))); }
     private static Json.Value at(String path) {
-        Json.Value v = tree;
+        return at(tree, path);
+    }
+    private static Json.Value at(Json.Value node, String path) {
+        Json.Value v = node;
         for (String part : path.split("\\.")) v = v instanceof Json.Obj o ? o.fields().get(part) : ((Json.Arr)v).values().get(Integer.parseInt(part));
         return v;
+    }
+    /** Literal expected spellings from binding §10.4, never enum names or declaration order. */
+    private static void tokens() {
+        tokenCases("publication.uncertainties.0.dimensions.0",
+                List.of(Evidence.Dimension.CONTROL, Evidence.Dimension.STORAGE, Evidence.Dimension.EFFECTS,
+                        Evidence.Dimension.VALUES, Evidence.Dimension.DEPENDENCIES),
+                List.of("CONTROL", "STORAGE", "EFFECTS", "VALUES", "DEPENDENCIES"), p -> p.uncertainties().get(0).dimensions().get(0));
+        tokenCases("publication.units.0.sequences.0.terminator.header.precision.control.status",
+                List.of(Evidence.PrecisionStatus.EXACT, Evidence.PrecisionStatus.CONSERVATIVE, Evidence.PrecisionStatus.OPEN,
+                        Evidence.PrecisionStatus.UNAVAILABLE, Evidence.PrecisionStatus.NOT_APPLICABLE),
+                List.of("EXACT", "CONSERVATIVE", "OPEN", "UNAVAILABLE", "NOT_APPLICABLE"),
+                p -> p.units().get(0).sequences().get(0).terminator().header().precision().control().status());
+        var coverage = List.of(Evidence.CoverageStatus.MODELED, Evidence.CoverageStatus.ABSTRACTED,
+                Evidence.CoverageStatus.UNSUPPORTED, Evidence.CoverageStatus.INPUT_MISSING);
+        var coverageTokens = List.of("MODELED", "ABSTRACTED", "UNSUPPORTED", "INPUT_MISSING");
+        tokenCases("publication.coverage.items.0.status", coverage, coverageTokens, p -> p.coverage().items().get(0).status());
+        tokenCases("publication.units.0.sequences.0.terminator.header.coverage", coverage, coverageTokens,
+                p -> p.units().get(0).sequences().get(0).terminator().header().coverage());
+        tokenCases("publication.coverage.inventory",
+                List.of(Evidence.InventoryStatus.COMPLETE, Evidence.InventoryStatus.PARTIAL, Evidence.InventoryStatus.UNAVAILABLE),
+                List.of("COMPLETE", "PARTIAL", "UNAVAILABLE"), p -> p.coverage().inventory());
+        tokenCases("publication.origins.0.location.span.columnUnit",
+                List.of(Origins.ColumnUnit.UNICODE_SCALAR, Origins.ColumnUnit.UTF16_CODE_UNIT, Origins.ColumnUnit.OCTET),
+                List.of("UNICODE_SCALAR", "UTF16_CODE_UNIT", "OCTET"),
+                p -> ((Origins.LineColumns)((Origins.Written)p.origins().get(0)).location().orElseThrow()).span().columnUnit());
+    }
+    private static void tokenCases(String path, List<?> meanings, List<String> lexemes,
+            java.util.function.Function<Publication,Object> extract) {
+        equal(meanings.size(), lexemes.size());
+        for (int i = 0; i < lexemes.size(); i++) {
+            // Isolate binding mapping; changing one claim need not produce structurally valid AIR.
+            var p = new BindingReader().envelope(Json.parse(changed(path, Json.value(lexemes.get(i))), AirJson.Limits.defaults()));
+            equal(meanings.get(i), extract.apply(p));
+            equal(Json.value(lexemes.get(i)), at(new BindingWriter().envelope(p), path));
+        }
+    }
+    /** Compiled writer guard: identical current spellings cannot mask a return to runtime authority. */
+    private static void noRuntimeTokens() {
+        try (var in = new java.io.DataInputStream(java.util.Objects.requireNonNull(
+                BindingWriter.class.getResourceAsStream("BindingWriter.class")))) {
+            equal(0xcafebabe, in.readInt()); in.readUnsignedShort(); in.readUnsignedShort();
+            int count = in.readUnsignedShort(); int[] tags = new int[count]; Object[] pool = new Object[count];
+            for (int i = 1; i < count; i++) {
+                tags[i] = in.readUnsignedByte();
+                switch (tags[i]) {
+                    case 1 -> pool[i] = in.readUTF();
+                    case 3, 4 -> in.readInt();
+                    case 5, 6 -> { in.readLong(); i++; }
+                    case 7, 8, 16, 19, 20 -> pool[i] = in.readUnsignedShort();
+                    case 9, 10, 11, 12, 17, 18 -> pool[i] = new int[]{in.readUnsignedShort(), in.readUnsignedShort()};
+                    case 15 -> { in.readUnsignedByte(); in.readUnsignedShort(); }
+                    default -> throw new AssertionError("Unknown classfile tag: " + tags[i]);
+                }
+            }
+            for (int i = 1; i < count; i++) {
+                if (tags[i] != 10 && tags[i] != 11 && tags[i] != 18) continue;
+                int[] ref = (int[])pool[i], nameType = (int[])pool[ref[1]];
+                String name = (String)pool[nameType[0]], descriptor = (String)pool[nameType[1]];
+                require(!name.equals("name") && !name.equals("toString"), "Runtime token authority: " + name);
+                if (tags[i] == 18) {
+                    require(!(descriptor.contains("io/github/gustavo2358/air/model/") && descriptor.endsWith("Ljava/lang/String;")),
+                            "Runtime model-to-string concatenation");
+                } else {
+                    String owner = (String)pool[(Integer)pool[ref[0]]];
+                    require(!(owner.equals("java/lang/String") && name.equals("valueOf")), "Runtime String.valueOf token authority");
+                }
+            }
+        } catch (java.io.IOException error) { throw new AssertionError("Cannot inspect compiled writer", error); }
     }
     private static Json.Value edit(Json.Value node, String[] path, int i, Json.Value replacement) {
         if (i == path.length) return replacement;

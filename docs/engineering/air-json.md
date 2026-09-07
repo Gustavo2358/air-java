@@ -63,6 +63,11 @@ resolver seus plugins previamente fixados; o codec não adicionou bibliotecas.
   preservados. Sem normalização de caixa/NFC/NFD. U+FEFF dentro de string é dado.
 - Campos catalogados são obrigatórios; somente os campos `?` aceitam null presente.
   Campo desconhecido não é descartado. Variantes têm `kind` explícito e tokens fechados.
+- Dimension, PrecisionStatus, CoverageStatus, InventoryStatus e ColumnUnit usam
+  mappings explícitos da §10.4 em reader e writer. Tokens wire nunca derivam de
+  `Enum.name()`, `toString()` ou `String.valueOf(enum)`. O oracle literal cobre os
+  20 tokens, inclusive os não exercitados pelo golden; um check do bytecode do
+  writer rejeita a volta à autoridade de runtime mesmo quando os bytes coincidem.
 - Naturais implementados (Position/Span) usam BigInteger e strings canônicas, sem
   teto int/long/2^53. `0` é aceito, negativos/`-0`/`+1`/zeros iniciais/fração/expoente não.
   Inteiros assinados em valores, decimal e Base64 ainda não têm cobertura de codec;
@@ -122,7 +127,7 @@ físico, espécie válida ainda sem implementação não vira INVALID_IR por ess
 | INVALID_IR | constraint local AIR ou erro de fechamento/ownership/validação |
 | UNSUPPORTED_CAPABILITY | manifesto com conteúdo ainda não negociado/suportado ou issue do Validator |
 | INCOMPLETE_VALIDATION | limite ou obrigação inconclusiva do Validator; nunca sucesso silencioso |
-| IMPLEMENTATION_LIMIT | forma fora da cobertura ou limite explícito do transporte |
+| IMPLEMENTATION_LIMIT | forma fora da cobertura, limite explícito do transporte ou representabilidade Java identificada |
 
 `path()` aponta para o campo, objeto local ou posição física (`$@N`, índice UTF-16
 na string decodificada). `issues()` conserva rule/subject/detail originais quando
@@ -130,6 +135,51 @@ emitidos pelo AirValidator. Construtores AIR são chamados somente após verific
 os tipos físicos; suas violações locais não são confundidas com JSON malformado.
 Falhas de programação/API (por exemplo argumento Java null) não são disfarçadas
 como validade AIR. Erros fatais da JVM não recebem promessa de recuperação.
+
+Na remediação do review humano, as violações locais com autoridade identificada
+produzem `ValidationIssue` com regra explícita e detail, e `path()` preserva o site
+JSON. A escolha da regra ocorre junto à materialização, sem interpretar mensagens
+de exceptions Java. Os issues do AirValidator continuam intactos, comparados
+integralmente nos testes de encode/decode, inclusive rule/subject/detail.
+
+| Constraint local | Regra/fonte no pin 122ce54… |
+| --- | --- |
+| Derived sem inputs | I-36 e AIR 06 §5: uma ou mais origens |
+| Unit available sem entradas | AIR 01 §2: pelo menos uma entrada |
+| Unit available sem sequências | AIR 01 §3: pelo menos uma sequência |
+| Uncertainty sem domínio afetado | AIR 06 §4: domínio afetado identificável |
+| ID de domínio incompatível | I-02 e AIR 01 §4 |
+| Terminador em instructions/operação comum como terminador | I-04 e AIR 01 §3 |
+
+A decisão humana da remediação classifica os três gaps conhecidos abaixo como
+`IMPLEMENTATION_LIMIT`, com `path()` do campo e diagnóstico
+`air-java representability limit`. A entrada é admitida pelo contrato pinado, mas
+não pode ser materializada fielmente pelo model Java atual. Isso não é defeito AIR
+da Publication. A inspeção interrompe nesse limite; não certifica os demais fatos.
+
+| Restrição adicional do Java | Autoridade e tratamento explícito |
+| --- | --- |
+| Span.lineBase/columnBase >1 | Binding §§3/10.3 admite Natural; checar >1 depois da leitura física, sem mudar Origins.Span |
+| FactScope.entities vazio | Binding §10.3 admite Id[]; checar lista vazia sem transplantar I-52 de DomainProofScope |
+| Text blank nos campos auditados | Binding §§3/4/10.3 não define nonBlank; checar String.isBlank somente nos sites limitados por Require.text |
+
+Os sites Text auditados são os componentes opacos de IDs, Artifact.logicalName,
+CoverageItem.sourceKey, Uncertainty.code/reason, Derived.rule e IncludeFrame.requestedName.
+AIR 06 §§4/5 exige código, motivo e regra como fatos, mas não define a gramática
+String.isBlank; o codec não decide semântica pelo conteúdo da mensagem. As constraints
+locais identificadas (como inputs e dimensões não vazios) são verificadas antes do
+limite de Text de Derived/Uncertainty. Não há filtro global de strings: contentDigest
+blank é representável e preservado; tokens/versões mantêm suas regras específicas.
+Naturais negativos/lexemas inválidos e números JSON continuam INPUT_ERROR.
+
+Todo INVALID_IR emitido pelo codec tem regra AIR em `issues()` e site em `path()`;
+os issues do AirValidator permanecem intactos. Não há catch que converta genericamente
+IllegalArgumentException em INVALID_IR ou IMPLEMENTATION_LIMIT. Falhas inesperadas
+de construtores propagam com identidade original para investigação; não recebem
+uma classificação por mensagem ou uma regra presumida. Um teste injeta esse tipo
+de falha para proteger a fronteira. Novos drifts exigem consulta normativa e decisão
+quando ambíguos. A dívida está em [AIR-MODEL-DRIFT](../work/backlog.md#backlog-air-006--air-model-drift);
+sua correção no model e novas formas de transporte permanecem fora deste PR.
 
 Por default: 16 MiB por documento e profundidade 128; `Limits` permite configurar
 bytes e profundidade 1..256. `ValidationOptions` mantém limites independentes do

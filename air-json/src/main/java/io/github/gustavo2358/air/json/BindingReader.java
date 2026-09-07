@@ -3,6 +3,7 @@ package io.github.gustavo2358.air.json;
 import io.github.gustavo2358.air.model.*;
 import io.github.gustavo2358.air.model.Unit;
 import io.github.gustavo2358.air.model.Ids.*;
+import io.github.gustavo2358.air.validation.ValidationIssue;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,12 +55,23 @@ final class BindingReader {
         }
         String kind() { return child("kind").text(); }
         AirJsonException unsupported(String form) { return Json.limit(path, form + " outside implemented 1A coverage"); }
+        AirJsonException invalid(String rule, String detail) {
+            return new AirJsonException(INVALID_IR, path, detail,
+                    List.of(new ValidationIssue(ValidationIssue.Kind.INVALID_IR, rule, Optional.empty(), detail)));
+        }
+        AirJsonException representability(String restriction) {
+            return Json.limit(path, "air-java representability limit: " + restriction);
+        }
+        /** Only for the audited Text fields backed by Require.text; never tokens or arbitrary strings. */
+        String modelText() {
+            String text = text();
+            if (text.isBlank()) throw representability("Require.text rejects blank Text admitted by the pinned binding");
+            return text;
+        }
         <T> T construct(Supplier<T> constructor) {
-            try { return constructor.get(); }
-            catch (IllegalArgumentException error) {
-                // Only a domain constructor runs here; lexemes and wire types have already been checked.
-                throw new AirJsonException(INVALID_IR, path, "AIR local constraint: " + error.getMessage());
-            }
+            // Known AIR rules and Java representability gaps are checked explicitly at their sites.
+            // Unexpected failures must retain their identity; they are not a codec classification.
+            return constructor.get();
         }
     }
     Publication envelope(Json.Value value) {
@@ -90,7 +102,7 @@ final class BindingReader {
     }
     private Origins.Artifact artifact(At a) {
         a.fields("id", "logicalName", "contentDigest");
-        var id = artifactId(a.child("id")); var name = a.child("logicalName").text(); var digest = a.child("contentDigest").optional(At::text);
+        var id = artifactId(a.child("id")); var name = a.child("logicalName").modelText(); var digest = a.child("contentDigest").optional(At::text);
         return a.construct(() -> new Origins.Artifact(id, name, digest));
     }
     private Unit unit(At a) {
@@ -105,6 +117,8 @@ final class BindingReader {
         var id = unitId(a.child("id")); var containing = a.child("containingUnit").optional(this::unitId);
         var entries = a.child("entries").list(this::entry); var sequences = a.child("sequences").list(this::sequence);
         var coverage = coverage(a.child("coverage")); var origin = originId(a.child("origin"));
+        if (entries.isEmpty()) throw a.child("entries").invalid("AIR-01 §2", "Available body requires at least one entry");
+        if (sequences.isEmpty()) throw a.child("sequences").invalid("AIR-01 §3", "Available body requires at least one sequence");
         return a.construct(() -> new Unit(id, containing, List.of(), List.of(), entries, sequences, List.of(),
                 Unit.BodyAvailability.AVAILABLE, Optional.empty(), coverage, origin));
     }
@@ -133,7 +147,7 @@ final class BindingReader {
         for (At instruction : a.child("instructions").elements()) {
             String kind = operationFields(instruction);
             if (!Set.of("assign", "havoc.must", "havoc.may", "nop", "copy_bytes").contains(kind))
-                throw new AirJsonException(INVALID_IR, instruction.path(), "AIR 01 §3: terminator in instructions");
+                throw instruction.invalid("I-04", "AIR 01 §3: terminator in instructions");
             throw instruction.unsupported("Instruction " + kind);
         }
         return new Sequence(labelId(a.child("label")), List.of(), operation(a.child("terminator")), originId(a.child("origin")));
@@ -162,7 +176,7 @@ final class BindingReader {
     private Operations.Return operation(At a) {
         String kind = operationFields(a);
         if (Set.of("assign", "havoc.must", "havoc.may", "nop", "copy_bytes").contains(kind))
-            throw new AirJsonException(INVALID_IR, a.path(), "AIR 01 §3: ordinary operation as terminator");
+            throw a.invalid("I-04", "AIR 01 §3: ordinary operation as terminator");
         if (!kind.equals("return")) throw a.unsupported("Operation " + kind);
         a.child("values").empty(); return new Operations.Return(header(a.child("header")), List.of());
     }
@@ -191,7 +205,7 @@ final class BindingReader {
         if (elimination.value() != Json.Nil.INSTANCE) {
             elimination.fields("rule", "origin"); throw elimination.unsupported("Elimination");
         }
-        var key = a.child("sourceKey").text(); var origin = originId(a.child("origin")); var status = coverageStatus(a.child("status"));
+        var key = a.child("sourceKey").modelText(); var origin = originId(a.child("origin")); var status = coverageStatus(a.child("status"));
         var outputs = a.child("outputs").list(this::id); var gaps = a.child("uncertainties").list(this::uncertaintyId);
         return a.construct(() -> new Evidence.CoverageItem(key, origin, status, outputs, gaps, Optional.empty()));
     }
@@ -199,6 +213,8 @@ final class BindingReader {
         a.fields("id", "code", "dimensions", "scope", "reason", "origin");
         var id = uncertaintyId(a.child("id")); var code = a.child("code").text(); var dimensions = a.child("dimensions").list(this::dimension);
         var scope = scope(a.child("scope")); var reason = a.child("reason").text(); var origin = originId(a.child("origin"));
+        if (dimensions.isEmpty()) throw a.child("dimensions").invalid("AIR-06 §4", "Uncertainty must identify its affected domain");
+        a.child("code").modelText(); a.child("reason").modelText();
         return a.construct(() -> new Evidence.Uncertainty(id, code, dimensions, scope, reason, origin));
     }
     private Scopes.FactScope scope(At a) {
@@ -207,6 +223,7 @@ final class BindingReader {
             case "unit" -> { a.fields("kind", "unit"); yield new Scopes.UnitScope(unitId(a.child("unit"))); }
             case "entities" -> {
                 a.fields("kind", "entities"); var entities = a.child("entities").list(this::id);
+                if (entities.isEmpty()) throw a.child("entities").representability("EntityScope requires nonempty entities; binding admits Id[]");
                 yield a.construct(() -> new Scopes.EntityScope(entities));
             }
             default -> throw Json.input(a.path(), "Unknown FactScope kind");
@@ -222,6 +239,8 @@ final class BindingReader {
             case "derived" -> {
                 a.fields("kind", "id", "inputs", "rule"); var id = originId(a.child("id"));
                 var inputs = a.child("inputs").list(this::originId); var rule = a.child("rule").text();
+                if (inputs.isEmpty()) throw a.child("inputs").invalid("I-36", "AIR 06 §5: derived origin requires one or more inputs");
+                a.child("rule").modelText();
                 yield a.construct(() -> new Origins.Derived(id, inputs, rule));
             }
             case "contractual" -> { a.fields("kind", "id", "authority", "version"); throw a.unsupported("Origin.contractual"); }
@@ -239,6 +258,8 @@ final class BindingReader {
         var start = position(s.child("start")); var end = position(s.child("end"));
         var lb = natural(s.child("lineBase")); var cb = natural(s.child("columnBase"));
         var cu = columnUnit(s.child("columnUnit")); var exclusive = s.child("endExclusive").bool();
+        if (lb.compareTo(BigInteger.ONE) > 0) throw s.child("lineBase").representability("Span only supports bases 0 or 1; binding admits Natural");
+        if (cb.compareTo(BigInteger.ONE) > 0) throw s.child("columnBase").representability("Span only supports bases 0 or 1; binding admits Natural");
         return s.construct(() -> new Origins.LineColumns(new Origins.Span(start, end, lb, cb, cu, exclusive)));
     }
     private Origins.Position position(At a) {
@@ -247,7 +268,7 @@ final class BindingReader {
     private Origins.IncludeFrame include(At a) {
         a.fields("including", "included", "requestedName", "site");
         var including = artifactId(a.child("including")); var included = artifactId(a.child("included"));
-        var name = a.child("requestedName").text(); var site = a.child("site").optional(this::location);
+        var name = a.child("requestedName").modelText(); var site = a.child("site").optional(this::location);
         return a.construct(() -> new Origins.IncludeFrame(including, included, name, site));
     }
     private BigInteger natural(At a) {
@@ -258,7 +279,7 @@ final class BindingReader {
     private Id id(At a) {
         String domain = a.child("domain").text();
         if (domain.equals("publication")) {
-            a.fields("domain", "localId"); String local = a.child("localId").text();
+            a.fields("domain", "localId"); String local = a.child("localId").modelText();
             return a.construct(() -> new PublicationId(local));
         }
         boolean owned = Set.of("entry", "label", "operation", "object", "completion_port", "operand").contains(domain);
@@ -267,9 +288,9 @@ final class BindingReader {
         if (domain.equals("operand")) a.fields("domain", "publication", "unit", "owner", "localId");
         else if (owned) a.fields("domain", "publication", "unit", "localId");
         else a.fields("domain", "publication", "localId");
-        String namespace = a.child("publication").text(); String local = a.child("localId").text();
+        String namespace = a.child("publication").modelText(); String local = a.child("localId").modelText();
         var publication = a.construct(() -> new PublicationId(namespace));
-        String unitName = owned ? a.child("unit").text() : null;
+        String unitName = owned ? a.child("unit").modelText() : null;
         UnitId unit = owned ? a.construct(() -> new UnitId(publication, unitName)) : null;
         OperandOwner operandOwner = domain.equals("operand") ? operandOwner(a.child("owner"), unit) : null;
         return a.construct(() -> switch (domain) {
@@ -284,7 +305,7 @@ final class BindingReader {
         });
     }
     private OperandOwner operandOwner(At a, UnitId unit) {
-        a.fields("kind", "localId"); String kind = a.kind(), local = a.child("localId").text();
+        a.fields("kind", "localId"); String kind = a.kind(), local = a.child("localId").modelText();
         return switch (kind) {
             case "operation" -> a.construct(() -> new OperationOwner(new OperationId(unit, local)));
             case "entry" -> a.construct(() -> new EntryOwner(new EntryId(unit, local)));
@@ -293,7 +314,7 @@ final class BindingReader {
     }
     private <T extends Id> T typedId(At a, Class<T> type) {
         Id id = id(a);
-        if (!type.isInstance(id)) throw new AirJsonException(INVALID_IR, a.path(), "AIR 01 §4: ID domain does not match reference role");
+        if (!type.isInstance(id)) throw a.invalid("I-02", "AIR 01 §4: ID domain does not match reference role");
         return type.cast(id);
     }
     private PublicationId publicationId(At a) { return typedId(a, PublicationId.class); }
