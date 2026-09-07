@@ -116,6 +116,13 @@ class DocumentationTests(unittest.TestCase):
         self.change_json("docs/work/active/WORK-AIR-HARNESS-001/work-item.json", lambda data: data["change_scope"].append("src/main/"))
         self.rejects("cannot authorize product")
 
+    def test_discovery_cannot_authorize_new_module_paths(self):
+        for scope in ('air-model/', 'air-json/'):
+            self.change_json('docs/work/active/WORK-AIR-HARNESS-001/work-item.json',
+                             lambda data: data.update(authorization='discovery', change_scope=[scope]))
+            with self.subTest(scope=scope):
+                self.rejects('cannot authorize product')
+
     def test_new_scope_is_allowed_but_absolute_and_parent_paths_are_rejected(self):
         relative_path(self.root, "docs/new/file.md", exists=False)
         for value in ("/tmp/escape", "../escape", "docs/../../escape"):

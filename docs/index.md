@@ -18,3 +18,6 @@ Os documentos existentes continuam em seus caminhos públicos. [Reconciliação]
 [validação anterior](validation-evidence.md) e [mutação anterior](mutation-evidence.json)
 são evidência histórica; leia quando a tarefa exigir, sem reinterpretar seus PASS
 como execução atual. Não duplique a especificação AIR em tasklists.
+
+0C-I: [evidência de implementação](quality/modularization-implementation.md) e
+[inventário binário comparado](quality/modularization-classfiles.json).

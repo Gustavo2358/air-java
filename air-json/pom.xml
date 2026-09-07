@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>io.github.gustavo2358</groupId>
+    <artifactId>air-java-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+  <artifactId>air-json</artifactId>
+  <packaging>jar</packaging>
+  <name>Analysis IR JSON (empty 0C-I module)</name>
+  <!-- 0C-I: intentionally empty; first transport source requires policy and tests in 1A. -->
+  <dependencies>
+    <dependency>
+      <groupId>io.github.gustavo2358</groupId>
+      <artifactId>air-java</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-help-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>compiled-module</id>
+            <phase>verify</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <executable>python3</executable>
+              <skip>false</skip>
+              <arguments>
+                <argument>-B</argument>
+                <argument>${project.basedir}/../scripts/harness/architecture.py</argument>
+                <argument>--build-flags</argument>
+                <argument>${skipTests}</argument><argument>${maven.test.skip}</argument>
+                <argument>${maven.main.skip}</argument><argument>${exec.skip}</argument>
+                <argument>--module</argument><argument>air-json</argument>
+                <argument>--classes</argument><argument>${project.build.outputDirectory}</argument>
+                <argument>--dependency-tree</argument><argument>${project.build.directory}/dependency-tree.json</argument>
+                <argument>--effective-pom</argument><argument>${project.build.directory}/effective-pom.xml</argument>
+              </arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

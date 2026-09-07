@@ -3,17 +3,18 @@
 ```text
 analysis-ir (normativo, SHA pinado)
         ↓
-model ← validation
-   ↑        ↑
-   callers / testes / exemplos
+air-model (artifactId air-java): model ← validation
+        ↑                         ↑
+air-json (vazio 0C-I)      callers / testes / exemplos
 ```
 
 `Publication` e `ValidationResult` são valores em memória. Não há necessidade de
 introduzir camadas application, ports, repository, DI ou adapters fictícios para
 uma biblioteca de valores. A direção existente já é adequada.
 
-O [mapa público](../../ARCHITECTURE.md) explica responsabilidades. O gate novo
-compila somente `src/main/java` em diretório temporário, examina todos os classfiles
+O [mapa público](../../ARCHITECTURE.md) explica responsabilidades. O gate standalone
+valida os três POMs e os dois owners, compila `air-model/src/main/java` em
+diretório temporário e examina todos os classfiles
 (Java 21, sem preview) e as referências diretas reportadas por `jdeps`, incluindo
 classes aninhadas. Rejeita `model → validation`, packages de produto novos,
 dependência não resolvida e bibliotecas externas.
@@ -32,5 +33,9 @@ Review continua necessário para dependências ocultas e duplicação semântica
 
 Os gates não exigem inventário fixo de cada classe Java: variantes futuras podem
 crescer dentro da fronteira. O inventário nominal da suíte é separado, com revisão
-deliberada ao acrescentar/remover checks. O futuro reactor e codec precisam de gate
-próprio por módulo no 0C; passar hoje não conclui 0C.
+deliberada ao acrescentar/remover checks. O reactor tem inspeção por módulo
+de POM efetivo, grafo Maven e JAR/bytecode em verify. O modelo rejeita qualquer dependência efetiva/resolvida, inclusive runtime
+ou optional sem referências Java; JSON permite só a aresta direta no modelo.
+[Política 0C-I](../engineering/modularization-gates.md) rejeita fontes/resources
+JSON, módulo ausente/adicional e outputs de produto no root. Não há codec ou
+conformidade de transporte entregue por esses gates.

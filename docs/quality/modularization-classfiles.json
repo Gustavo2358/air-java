@@ -1,0 +1,1556 @@
+{
+  "class_count": 308,
+  "identical_bytes": true,
+  "public_api_sha256": "689bc7a92161cb9c1b81d739058dfdf11ee12495b4b229a1bcfed06d1ea2b1ba",
+  "jdeps_sha256": "9f8a2354d9144a128f8bb430c961d2783b523602885582e173eff9545ff8644d",
+  "packages": [
+    "io.github.gustavo2358.air.model",
+    "io.github.gustavo2358.air.validation"
+  ],
+  "jar_changed_entries": [
+    "META-INF/maven/io.github.gustavo2358/air-java/pom.xml"
+  ],
+  "classfiles": {
+    "io/github/gustavo2358/air/model/Artifacts$ExternalArtifact.class": {
+      "sha256": "a2afff9e613d226ae24fcca53997ccfd1fc4637a8d751d6aca76174a62dfde92",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Artifacts$InternalArtifact.class": {
+      "sha256": "9f3f7e931f4df0431f3933bcf949d9470f4419732c4ba89b77154b763dd18740",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Artifacts$Relation.class": {
+      "sha256": "d587f2b4aeeb79cbd976a09fe53dac1cd5dc07f8c629b9d0bd6da3f760597457",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Artifacts$RelationTarget.class": {
+      "sha256": "7b66b1e022c5f764144454d787813ce966920d94e5dfcdf479cd4a7d740a2c8c",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Artifacts.class": {
+      "sha256": "f8fe63ecd174fbe0e5dea27134143191a1e40ff0bd7ef167d387a745776c6382",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Capabilities$Capability.class": {
+      "sha256": "a56a43c672f9e704571f1b5732713aac70bf70ddcf274fc207ab0af8ff5cef43",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Capabilities$Manifest.class": {
+      "sha256": "43fc1e90540411c88fdd9cac5c0a648ce6d7e3712cbffaa464cfe777e7828947",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Capabilities.class": {
+      "sha256": "1bf1d4717eebe40abd22007bee6f5d8fe0ba2f944cfbd033b6d319891caafb6a",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$After.class": {
+      "sha256": "7c77ba5ce470fd9f8fa2b644fceed395f17e0e52e516df9d8a653d58801f2a97",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$AnyException.class": {
+      "sha256": "21e3701c27d78cad8686195d241c0f3ad4e2168cb9600091603ad6d7f89e0a07",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$Before.class": {
+      "sha256": "a9519f009369542f3b7c5eb9338a9247e9a907456a8d8052b8bfbc6846ded450",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$ContinueAlternative.class": {
+      "sha256": "fa0d3cae770a2b1143ddd141c6927e8c1b14c7758059242a184705a9ad24c0b9",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$ControlAlternative.class": {
+      "sha256": "a86f0cb455a0747e5c7f04cc3113ba8527035d6bac7652d374674c5186762147",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$ControlEnvelope.class": {
+      "sha256": "79734a5cbf07feb9207ce042895e0fbfa54393e4196a5b2e46655e41a8cfbc19",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$Diverge.class": {
+      "sha256": "464e0f625058002ed9255576cd6279baba9f7dd796e9310b30d42dab544c3912",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$DivergeOutcome.class": {
+      "sha256": "6cf718a65590015bd5b1f2366d2f1d7138070f44a3e155e54579e44a9b389469",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$EntryPoint.class": {
+      "sha256": "9a82080c6a432f0d60b2a4e926493a575e3e03eef95daecf697b2f0641782832",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$ExceptionDestination.class": {
+      "sha256": "199a47f53b2888ffcee6c7ea5f23c549f323132dfa8ac7b0b4a1aae2c1794e9f",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$ExceptionOutcome.class": {
+      "sha256": "74d7084e8adee5e5c74453646ff918ddf347aabc70d0fcad6c3f405e2f2070f7",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$Exceptional.class": {
+      "sha256": "84ab4e241a0f4cb3b87d305770b66033477669e0e45eff50c4386b127cb58314",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$ExitPoint.class": {
+      "sha256": "a7159e75089ade1f3fe31bb4c7b24b6457f18128e0ba8a0003d9dbac6a19e813",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$HaltAlternative.class": {
+      "sha256": "3ded851d09594d3f2f06a1a979ddf4491aaee2ff876434ebe62d0a2d80274731",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$HaltOutcome.class": {
+      "sha256": "e0776dca324cebab2f95d93536c1fd6cdfac0b693078416eacd07ce96d5cd0ee",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$Handler.class": {
+      "sha256": "8acb5fd948adf294f139c081ae9de78a016664274b6fc1cb62bf19cfd91a85ae",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$InvocationAlternative.class": {
+      "sha256": "e780d2d8051d2530dab74f2d8623160d50feb926b0a0f37c0da47dc96707799b",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$InvocationOutcomes.class": {
+      "sha256": "e64b6c41d30792ff80ba4b6f7efa81690aa8643af95290ca1f06ef2ff71a5b25",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$JumpAlternative.class": {
+      "sha256": "26f8aa8fbd3a42cc6c995ca978bf898f1facea774f25728135acb6204ed6d5ec",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$Normal.class": {
+      "sha256": "e6f517cd2448c1b4b199e1788bf80b9ca7509f26453a4514b0ae54a89e350671",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$NormalOutcome.class": {
+      "sha256": "9def5fd6270e051f0925a3687c02c6451149a9e6854127dbb2e02f3194df4459",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$OtherExceptionOutcome.class": {
+      "sha256": "9049db9df9c0d9b8ea80ddc4abc5b10bf36fa597840e6fdc548308b118a7fd8a",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$OutcomeKey.class": {
+      "sha256": "2beefb1e704e3970230bcd0f845eb240869372a1b69ef0d2f29b1cc67765bd01",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$ProgramPoint.class": {
+      "sha256": "c3d469480f5d9e74d95c543382307d62cf8b082b7ed85cd4c8cff64ccecdb124",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$Propagate.class": {
+      "sha256": "dd6cb1f84dc3800b75b946758ffaa57af52464081cbdc79829345dfdd00fa977",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control$ReturnAlternative.class": {
+      "sha256": "986b6e641f9ba1a0d8c666ea6be6660ec2c73583eece2d1cf792482be8f05ae1",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Control.class": {
+      "sha256": "fb32a41922d7c309763530e3dd8fb831a5c78bf707217bff6428707e42d662e0",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Entries$CompletionPort.class": {
+      "sha256": "4761571d745e3889e46d1a90bec6822db459a5e3c7e32bac4ff510c21ec53c5b",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Entries$Entry.class": {
+      "sha256": "b04d826b1d775e782bb4748bb91f19cb4d1e3df0d1faebbe8de20c6aa55bc81e",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Entries$EntryState.class": {
+      "sha256": "ed496edfa8cfe75436f4977c228f46bda632d6af85c28672a2af7c85016c903a",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Entries$ExternalUnknown.class": {
+      "sha256": "c229b171c31b0cd796deda830a29d93ebda06848f8b65df2244c0f6976a27816",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Entries$InitialCondition.class": {
+      "sha256": "f904c45f4abf04e46ef646fc9181fdace0044d7a5941682ad6854391b94d1afa",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Entries$InitialValue.class": {
+      "sha256": "a73cc87cd64c417f42834b42b0521bd122bc1157936f4c34f83e453b88361f65",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Entries$LiteralInitial.class": {
+      "sha256": "dfd6f46a63be3bbe61767d0a6114082e45ecd6d32f992ccdde8d5bdabee2f251",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Entries$ParameterInitial.class": {
+      "sha256": "4c1a9c004c8934150c288491ca42f9a52c3d425f03f78cec6912480175275f76",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Entries$Preserve.class": {
+      "sha256": "4f8536b5c378ead338f06c9b7a542a4f22db12392c8f6a2abb4c15b185c42bf1",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Entries$Uninitialized.class": {
+      "sha256": "4900706b1129cd226af80e3035eca50f962692d1f7fc340d075d11bc534df712",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Entries.class": {
+      "sha256": "b0db54c099bc5c486fe3397a915b6e7b8b95c5e80118a79c4fa5f8e556c1794a",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Envelopes$DependencyEnvelope.class": {
+      "sha256": "85a1a46b3adadcdbbcfbba8d2e892abe6031903a7246521d5188045b73d61757",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Envelopes$Envelope.class": {
+      "sha256": "b5f20d1f889b116cb930dd918410e57ce707343b5ede4f23675e94f27f7e7d23",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Envelopes$MemoryEnvelope.class": {
+      "sha256": "a6132ace585742d3fd63c5f22d5cf0dc67422851629be4acbb41330963998d87",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Envelopes$ResourceUse.class": {
+      "sha256": "b776ac13023a3af74deaca4bcd4de810ab8840afe7146d76a08050862eb83a56",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Envelopes.class": {
+      "sha256": "defefdd099dd40d573fb0767fd6017b4266812bd7a0484028c630a8f64a048d7",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Evidence$Claim.class": {
+      "sha256": "3a6c48f6fb4149c8bf3b1561e3ab31af0dc79a9ceebe8f1eb771ed42dc7127a7",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Evidence$Coverage.class": {
+      "sha256": "d3f3f55481fe12f969e5947fb18392afddb9e88ef687e6471d62df5b8357b9f5",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Evidence$CoverageItem.class": {
+      "sha256": "9650144068a795cf6062717f233cd54dc3aa275a4ca78f20dac5db63d9568ffa",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Evidence$CoverageStatus.class": {
+      "sha256": "84833cf7da1e1d6e2215d02789aa7018afb179ed4e531b03846c37139fff95f6",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Evidence$Dimension.class": {
+      "sha256": "3840344d3fd41aebe17fbf9701eec187b9b66c8bd7e25247b34b4d78a087a13c",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Evidence$Elimination.class": {
+      "sha256": "8307f4b0e4a3090a311d0ef4113d4f88761cdc5f71a5bf0e031bbcc1d1bbef5b",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Evidence$InventoryStatus.class": {
+      "sha256": "5c178ca5ed34636d3b9f191a39c83f0f28c9c8c2c3c0ea2e3d7c292bd9bbc671",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Evidence$Precision.class": {
+      "sha256": "d4a88265fdb719401e4e3bfef93a4ef916856f0a77c1da1c23ce7736a8bad5d7",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Evidence$PrecisionStatus.class": {
+      "sha256": "46342b18baa8e168d6c304169426a5e3a5bf2eb798b3f51e482e4973cd58cf24",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Evidence$Uncertainty.class": {
+      "sha256": "14f09dd8a237401e86dedf0e8a1d92092f58b3c762a37082e1a78b77627ef357",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Evidence.class": {
+      "sha256": "dfc4e8d8125702dfdf6c754af4db09549dc1569f65d7635c3a040de338640c83",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Expression.class": {
+      "sha256": "837c8ed18ddbb4bfaac0c8a005ec80ccd7197974618ab81bbc61817a063dccab",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Expressions$Binary.class": {
+      "sha256": "3307dff4e2485647cc04de9d282b0158b16e6d236e2b6e01be5962712d4f5c81",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Expressions$BinaryOperator.class": {
+      "sha256": "d72fc2786d5d9fa61fee1a6afbf667055149f93b18fa021036372803f5109615",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Expressions$FitText.class": {
+      "sha256": "e8a8bacc61b398d56b0433171018954ae41f1e63b2877f3ee1fa6dd8f6e7b9d2",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Expressions$Literal.class": {
+      "sha256": "7b7336df0ccea5a7b4284cfcb02a3fdb4bb0d66a993c912a88682685f7a1c4d3",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Expressions$Quantize.class": {
+      "sha256": "25f704b9f0ea9369a72d3e5480461d0df0f09f5e86e780bcfb97e699f60091b1",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Expressions$Read.class": {
+      "sha256": "5e8fdf7f2eef34e3ce1577e552d1939b5fa5f176b5718883da74279082bc21bd",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Expressions$Rounding.class": {
+      "sha256": "0f8874be55109bba5c8f6b7d406f36297ed68c0e134245e128ed322c24f0a2fc",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Expressions$SliceText.class": {
+      "sha256": "011de73368228cb55b3ab687e253f23699e5e600ef2b63bfeb83bf1a8b845eb2",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Expressions$TrimRight.class": {
+      "sha256": "a5964d94bb5f673bb2c740a8758a53e6c765148fa49cbb086d2efca926b0cbd7",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Expressions$Unary.class": {
+      "sha256": "76169a14638d3c589430f744a4bffff3239e1b81e3d52fd08e9c7e61f7a36ade",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Expressions$UnaryOperator.class": {
+      "sha256": "7d262b36e55a05918c04952a23a7f9fea9683963768af023d7c362834d751e90",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Expressions$Unknown.class": {
+      "sha256": "45e0864ee9ab9a768076b652d7ae352eab8b50c7d48b7f6cded14ca150cbee5e",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Expressions.class": {
+      "sha256": "edb7128a8f3fe86fe35e34f0edc7a1f9cbf8e9e96ff7d077eff15389aa5e9a75",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$ArtifactId.class": {
+      "sha256": "7482ef847ac6d5604b015735ff1ebc9e2d5c0bb00a40ed8b9b6fea2d412e5d60",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$ArtifactRelationId.class": {
+      "sha256": "d4324ac4c26a6cc5704ae066ffb442dbc65dd857784fd1d0707277fe3cfcfd35",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$CompletionPortId.class": {
+      "sha256": "14ac21c5a546e72d3abf24fd41c51781dee33b2d141b119e978d3ca786a082f2",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$EntryId.class": {
+      "sha256": "5c006ba168080cdb4cd8f09fe6d26a9f2d3590c3c0a1a97f4032fe79c0e754bf",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$EntryOwner.class": {
+      "sha256": "28750c563a221bf52fc628cf5b4228acd95a3448d21819b437534076ff020291",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$Id.class": {
+      "sha256": "731d49aabf17381a7460d41c2cebe1c4a6c242cc48f4695385a0ea9918cbfacb",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$LabelId.class": {
+      "sha256": "562423eec15bca92e97b0d0ec42300f540e5a1f722f74cee2062311565f19a9c",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$ObjectId.class": {
+      "sha256": "57ddb633599fc0c38add080ee55b25f95482891fdb806aec97498ede3fc3a888",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$OperandId.class": {
+      "sha256": "0a84e174381ac9698c96ef972b4c89a7d1f874eb59fb2ada7c664a3f77347649",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$OperandOwner.class": {
+      "sha256": "15b8f202702816e81113bec0a3d0078b493d37c1eb54d6c66975aa9dfc72632e",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$OperationId.class": {
+      "sha256": "3d7c52429d518a7de5b4183af09db3c1654dafcfc23bbb30d159975975c651ab",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$OperationOwner.class": {
+      "sha256": "abaf0abda34e8c4b0bd17bcd8bda7499e8d6c03ad1c432c42d93289d20cbf7d9",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$OriginId.class": {
+      "sha256": "28b865ca98b20af7be8a6a1e6095d94dc58dcb7bfebbc240b55e0fa18c4f827d",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$PremiseId.class": {
+      "sha256": "37445e7b52b247d99566cff82400df55a535abf67e450ddda0edf0b35d155454",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$PublicationId.class": {
+      "sha256": "1e78cfc17da3d8babcd964b4664d883a69809dd002246b45bb175025ad23c666",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$ResourceId.class": {
+      "sha256": "26c3839ea44cde71c76d6cdffdde60cf4b1b6adbd1eec75d829e3261d16bfa7e",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$StorageId.class": {
+      "sha256": "e32c6454653c46c07ba0c5ed1a7006c4d7317912cc9f33b2b3631bfcec160c37",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$UncertaintyId.class": {
+      "sha256": "c8f9da02be66033e0677652e93dbf67f397c614750a14a2369cd9aa70a0b490a",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids$UnitId.class": {
+      "sha256": "a66642daaaea30e561543e18fbde4839bd4023ca3ec4e2dc90a15ebde3bc5e1b",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Ids.class": {
+      "sha256": "60d6d350df8d1be1561de6bc080681a2dcae1db52d3fc79984e38b8b80e85f40",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Instruction.class": {
+      "sha256": "71bcf0694272ca5101dd648dfd4253b327a96360d947e76949be9f0a0c278d96",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$Argument.class": {
+      "sha256": "9d40d0cdc66ef8d1f5758223783a372af4ff73fd9a519ab8099cc76ed909ef13",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ComputedResource.class": {
+      "sha256": "a0d0a229e5de14b70a91e5abc7967a47b9f2367c024204131e85768e6e7a0bf5",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ComputedTarget.class": {
+      "sha256": "180254f2dd09f26a3201966f96455d0fe4db91ad8053739364d12d5fb9d600fb",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ContractKnowledge.class": {
+      "sha256": "36ac761daddf5deba2577f619569164dca36d894803740140141395951f33026",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ContractRef.class": {
+      "sha256": "0eefb28087e75667353ebbccb4532418401c4fbcf052ff4560b7fc69efe5689f",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$CopyArgument.class": {
+      "sha256": "cf6423277265026718224aaac943b0588243406dff42ba402262708a389073ee",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$EffectBound.class": {
+      "sha256": "877cd22d9b939da76e08660d016c78cf9ad5f9b701721e28ff0a3486ade76957",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$EntrySignature.class": {
+      "sha256": "ff4c21ee63f1635585931553b0411ad2859d192c5355c65c49b3b71a731a3887",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ExactName.class": {
+      "sha256": "1c07635cca0f3bba1c04e47783990337a5c3074e7bf592b310592bb6a7ccf5e6",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ExtensionName.class": {
+      "sha256": "82a3be7c658a8b61d42ecf893d32dea3dcf84ff9f4272b7bc96cd5a8fd41aafe",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ExternalBinding.class": {
+      "sha256": "bf9c249176a214d74eb28e413565975d1f0f481188313260bd654ea94607d526",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ExternalSignature.class": {
+      "sha256": "43a1ee5fad7981b49cbd52394724c24396e15c0faed255c90018bc021baf5ca1",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ForeignEffects.class": {
+      "sha256": "bbae3231582e350b6f403f3ab5fdaaf34baec94722644cbcd53ab98bb97d7384",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$InternalTarget.class": {
+      "sha256": "1bab65e61bde26353e8feffe840f3e52744546f986162cbf3a263ebdba8c576c",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$InvocationSignature.class": {
+      "sha256": "dda372d8c5fa0588366b61169fa3e1cf5b1cafdc3a2a43e5b99294f4aa4697ac",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$KnownContract.class": {
+      "sha256": "11a29cd8b5339bc41115a05be4fe627d7604f1cb9d14bbd3869b5a71baf2924a",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$KnownMode.class": {
+      "sha256": "9ddb211eda94d65494da409b2f5a2309e46d2ce23c882cacee3ac3d682ad5856",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$LiteralTarget.class": {
+      "sha256": "442fd8914bcd4c5edafbe54f4a2a177c8926b8177aa1063ad43eb91f6e6f88e5",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ModeKnowledge.class": {
+      "sha256": "40471b010fdc6e14fde94317eb99aac20268314b740dfc9109fa0b51cf1968e4",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$NamePolicy.class": {
+      "sha256": "d49e01451c2352cb88c2526f3472219400925f1dc8472d86caad95754bc1cd97",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$NoRemainder.class": {
+      "sha256": "22b30004f00a43d915fc9c9ea035e585f0f485243b2ffed2e51bb5752d01e647",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ObjectBinding.class": {
+      "sha256": "4d819272258bc2f0444bfbcf1aca75418069eb39695bc60200e6c37188cbfb3a",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$OutcomeEffects.class": {
+      "sha256": "94d45e4509a509b617fb01243e32fc7b81ecfe5f7fc23b0cb2da6268e67d8240",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$Parameter.class": {
+      "sha256": "e4fd5f783b020b5f548c1acba3b8a5317edd6110739984ee0d7e5f0a64ccbdee",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ParameterBinding.class": {
+      "sha256": "04c9243c19ae3fd057085bbef30e1e9551bea830c6eb4fbcf8ad5bd108349101",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ParameterInventory.class": {
+      "sha256": "15584aa73a34453372bac359358c978a7752dcbc3f9f36f6b6dfa4755a542070",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$PassingMode.class": {
+      "sha256": "ecb9eccf0ca9430567b0e1b3acb275aec1a4a24b028583e42fa3360d7f738568",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ReferenceArgument.class": {
+      "sha256": "936b582b02295dd244bc8e182125cad389fc8d1d6a342bb597c5dc37ec8bbb04",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$Resource.class": {
+      "sha256": "035475c81605121e38fa53c46e64e84a824cbfd698785048f121eff878396640",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ResourceDescription.class": {
+      "sha256": "c1b3c880a44dd6c3d254434b4514cba6ec9faf94c2b3e7ecab4565bcef932537",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ResultInventory.class": {
+      "sha256": "32abb327778679d404a9cf1ff63b72034928bd3cb87946a1b16efec60767ff91",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ResultSlot.class": {
+      "sha256": "6d0f0c91e36328880c53c29362faa3da2d4a48f8c3a17814b3b34158ec8c9f73",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$Signature.class": {
+      "sha256": "f0c261a0806c068653f07b478c0e7bf79615e9d434685644d07382772bdbabda",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$Target.class": {
+      "sha256": "8ed42778cbf005744cbfd08c79d4c8029fbd6e5f298a2381ac8005a24624cc82",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$UnknownBound.class": {
+      "sha256": "cb68940411cdd356296291ded036d023991656053ec5fb421dde40d4ec6f4793",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$UnknownContract.class": {
+      "sha256": "5d5e191c5b49d2d9cc6a0a70e72962741da78f3e26b614340323fe126f593ed1",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$UnknownMode.class": {
+      "sha256": "d37230c444055dba6c9b84a28bfd3ffe6b735dc928c36e7ada574b95aa6b00a8",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$UnknownName.class": {
+      "sha256": "303e00a4a45a2e652fc7751ace730b43d335d6f188f85d76514e3b5d3eae57ce",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$UnknownParameterBinding.class": {
+      "sha256": "35728302f033bdd986a99a12c7dff1eb6cae4d68b9815892c653228399e34ae6",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$UnknownRemainder.class": {
+      "sha256": "11feb7c11f53ac5c9201438343c81d1234270301393c3051c3f987e9c55e6b38",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions$ValueArgument.class": {
+      "sha256": "a9fbfe1e3bd69091058216dd65e9195fae87d5f3286b0719efe67e5e2d9bf52f",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Interactions.class": {
+      "sha256": "90565ea793f5e0ac0cd549e062dc2fb19ea86fe74de9bca3afbe399fe8d3ff75",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$AliasBinding.class": {
+      "sha256": "0dd26b3e0c956b043c0518c835f4a69ce23fcaa43427ab043d7ce6c223d66622",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$AlternativesBinding.class": {
+      "sha256": "5845e065c8572e74555f37b29a5b21456a8352d3f8c31f76f399457e93ff653f",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$AsciiText.class": {
+      "sha256": "84ea81cc97de809f80f8839dedb2a296e3291d61b5634792a88b82b291c1e815",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$BinaryCodec.class": {
+      "sha256": "dd23e301b96803b52eedf8ba72693e237a36c1bdf8d7d8f3b7415c9925500a07",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$Binding.class": {
+      "sha256": "d5174e56a83bde3cbedde98624fc897f2b7558748c7b19dfbb4e5679c69fd48f",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$ByteOrder.class": {
+      "sha256": "21bab01528fd31ad91fe35d5bc188bbf8327c94b8eea706fb93137d6de807b8e",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$ByteRange.class": {
+      "sha256": "7ddf738f7b3bf5be04f52dfc47e3a5ff03e9f4657bda69856e89181ad7c5ed24",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$Cell.class": {
+      "sha256": "bc9eabe0a4ef5c6cb598af4ec9fdc52f07fcc20d9a3095e7bae3d826d32db476",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$CellBinding.class": {
+      "sha256": "4750a5d6538d0034729828009f12b4ce9393eebe441df65b56453b4c7344abaf",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$Codec.class": {
+      "sha256": "a5bd4925d2c8e2f691f6deadbdf9e534323a13c00963886436119c68d0c4685a",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$ExtensionCodec.class": {
+      "sha256": "d10bad76f77a731b46af78a9f551bd868ce9b4be877f1227c570d0701709ed16",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$IdentityBytes.class": {
+      "sha256": "fa3664f2d014964e1aabe0d0fcec88bdc4b0eaea81e11267c77e8beedd395b85",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$Lifetime.class": {
+      "sha256": "06b97f09fe135782781f8c52d5d8844d801b6ecd795a47f93c89fad26b9c3c34",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$ObjectDeclaration.class": {
+      "sha256": "8d2d087faca491676c250f6d45c5b95297f431181796eb28026e400b93d284c4",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$Region.class": {
+      "sha256": "3219617ab8de9e72bdcfe15dd982fdc5fccb5abd3cb5bf50bb4c43ec90e5f161",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$Storage.class": {
+      "sha256": "cbeec54e2f39f97b6a4c95495a4f7844089a57b574340fb5c1035c94f6eb3a0b",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$StorageHeader.class": {
+      "sha256": "f48ecd74a5d8fea7714bdc2a376c9c1f4a8ab1e72d8b6eab689aee1727ae1408",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$UnknownBinding.class": {
+      "sha256": "7d2e137ab859296d2cbbc0b0d3c292c21fb21f5c3287597caa67f1970c70ebb4",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$UnknownCodec.class": {
+      "sha256": "3f0b5faff179e432c26b9f011663ca56c2495a736ca506e65cd232328c950939",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$ViewBinding.class": {
+      "sha256": "a926c697ec464c6604ffb93d35db0fe323028e7a9c11d1300dd641494cfe0df4",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory$Visibility.class": {
+      "sha256": "ee2785a7bd8c82f0eab5be7f3a9d14e230e9f380dbaf91a0338661bed2b30ec2",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Memory.class": {
+      "sha256": "2a6adb7b4bc178738acff5f2d615ecbd25d38e09df793abdbf730ab560e2c23d",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operand$Header.class": {
+      "sha256": "ed85c7b05c7fe13a5f8195cc0f85bb44078ec2604ae9d487fda0f4ee14778ec6",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operand$Role.class": {
+      "sha256": "d21e3cf837438183d5b503f94f80dd5c18b2e5c4383638f9ea85efbf7ea56028",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operand.class": {
+      "sha256": "fe2ba6ee15e269a6c7ace9250d51a254bd82cbbc29edc34f4bcdc47ad7832a18",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operands.class": {
+      "sha256": "232f743c8bfa54d758609aa263455a42237113ea8cff289d4f722863a634490c",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operation.class": {
+      "sha256": "7978798d11017a9d8349a4d948344a931b3909e758d9f68ce7c1cf0a45b1843e",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$Assign.class": {
+      "sha256": "43d465e1c4494299658b032a59656829202cb3e7c6aacc434038a92ef81e272a",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$Branch.class": {
+      "sha256": "5a0d3c9cbbff75a1144ae51053f589267204245ef052030712bc1d442f52e699",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$Case.class": {
+      "sha256": "6c6f73902994dcf0ba9c9150ee2e023e466a4a33c0ab73f130791c493367b92f",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$CopyBytes.class": {
+      "sha256": "f7c868e3c398ad6f6844d536945d628d1693f14e4e103b398e451c52c0d0c67f",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$Dispatch.class": {
+      "sha256": "1b82d712d602255479610ba693959e999ae82c768d6ef573f663f3a8cf807e3c",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$Halt.class": {
+      "sha256": "901069e2acfd303f1d32f7e6e252969636577576c632aa96d6c727dfd4080117",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$HaltKind.class": {
+      "sha256": "2c794f53c90901bbc8a6960169da449beaed7e7bec7f79b3910a4c7fdc31a418",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$HavocMay.class": {
+      "sha256": "56764285c6bbfa18579dae371052b88d8b3385bef9a1889afa88b03ad0af50c9",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$HavocMust.class": {
+      "sha256": "12fb87757c63b7c223bec9e78d31765a11b197245bc09abe488330e1287a564c",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$Header.class": {
+      "sha256": "7e888b34acbde51697f2811f3e586e4b008b73a06ea37f21706fdbe2ec9a656a",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$IndirectJump.class": {
+      "sha256": "178ec0a3f34ec45f3d6bf350d088f4f6aa3e1034c1e5b21a48bfe9079aa4c342",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$Invoke.class": {
+      "sha256": "6afb75fc18b26a912fa2ae6c9b8bd549e531f60644e62668e23f95ec956a97b6",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$Jump.class": {
+      "sha256": "d6f80a694276433e38d0bec6c913effe0b9862d7cb220ba1079422ceb4917e9d",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$LocalBoundary.class": {
+      "sha256": "47e331f652d158c48b753702f47bc5662e2ec1eab23f0e00c16a5d0897a9544f",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$LocalInvoke.class": {
+      "sha256": "1393858a54bed46b21bc2ebb65a0621628c5412a651f8bdcb42f4667a998b7fa",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$LocalResume.class": {
+      "sha256": "9a9237178be48cec8288f76209000899c2bc18fcb7c966665f525375c4100fa6",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$LocalUnwind.class": {
+      "sha256": "0135c79b6600f3a8933ebabbfc76875967f73b0d2c5fc3cf8931684c747e8e5d",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$Nop.class": {
+      "sha256": "b9af3a40bde9b44985db35b86c04b5506005772099257c3969d6d7bb83d25622",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$Opaque.class": {
+      "sha256": "7b756fe3311344b60dd5e46a33044b3d5af5617cbb9a86594344df0203647665",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$Raise.class": {
+      "sha256": "8758486e78140f411e0e56e72a64ff6cc1b7e0a0b2a9769800ca7657a2a69342",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations$Return.class": {
+      "sha256": "f869584691d6d98ee6650f4b66f02c7a1f34a12de7ef63470fadd00823f0b3ec",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Operations.class": {
+      "sha256": "ec8bda74f1e7f58fa68e0011b26121b6a19f041cec14b8d6084996cada6226ee",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Origins$Artifact.class": {
+      "sha256": "06e0f693cedde7ea597a49a01df657488001d83a07171826f9d7b214f6c00c86",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Origins$ColumnUnit.class": {
+      "sha256": "e9f643135b1fe6dbf4160fe411a054e51e57b9cc31eba9e417b993b5aec41c3a",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Origins$Contractual.class": {
+      "sha256": "bf6b1c2b63e3d98b93decf409c03f24db39b767a935ba7236cc68f24723b64bb",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Origins$Derived.class": {
+      "sha256": "120f9eeed3d85010e8ab7e349e267c8ef94b644ea452a43c7ba4a4675b620f07",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Origins$IncludeFrame.class": {
+      "sha256": "fa93b94d788a05cce8198a2699dc1a490b04310f43821332f65629d2e68d7ddf",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Origins$LineColumns.class": {
+      "sha256": "61809c3517ce9643d5ba17796763fdde06c9e47622792d67df6598408dcbb401",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Origins$Location.class": {
+      "sha256": "7ab5cf5fe027ba98b5207698dc762be724f9a41648ab174ee01ec6c4d891863a",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Origins$Offsets.class": {
+      "sha256": "e6f226da9e591943b945e2e1f029afb4b86e52332d245ca443cd0a2e939981ac",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Origins$Origin.class": {
+      "sha256": "ef19ffee353eb33928da7a9cd8c302333628b85d752a9a35a415cfe86ad84dde",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Origins$Position.class": {
+      "sha256": "bc3feca70c54afab8c6f5dbfb8e226e9b4bc561c275fb394cdd9dd51c698d1d3",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Origins$Span.class": {
+      "sha256": "d922292458f815c6da0133bccbfb8846d513c0065d3b71571ba96c45934d1649",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Origins$Unavailable.class": {
+      "sha256": "b978a2ffcc5f0a9137f8b24a72eb4ed39b6c6f14b46b91e979d87de2c35d1eb2",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Origins$Written.class": {
+      "sha256": "02bc4f9fa92372fa5009f77ac959827ac625e66028d26d6f0f079ea04b91debd",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Origins.class": {
+      "sha256": "dee94794c3839c00bd579192abb6d6143e0233f8de045d10ee36d5bd111302ce",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Place.class": {
+      "sha256": "1d5060b7d2f5b448146bfc2580674899f1d93906d91a44883d68f39aeadf706d",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Places$Choice.class": {
+      "sha256": "fcc70ce361d58f61572d94de11b37eaa383398a6620fdddf3e3c5afb35beec82",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Places$ObjectPlace.class": {
+      "sha256": "079c19d4b3c57007e50823c6262386072d8e7a449e4fb49eedb1b920015250b6",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Places$RegionSlice.class": {
+      "sha256": "ff6fa13e75b8eae3274009907eb6e6cba67c364f90518331d60601ee8d41f0b0",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Places.class": {
+      "sha256": "50824b5936c3d2ec48551534c99ccae1a9c62076a48aa0aeb5160a81e5429773",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$Assertion.class": {
+      "sha256": "f3f99772181293d82459e99ce469d0c4683104fc5df167516f55ff95a6cc93dd",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$CallParameterDomain.class": {
+      "sha256": "8c8ec420a70f6475526846770597e80e43ad1db5f3e444911dc8fdf28e60b8cf",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$CallResultDomain.class": {
+      "sha256": "075cf838e161a023131eec14f99402b45f4a61de573479629a0be75b7d688265",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$CellDomain.class": {
+      "sha256": "0b5461a423fc36c75598f35b25c3318d32936a87da79a933b4120aabfddb2653",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$DisjointStorage.class": {
+      "sha256": "0cb10708b719ace2594e05db96cc51c9ea6a3678bd7414f9761e0c2fc13c87d1",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$DomainProofScope.class": {
+      "sha256": "4987154e86ea51a3074096bd395bd17d2d0b23970229b96bf298bd0c3e0d95f0",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$DomainSubject.class": {
+      "sha256": "d61a6c076db74a78fe6d6decfc5bb7003b3925914be024f3471536551749c747",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$EntryDomain.class": {
+      "sha256": "a6bf1c2d90533ecd05b5bdcb2e8a323243744529d20327de3228fb6f41f86555",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$EntrySite.class": {
+      "sha256": "4ca98087fb341e343f61f64768cda2a770a07cf96057d0dc71697b87d00273ee",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$ExternalParameterDomain.class": {
+      "sha256": "a1c1934d413f189ecf5d663e0396a81033ef18f9f3846c5f2ec0f9fcefb01fb7",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$ExternalResultDomain.class": {
+      "sha256": "02f1d332178ed7426ac7de3db7e82f8b7fa6f0d12c80db0a0feefb344bba896a",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$Intersection.class": {
+      "sha256": "db41825f0faec82838076a176d2e37f73aa900c2814c899cfa5ca9deb6de7352",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$InvocationDomain.class": {
+      "sha256": "610bc723a238b5ebbc9a9a27ced1bedb05479948c8164c5debe8130e120559e0",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$InvocationSite.class": {
+      "sha256": "5e72d38af64cbbba9acc80b763a56bce3df919351faa84c46d8f4abf3d2a0564",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$ObjectDomain.class": {
+      "sha256": "dff43b9b97babb296e1aff019b1329b470910933c2e4c3e5d28f4e80e82da75f",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$OperandDomain.class": {
+      "sha256": "367b3d0d5261d9bbcc9f9cf7a8e2270f534264078c27f7f17690ca67434ed282",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$OperationDomain.class": {
+      "sha256": "55affaa4dbcd3d456945641d9f6e443729e0b6597e89415ea767bb0af2545068",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$OperationSite.class": {
+      "sha256": "8fe581e88e268ccf5390066a2d682ac68a332f91246f5ee263f363b9ff5ab74a",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$ParameterDomain.class": {
+      "sha256": "0e29462a045538583b06cb97e9945c064a9d3dfebb3ea4e3e67dcb9696a93079",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$Premise.class": {
+      "sha256": "51a880c0ebe74d86f09d0bcf808291af85fd6c96f8c9143dbfa613dfbbb48539",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$ProofSite.class": {
+      "sha256": "735dc5a8ee4affc64850366e63ba6d0cc250cfb436222bc7dae0dde4a1fa4d66",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$PublicationDomain.class": {
+      "sha256": "37cb1cde6ed12d5a2fc425c04c01cece274a34b22f98ca6a5af3cf113b6156b1",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$ResultDomain.class": {
+      "sha256": "bad76a0a18e1064f5aabdb290d3b2aead6293fc48a565699d288da17ccae6607",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$SameDomain.class": {
+      "sha256": "5d48db02a2724e103d067be3bcb0bc83618e79f484040c7ea122776ce936bb6d",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs$UnitDomain.class": {
+      "sha256": "32fc473b7142fe163ed0a4d82618939307d73c16eb24eac8feeb9da7ce82a625",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Proofs.class": {
+      "sha256": "ce800a7643a93f6842ad7f8eecaf168d49c3de15fca8fad910acb81844df5649",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Publication.class": {
+      "sha256": "19e71a363588754401b8f5e18669940ac6831913cb9534bff1614091d63386ca",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Require.class": {
+      "sha256": "ed7d9ef0c008aa6732e8ab4ca009b54b0abc8adb7cbe043d792713054d8da8cc",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$AllControl.class": {
+      "sha256": "e112cadd6139456d27af34bdda79352314650433987fafcbf219e35b3ae505a3",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$AllMemory.class": {
+      "sha256": "ce870ef368b7b1e9d5bd58390c36bdf11b4f19b00ab33782f091f16ca291b702",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$AnyResource.class": {
+      "sha256": "e22e54ba80b654ca02215187690555df1480f95df2c8d0e533e7b939c4c1b129",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$ControlBound.class": {
+      "sha256": "8458fca3d70ccea662821d34001f2beab714182ae35f6dc9c608fcfab608a9d6",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$ControlScope.class": {
+      "sha256": "ab38ceb4225f38bc196e6425b0c6b70f7fa2d7998642d1fdbd112e8725af7130",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$ControlUnion.class": {
+      "sha256": "fd56376df293e0f969c6eb3282edd356c3f5ebfa36cb85f85456be4ee310d3ca",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$DependencyBound.class": {
+      "sha256": "eb288d7a48eb344aeab36cc5a3be3ed5dab389870de84a426737d11b1bead755",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$EntityScope.class": {
+      "sha256": "953fe0f061464c04962feca75c607ee976ccdfdd747b8a7e7d901da079a91854",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$FactScope.class": {
+      "sha256": "c048671983ea6b75a34e78a643725978ca8d9558e009978a627b3819fc54cd17",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$LabelsControl.class": {
+      "sha256": "9ebcf2ebd0198bd6abaf396e2813053788ed63a9949db8cc359276656dc09553",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$MemoryBound.class": {
+      "sha256": "5dba191419c2d7cb96bdf46601fe9106b02f356e7c653f1d816322a25a194b1f",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$MemoryScope.class": {
+      "sha256": "f56aa04fa53faa474de0fb154fd89b28535a701f03c15d35657cb88605d22b58",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$MemoryUnion.class": {
+      "sha256": "c26ac40b6a5de1554e05acf8b7f50f92b3ffbcc1c42cbba21662fa198e29ddde",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$NoControl.class": {
+      "sha256": "47fb560f7e213f5756b1f9de4f53ab6153a16fb9e20fbe2a1682a27130e00439",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$NoMemory.class": {
+      "sha256": "e4d7aaa6f8579303518bf163347401e286d9ae47af194587ff0f75cd0206d7c8",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$NoResources.class": {
+      "sha256": "8d69283bfb83c5262be0b3a433fc03d1587158bba980d4994cff015761028fa8",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$ObjectsMemory.class": {
+      "sha256": "734b84d1b7f5505da80cdc6688e55f48cd387f8615b4b90b7c776c66019e9365",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$PublicationScope.class": {
+      "sha256": "7b183403d56a55a63fc71df4720b10d6ef020628d3f7496860ca09067f5dfbd1",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$ResourceCategories.class": {
+      "sha256": "5bf6b02a04905d9fa98ea7810ee5605501a4d6b300b821f3dcdf36d178613e8f",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$StorageMemory.class": {
+      "sha256": "b9b93c69898489b77ce7dc9882cda568a054c1d8e4d264b6cb02ff9494906d6b",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$UnitControl.class": {
+      "sha256": "e7e8b525bb894f33604738e2c6f1dce07502289cb03724d4c881edb7988ec8c7",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$UnitScope.class": {
+      "sha256": "bf32c21f230edf83e97f99041d45bef2b05cc52a180defae78bc3eb18487e828",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$VisibleMemory.class": {
+      "sha256": "5ab2455b0ba03c43b83b6bd1284664a81504dc4f87fc9a107fd67c30b5a2afd3",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$WithinControl.class": {
+      "sha256": "e9d6839f24fd01952a754dcfd089eebd9dbc7088f3926b012a072ce0cd54b5b6",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes$WithinMemory.class": {
+      "sha256": "65cfd8bafeaa657fe2997f324fe03e09cdb571d8caa8c713474d84effc5dcafe",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Scopes.class": {
+      "sha256": "b67f30ea6163ba0e5170f3166d59cbe10a302e537887f925c8db9e4c2dad3c57",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/SemanticVersion.class": {
+      "sha256": "a65eee3a8663c0565654531759ac8c44ef97e8897c3c9a029f6c413b5b33a97d",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Sequence.class": {
+      "sha256": "a5d7a76408cc9f402977c9302b2a94b27f6363f3e6a985df7717991bf8b10f60",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Terminator.class": {
+      "sha256": "d7e2237f4ccffed14a0dd5b8b03ef55f059338c4e895a8f9dfb236017a28e8b8",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Types$Builtin.class": {
+      "sha256": "fea6ab40cf46554cce4226948937783c545c5051a1143122910318755b843eb4",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Types$ExtensionType.class": {
+      "sha256": "422bc2187b638da7979091c4c89d98ec8021304e83bcc384282cf8eb906f9eee",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Types$Known.class": {
+      "sha256": "0ad4a2a59627af77e628e9a9bdb075b48eefa516c882cc2408fb40763ed14da7",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Types$LabelType.class": {
+      "sha256": "ff1b99d59f4d77e0bae84dc0c0881e6b4696c3a7d82a7a2225750baa784946a9",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Types$Type.class": {
+      "sha256": "dc91528d709ae4d631f1beb9d5ad4ea1ef065d11cbd55d6dd1f6d96c470cf786",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Types$TypeRef.class": {
+      "sha256": "88c8ca1483bba6b7eb885e8e9848cd72fa7028f9ea6dc2ad811fe3608cbfcf67",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Types$UnknownType.class": {
+      "sha256": "5c45a4e5b7ccb493a62bc653c6a186e3ced7997065b751f4c7a9dc7a5d49c4f8",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Types.class": {
+      "sha256": "bc64394d7d7da11430d92ba5a5a63b3f19172e43838a571554a8bef4049c56ac",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Unit$BodyAvailability.class": {
+      "sha256": "9213934d234da13930588f57e1ddae46426dcdbddd396e42e1cc8a0361ab9e7b",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Unit.class": {
+      "sha256": "5e0b6db9af09dc0e132dc5c9ef7160420d4a13f179f857dc0bc53f221adf559a",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Values$BoolValue.class": {
+      "sha256": "9c032abcd8081520b39d0eaff9a7f5491cc44cb3172dd16efd4e77aa811b3836",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Values$BytesValue.class": {
+      "sha256": "d755a5add0d40920d7e73621b7b60540fa3e669613fd8513c26da74684b0c05e",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Values$DecimalKey.class": {
+      "sha256": "b160656150f996b54269a1b22120e35ea4327ad40385a3b1c18248409291269b",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Values$DecimalValue.class": {
+      "sha256": "a72009c378418dab8ff9362e8abdfd0bdbbbc70fc4f8f992aa23d558d7a60083",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Values$IntValue.class": {
+      "sha256": "06b1da3fdbe5191b3ad4cd4b593c198f2d37dd12d53fbdfc1fdbc7bc1d3ac687",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Values$LabelValue.class": {
+      "sha256": "3bf99cb902fbc4b0b8e07dfab210f56bdc1ef72dd0dae2d83b97d763f8cf119c",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Values$LiteralValue.class": {
+      "sha256": "ef47b37cc15ba7ae5a0a7d279cf2b2cfa691947679e6177d80abef66c11af999",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Values$TextValue.class": {
+      "sha256": "3b8ce38b3b3195a6fb16abc77a6a84a8362d99f846c27807e4542942a22863f5",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/model/Values.class": {
+      "sha256": "8b2ab203ece828ece4bcbaa818eb4ceeba372fb9d1f40481f91c62e1acf8ebaa",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/AirValidator.class": {
+      "sha256": "2026fd5beff929088f0b35e74a827948c04d6b6eed762a637357106d855ed1d1",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/DomainProofEngine$Graph.class": {
+      "sha256": "73101a80ecea5a1b4841146b82d816ec96caed7700dfc53353ac67f79899315b",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/DomainProofEngine$Key.class": {
+      "sha256": "a629128e57f9bb9dde4ee35f5e530bd907b86c7501ef9a33e6b9d6e66fcaff53",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/DomainProofEngine$Scoped.class": {
+      "sha256": "4c0977d342a5cda2b160f609b4589614fab8d687b3d7b9cdfac802e9088fa569",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/DomainProofEngine$SignatureSlots.class": {
+      "sha256": "0548da8c47625debb6335a20dc0179b394309ab03088d43a242bb444bae42a6d",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/DomainProofEngine$SubjectKey.class": {
+      "sha256": "2d74a9ca78b5de2446333d9b26ff2757b1f25f4d265e3f57962373a4371585d4",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/DomainProofEngine$TypeKey.class": {
+      "sha256": "777c55309378c43f0dcc446955a076b02847487ca82438be960c52f992fa188f",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/DomainProofEngine.class": {
+      "sha256": "80af0ba29a1159a2ac516f1d0ba16cb40e53203009cfdcd41443caaad4bbb9b5",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/OperationChecks.class": {
+      "sha256": "ed94bffed8b8e7a0a799e1ffc2bb1c0d55a0531857f4cc819950b74a37968d72",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/PublicationIndex.class": {
+      "sha256": "c198011baa55bb93912a76ea6c21a5008c6a98224e23d2862a172fa200d658ac",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/ReferenceChecks$SignatureContext.class": {
+      "sha256": "1a49024cd61d8adcf1968dd48852156dd5fcd26a88dfaccde1d3189aa66a14e2",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/ReferenceChecks.class": {
+      "sha256": "745f441fd7981cd62e08682d50d57e5c62bcdb07725fad0f8b97f21e33512379",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/ScopeRules$Kind.class": {
+      "sha256": "0d89ddae34153495dda26641b96ff13197293fbddde32d09dc6e69d1e99e1f08",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/ScopeRules$Region.class": {
+      "sha256": "9ec6e36c74ef81d0bade54c226f08338b3ebf4722112a25d8d9b6dc2e6938691",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/ScopeRules.class": {
+      "sha256": "e916498b3b0b96f077d874a13943e50425609997351138e9dcfed021b1bd5f20",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/TypeResolver$1.class": {
+      "sha256": "15b14f2b60e058b87c4ca1d8140230208d33e1c190156411a63c8d35573517b9",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/TypeResolver.class": {
+      "sha256": "caa09f9c29234ac8c6001fc488e36d14110f87d4f725f2ba986135ced428c505",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/ValidationContext$Limit.class": {
+      "sha256": "52f7f42618dbe686fb98ba8307c9b2b0f2c36c6cfeff30f8a5e677822b05ed19",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/ValidationContext.class": {
+      "sha256": "6d95d0c89b23ac2ff4b68c7646bd656de80ca645d74ca2ee4f639f5618ec3731",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/ValidationIssue$Kind.class": {
+      "sha256": "100e55d719fe5326d0690a40957542d5115b7194bd584196e67011f44d358519",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/ValidationIssue.class": {
+      "sha256": "e4641b3ed3a611f795d417f7155f9e7be0181d411a33f5b7ac1304de712f7ab7",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/ValidationOptions.class": {
+      "sha256": "9c5385f1fd63a5e934f9628b5f978b06eea6932b617ea255025839642c28e336",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/ValidationResult$Statistics.class": {
+      "sha256": "64db4c9ece6d142b3bbda5b75949c22807e99be89b0d3e92e10921b00d76b455",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/ValidationResult$Status.class": {
+      "sha256": "84f60d047c63658f8a7b2b13ad5224088ce0bcfc82a7e174db64a174d018107b",
+      "major": 65,
+      "minor": 0
+    },
+    "io/github/gustavo2358/air/validation/ValidationResult.class": {
+      "sha256": "9804f07613882dbc7ccea38d80f00b2cb514982ef664c6ffddb09020a7cbd533",
+      "major": 65,
+      "minor": 0
+    }
+  },
+  "baseline_commit": "59120faebfe8381df445fd6ea74822bb83f08554"
+}

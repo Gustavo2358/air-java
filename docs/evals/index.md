@@ -5,9 +5,9 @@
 | Eval | Prova local | Estado |
 | --- | --- | --- |
 | EVAL-AIR-001 | Integridade documental e lifecycle (docs) | implemented |
-| EVAL-AIR-002 | Fronteira real de bytecode (architecture) | implemented |
+| EVAL-AIR-002 | Ownership, POMs e fronteira de bytecode (architecture) | implemented |
 | EVAL-AIR-003 | Contratos existentes do modelo e Validator (semantic) | implemented |
-| EVAL-AIR-004 | Maven executa a suíte completa (maven) | implemented |
+| EVAL-AIR-004 | Reactor, grafo efetivo e suíte completa (maven) | implemented |
 | EVAL-AIR-005 | Contracasos do próprio harness (harness) | implemented |
 | EVAL-AIR-006 | Branch, base e escopo completos (git) | implemented |
 | EVAL-AIR-007 | Codec contra binding pinado (transport) | planned |
@@ -29,3 +29,8 @@ EVAL-AIR-007/008/009 são planejados: execução retorna UNAVAILABLE. Fixtures d
 transporte exigirão expected derivado do draft pinado, erros tipados de versão,
 canonicalização, determinismo e round-trip com preservação de incompletude; ainda
 não são parte da implementação ou certificação atual.
+
+Em 0C-I, EVAL-AIR-002/004/005 incluem o [contrato multi-módulo](../engineering/modularization-gates.md):
+Jackson runtime sem referência é recusado pelo effective POM e grafo resolvido;
+model/validation mantêm a allowlist JDK. JSON vazio é autorização de topologia,
+não PASS de transporte; primeira fonte/recurso/teste exige revisão da política.

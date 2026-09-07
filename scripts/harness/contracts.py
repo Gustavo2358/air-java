@@ -18,6 +18,8 @@ def inspect_output(output, expected):
 
 
 def check(root, *, maven=False):
+    from module_policy import MODULES, inspect_topology
+    version = inspect_topology(root)
     expected = read_json(root / "docs/evals/contract-checks.json")["checks"]
     if maven:
         # Dependencies are build plugins only. Do not install/publish a library.
@@ -32,4 +34,16 @@ def check(root, *, maven=False):
     count = inspect_output(output, expected)
     if maven:
         require("BUILD SUCCESS" in output, "Maven did not complete")
+        inspect_reactor_output(output)
+    for owner, artifact in MODULES.items():
+        require((root / owner / 'target' / f'{artifact}-{version}.jar').is_file(),
+                f'Missing reactor artifact: {owner}')
     return f"{count} deterministic checks executed via {'Maven clean verify' if maven else 'scripts/check.sh'}"
+
+
+def inspect_reactor_output(output):
+    """Only the full root invocation claims a complete reactor, never a cached JAR."""
+    require(len(re.findall(r'^PASS: reactor topology ', output, re.M)) == 1,
+            'Missing or duplicated reactor topology verification')
+    owners = re.findall(r'^PASS: compiled module ([\w-]+);', output, re.M)
+    require(owners == ['air-model', 'air-json'], 'Incomplete, duplicated or reordered reactor verification')

@@ -64,6 +64,22 @@ class BytecodeTests(unittest.TestCase):
         with self.assertRaisesRegex(Failure, "Unexpected production class"):
             self.inspect(classes)
 
+    def test_nested_model_dependency_on_validation_is_rejected(self):
+        classes = self.compile({
+            'Value.java': 'package io.github.gustavo2358.air.model; public class Value { public static class Nested { public io.github.gustavo2358.air.validation.Check field; } }',
+            'Check.java': 'package io.github.gustavo2358.air.validation; public class Check {}'})
+        with self.assertRaisesRegex(Failure, 'model -> validation forbidden'):
+            self.inspect(classes)
+
+    def test_model_cannot_depend_on_json_module_or_gson(self):
+        for package, name in [('io.github.gustavo2358.air.json', 'Codec'), ('com.google.gson', 'Gson')]:
+            classes = self.compile({
+                'Value.java': f'package io.github.gustavo2358.air.model; public class Value {{ public {package}.{name} field; }}',
+                name + '.java': f'package {package}; public class {name} {{}}'})
+            (classes / (package.replace('.', '/') + '/' + name + '.class')).unlink()
+            with self.subTest(package=package), self.assertRaisesRegex(Failure, 'Unresolved dependency'):
+                self.inspect(classes)
+
     def test_wrong_major_or_preview_is_rejected(self):
         classes = self.compile({"Value.java": "package io.github.gustavo2358.air.model; public class Value {}"})
         path = next(classes.rglob("*.class"))

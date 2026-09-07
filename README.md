@@ -17,16 +17,30 @@ produtores e consumidores
 **Coordenadas:** `io.github.gustavo2358:air-java:0.1.0-SNAPSHOT`.
 A versão da biblioteca é independente da versão semântica da AIR.
 
+## Layout Maven
+
+| Diretório | GAV (versão conjunta 0.1.0-SNAPSHOT) | Conteúdo |
+| --- | --- | --- |
+| raiz | `io.github.gustavo2358:air-java-parent:pom` | parent/aggregator, sem dependências herdadas |
+| `air-model` | `io.github.gustavo2358:air-java:jar` | modelo + validation, packages públicos preservados |
+| `air-json` | `io.github.gustavo2358:air-json:jar` | vazio em 0C-I; dependência compile direta em air-java |
+
+`air-model` é o diretório físico; **`air-java` permanece o artifactId consumido**.
+A direção é `air-json → air-java`, nunca o inverso. Para consumo via cache Maven,
+instale o reactor completo (`mvn install`): o POM do parent também é necessário.
+Nenhum codec ou biblioteca JSON faz parte de 0C-I.
+
 ## Fronteira
 
-`src/main` depende somente de `java.base`. Não contém Jackson, Gson, JSON,
+`air-model/src/main` depende somente de `java.base`. Não contém Jackson, Gson, JSON,
 filesystem, rede, CLI, frontend COBOL, CFG, cálculo de effects, reaching
 definitions ou possible values. Nenhum campo semântico é um payload livre como
 `Map<String,Object>`.
 
 O modelo é transport-independent. `analysis-ir/bindings/json-v1.md` é uma
 especificação de transporte **DRAFT** e não é implementada por esta biblioteca.
-Adapters de transporte pertencem aos produtores/consumidores, fora do domínio.
+O módulo irmão `air-json` está vazio no checkpoint 0C-I. O futuro codec compartilhado
+pertence a esse módulo, fora do domínio, e exige o checkpoint 1A.
 
 ## Conteúdo
 
@@ -35,7 +49,7 @@ Adapters de transporte pertencem aos produtores/consumidores, fora do domínio.
   proveniência, coverage, uncertainties e premissas normativas;
 - `validation`: índices por identidade, checks de fechamento/ownership/tipos,
   prova finita de `sameDomain` e diagnósticos explícitos de limites/obrigações;
-- `src/test`: suíte determinística sem framework externo;
+- `air-model/src/test`: suíte determinística sem framework externo;
 - `examples/MinimalPublication.java`: construção e validação sem transporte;
 - `docs/reconciliation-air-2.md`: discovery AIR ↔ Java e evidência da migração;
 - `docs/model-catalog.md`: catálogo informativo da API Java atual;
@@ -69,22 +83,29 @@ Gate offline, sem dependências de teste:
 
 ```sh
 ./scripts/check.sh
-java -cp target/air-java-0.1.0-SNAPSHOT.jar examples/MinimalPublication.java
+java -cp air-model/target/air-java-0.1.0-SNAPSHOT.jar examples/MinimalPublication.java
 ```
 
-O script compila main e testes com warnings como erros, executa a suíte, gera o
-JAR e confirma com `jdeps` que o runtime depende apenas de `java.base`.
+O script conhece os dois módulos, compila modelo e testes com warnings como erros,
+executa a suíte com cwd em `air-model` e valida seu inventário nominal. Produz os
+dois JARs em seus próprios `target/` e verifica ownership e bytecode. Não baixa
+dependências; POMs/profiles não cobertos falham. Saída de produto no `target/` raiz
+é rejeitada; ao migrar um checkout antigo, `mvn clean` remove a saída anterior.
 
 Com Maven:
 
 ```sh
-mvn verify
+mvn clean verify
+# Seleção coerente: parent + modelo, com a mesma suíte e gate compilado
+mvn -pl air-model -am verify
 ```
 
-`ContractSuite` roda na fase `test` via `exec-maven-plugin`; um relatório vazio
-do Surefire não significa que a suíte não executou. A saída contém
-`PASS: ... deterministic contract checks`. Plugins Maven podem precisar de rede
-apenas no primeiro uso; eles não se tornam dependências do domínio.
+`ContractSuite` roda exatamente uma vez no modelo, na fase `test`, em JVM separada
+com `-ea`, classpath de testes e cwd `${project.basedir}`. Seu log é validado e
+apresentado em `verify`; omissão, duplicação, reordenação ou skip falham. Cada JAR
+passa por effective POM, dependency tree JSON e inspeção focalizada de bytecode,
+sem invocar Maven/full novamente. Plugins Maven podem precisar de rede no primeiro
+uso; não são dependências de runtime. O harness `full` exige o reactor completo.
 
 ## Consumir
 
