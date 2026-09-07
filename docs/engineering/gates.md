@@ -46,8 +46,11 @@ diff sujo), timestamp operacional, resultados, detalhe, exit code e etapas não
 executadas. Maven clean remove resultados anteriores em target; full grava seu
 relatório agregado depois da execução. Os relatórios não são certificados humanos.
 
-CI adicional em [harness.yml](../../.github/workflows/harness.yml) roda full e ci-scope
-no SHA checked out. CI exige um item ativo explícito; sem ativo, aceita somente
+CI adicional em [harness.yml](../../.github/workflows/harness.yml) roda ci-scope antes de full
+no SHA checked out: autorização de diff falha antes de compilação/suíte/Maven.
+Os dois steps são obrigatórios, sem continue-on-error ou condição de skip; falha
+do scope impede full. O oracle em test_execution.py protege ordem e obrigatoriedade.
+CI exige um item ativo explícito; sem ativo, aceita somente
 encerramento documental dos itens da base do evento, com registro histórico e
 ancestralidade do merge. Essa exceção não admite código, POM ou source lock. O workflow anterior permanece
 intacto e executa os gates originais. Sem path filter que ignore novos arquivos,

@@ -1,9 +1,15 @@
 {
   "active": [
     {
-      "id": "WORK-AIR-HARNESS-001",
+      "id": "WORK-AIR-MODULARIZATION-001",
       "status": "ready_for_review"
     }
   ],
-  "history": []
+  "history": [
+    {
+      "id": "WORK-AIR-HARNESS-001",
+      "status": "completed",
+      "merge_commit": "c487b80dd5548236de9114d8b3ec370eabb25c30"
+    }
+  ]
 }
