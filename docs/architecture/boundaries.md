@@ -5,7 +5,7 @@ analysis-ir (normativo, SHA pinado)
         ↓
 air-model (artifactId air-java): model ← validation
         ↑                         ↑
-air-json (vazio 0C-I)      callers / testes / exemplos
+air-json (codec 1A)      callers / testes / exemplos
 ```
 
 `Publication` e `ValidationResult` são valores em memória. Não há necessidade de
@@ -36,6 +36,9 @@ crescer dentro da fronteira. O inventário nominal da suíte é separado, com re
 deliberada ao acrescentar/remover checks. O reactor tem inspeção por módulo
 de POM efetivo, grafo Maven e JAR/bytecode em verify. O modelo rejeita qualquer dependência efetiva/resolvida, inclusive runtime
 ou optional sem referências Java; JSON permite só a aresta direta no modelo.
-[Política 0C-I](../engineering/modularization-gates.md) rejeita fontes/resources
-JSON, módulo ausente/adicional e outputs de produto no root. Não há codec ou
-conformidade de transporte entregue por esses gates.
+[Política 1A](../engineering/modularization-gates.md) exige implementação/suíte JSON com ownership, módulo completo e nenhum output
+de produto no root. O codec admite somente a cobertura declarada de 1A.
+
+O JSON tem somente classes adicionais JDK para UTF-8/ByteBuffer em allowlist
+exata; não abre java.nio.file, filesystem ou bibliotecas externas. Model e validation
+conservam sua allowlist anterior. [Contrato do codec](../engineering/air-json.md).

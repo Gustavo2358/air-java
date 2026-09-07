@@ -1,0 +1,36 @@
+{
+  "air_java_baseline": "71937dfe88bac4dae10f6f195731acac638c2d29",
+  "modularization_pr": 4,
+  "modularization_merged_at": "2026-09-07T18:08:56Z",
+  "branch": "feat/air-json-codec-mvp",
+  "analysis_ir_pin": "122ce54e1b9ef9b00646f93ece409ca8b63bc933",
+  "analysis_ir_0b_merge": "51b4d9a8ae0364232bd97103cd73a77e1a34996c",
+  "binding": "analysis-ir-json",
+  "bindingVersion": "1.0.0",
+  "airVersion": "2.0.0",
+  "status": "DRAFT",
+  "normative_file_sha256": {
+    "bindings/json-v1.md": "ff9c3430c4ac9b102ec675d00b7b091d2cd999724624972b1779625329d47104",
+    "bindings/revisao-json-v1.md": "f51b4c3bdb048fb0f85bdef2d72e7716566b959dc67174bbdbe95cded2fa0f54",
+    "especificacao/00-escopo-e-convencoes.md": "c02d9d4f78580b56728c4fd1207e766f0f5ddc0c690e585b70fcc23649afac69",
+    "especificacao/01-modelo-e-identidades.md": "414184c62626b71bf3852455ff3427383f0c2412061c29e9f56002aa7b50a91e",
+    "especificacao/04-operacoes.md": "7c0f71f657490e6fe110fc5c43e297e9a34e6b645ec1b2d923fc3e92b70ad16a",
+    "especificacao/05-controle-e-invocacoes.md": "cf072a83d8237a65e9d97cf0775bfcabbab41e22d106cf95c320b170e41a125d",
+    "especificacao/06-incompletude-e-proveniencia.md": "a3df98392065a2a052de6240dd5b41bc296342ade091aafe0772255a90e2b1e1",
+    "conformidade/01-invariantes.md": "d3881c9504d2f3ded32235e578f6b826da1a32df7e2866161979be75f6e56ca1"
+  },
+  "operational_handoff": {
+    "path": "bindings/checkpoint-0b-mvp.md",
+    "ref": "51b4d9a8ae0364232bd97103cd73a77e1a34996c",
+    "sha256": "5ff6b48607ceef7ae35aebc03de55563ad10d97e5e57825fdf8cb5e8e7e85c98"
+  },
+  "roadmap": {
+    "path": "../roadmap.md",
+    "sections": [
+      "1.2–1.6",
+      "8"
+    ],
+    "sha256": "df93743bfc633fc0d6eac05113befca46a73fec8c3f13b9fe7a2224f30a5d587"
+  },
+  "json_library_decision": "No external dependency; explicit physical parser/canonical writer with adversarial tests, only in air-json"
+}

@@ -9,7 +9,7 @@ diretório. Requer Python 3.10+, Git e JDK 21+ (java/javac/jar/jdeps); Maven par
 | docs | links/anchors locais, JSON sem chaves duplicadas, locks, IDs, evals, lifecycle, MANIFEST hashes/cobertura |
 | harness | unittest com contracasos documentais, Git, saída de testes e bytecode sintético |
 | fast | docs + harness; inclui JDK para contracasos compilados, sem Maven |
-| architecture | topologia/POMs fechados + compilação isolada + ownership/classfiles 21/jdeps; JSON vazio explícito |
+| architecture | topologia/POMs fechados + compilação isolada + ownership/classfiles 21/jdeps; modelo isolado + JSON com aresta explícita |
 | semantic | script offline do reactor, confere cada check nominal, ordem, numeração e resumo |
 | maven | root clean verify, owners completos, effective POM/grafo/bytecode/JAR e suíte nominal |
 | git | branch/base/origin main local e diff no scope do --work explícito |
@@ -17,7 +17,7 @@ diretório. Requer Python 3.10+, Git e JDK 21+ (java/javac/jar/jdeps); Maven par
 | ci-scope | scope + diff da base do evento GitHub; permite encerramento só documental sem item ativo |
 | full | docs + harness + architecture + semantic + maven, uma vez cada, para na primeira falha |
 | performance | UNAVAILABLE: não existe gate focalizado de custo N/2N |
-| transport | UNAVAILABLE: codec ainda não implementado |
+| transport | suíte 1A isolada, golden manual, regras físicas e preservação |
 | integration | UNAVAILABLE: equivalência arquivo/memória e E2E futuros |
 
 [Estado estruturado](gates.json) é conferido contra executores. Exit codes: 0 PASS,
@@ -66,4 +66,5 @@ não prova as assertions. Review humano e oráculos de domínio continuam necess
 
 Detalhes da implementação e contracasos por owner em
 [modularization-gates](modularization-gates.md). `air-model` produz `air-java`;
-`air-json` vazio é verificado, sem declarar transporte disponível.
+`air-json` tem implementação/suíte nominal obrigatórias; cobertura é a de
+[1A](air-json.md), sem alegar o catálogo completo.

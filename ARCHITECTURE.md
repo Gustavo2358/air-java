@@ -20,8 +20,8 @@ O root produz `air-java-parent:pom` e agrega `air-model` e `air-json`.
 `air-model` preserva `io.github.gustavo2358:air-java:0.1.0-SNAPSHOT` e contém
 `io.github.gustavo2358.air.model` e `io.github.gustavo2358.air.validation`.
 Validation permanece no mesmo JAR do modelo; não existe terceiro módulo.
-`air-json:0.1.0-SNAPSHOT` depende diretamente de `air-java` e está vazio em 0C-I.
-O primeiro código de transporte exige política/testes de 1A. O parent centraliza
+`air-json:0.1.0-SNAPSHOT` depende diretamente de `air-java` e contém o codec 1A.
+A [política/suíte JSON](docs/engineering/air-json.md) declara as formas implementadas. O parent centraliza
 Java/encoding/plugins, sem dependencies herdadas. [ADR-0002](docs/architecture/decisions/ADR-0002.md).
 
 ## Dependências
@@ -30,10 +30,10 @@ Java/encoding/plugins, sem dependencies herdadas. [ADR-0002](docs/architecture/d
 somente JDK/`java.base`. Testes e exemplos dependem dos dois.
 
 Não há porta de infraestrutura obrigatória: `Publication` e `ValidationResult`
-são valores entregues ao caller. O futuro codec JSON pertence ao módulo irmão
+são valores entregues ao caller. O codec JSON pertence ao módulo irmão
 air-json. Arquivo, rede, CLI e frameworks permanecem fora do núcleo e sem
 autorização antecipada no codec. O binding JSON da AIR continua DRAFT e não
-define o runtime desta biblioteca.
+é promovido por esta implementação.
 
 Uma integração possível é:
 

@@ -89,7 +89,7 @@ class DocumentationTests(unittest.TestCase):
         self.rejects("Invalid/duplicate ID")
 
     def test_unavailable_gate_cannot_claim_implementation(self):
-        self.change_json("docs/engineering/gates.json", lambda data: data.update(transport="implemented"))
+        self.change_json("docs/engineering/gates.json", lambda data: data.update(transport="unavailable"))
         self.rejects("Gate state differs")
 
     def test_completed_cannot_remain_active(self):

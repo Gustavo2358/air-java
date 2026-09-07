@@ -19,7 +19,7 @@ import manifest
 from common import ROOT, Failure, git, read_json, require, run
 from pathlib import Path
 
-UNAVAILABLE = {"transport", "integration", "performance"}
+UNAVAILABLE = {"integration", "performance"}
 GROUPS = {"fast": ["docs", "harness"],
           "full": ["docs", "harness", "architecture", "semantic", "maven"]}
 
@@ -29,6 +29,8 @@ def execute(name, root, work):
         return docs.check(root) + "; " + manifest.check(root)
     if name == "architecture":
         return architecture.check(root)
+    if name == "transport":
+        return architecture.transport(root)
     if name in {"semantic", "maven"}:
         return contracts.check(root, maven=name == "maven")
     if name in {"git", "scope"}:

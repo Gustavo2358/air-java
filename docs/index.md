@@ -21,3 +21,6 @@ como execução atual. Não duplique a especificação AIR em tasklists.
 
 0C-I: [evidência de implementação](quality/modularization-implementation.md) e
 [inventário binário comparado](quality/modularization-classfiles.json).
+
+1A: [codec, API e cobertura](engineering/air-json.md),
+[baseline pinada](sources/air-json-baseline.json) e [evidência](quality/air-json-implementation.md).

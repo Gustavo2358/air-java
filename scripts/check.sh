@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Offline reactor build/test/ownership gate. No Maven or dependency downloads.
+# Offline model + JSON codec build/test/ownership gate. No Maven or downloads.
 set -euo pipefail
 root="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 for tool in python3 javac java jar jdeps; do

@@ -117,7 +117,7 @@ def check(root):
     gate_state = read_json(root / "docs/engineering/gates.json")
     require(set(gate_state) == GATES, "Gate registry differs from executors")
     for name, status in gate_state.items():
-        expected = "unavailable" if name in {"performance", "transport", "integration"} else "implemented"
+        expected = "unavailable" if name in {"performance", "integration"} else "implemented"
         require(status == expected, f"Gate state differs from implementation: {name}")
     for entry in evals.values():
         require(entry["status"] != "implemented" or gate_state[entry["gate"]] == "implemented",

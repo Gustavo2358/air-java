@@ -1,8 +1,10 @@
 # Cobertura implementada e limites
 
-Topologia 0C-I: `air-java-parent:pom` agrega `air-model` (artifactId `air-java`,
-modelo + validation) e `air-json` (vazio, dependência direta no modelo). A cobertura
-semântica abaixo não mudou; nenhum codec foi implementado. [Evidência](quality/modularization-implementation.md).
+Topologia pós-0C-I: `air-java-parent:pom` agrega `air-model` (artifactId `air-java`,
+modelo + validation) e `air-json` (codec 1A, dependência direta no modelo).
+A cobertura semântica do model abaixo não mudou. O transporte tem
+[cobertura própria e limites explícitos](engineering/air-json.md), comprovados
+por [golden manual e suíte](quality/air-json-implementation.md).
 
 Baseline normativo: Analysis IR 2.0.0, `Gustavo2358/analysis-ir@122ce54e1b9ef9b00646f93ece409ca8b63bc933`.
 A biblioteca `0.1.0-SNAPSHOT` é uma implementação Java revisável. Ela não declara

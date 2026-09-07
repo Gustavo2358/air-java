@@ -1,4 +1,4 @@
-"""Closed 0C-I Maven shape and resolved graph. No Maven/network in this module."""
+"""Closed 1A Maven shape and resolved graph. No Maven/network in this module."""
 from __future__ import annotations
 
 import re
@@ -17,6 +17,7 @@ PROPERTIES = {'maven.compiler.release': '21', 'project.build.sourceEncoding': 'U
               'maven.test.skip': 'false', 'maven.main.skip': 'false', 'exec.skip': 'false',
               'project.build.outputTimestamp': '2026-09-05T00:00:00Z'}
 SUITE = 'io.github.gustavo2358.air.validation.ContractSuite'
+JSON_SUITE = 'io.github.gustavo2358.air.json.CodecSuite'
 
 
 def xml(path):
@@ -42,7 +43,7 @@ def children(element, allowed, context):
 def dependencies(project, owner, version):
     deps = project.findall('dependencies/dependency')
     if owner != 'air-json':
-        require(not deps, f'{owner}: compile/runtime/test dependencies forbidden in 0C-I')
+        require(not deps, f'{owner}: compile/runtime/test dependencies forbidden')
         return
     require(len(deps) == 1, 'air-json requires exactly one direct compile dependency')
     dep = deps[0]
@@ -104,25 +105,25 @@ def inspect_build(project, owner):
     executions = [e for p in plugins for e in p.findall('executions/execution')]
     ids = [value(e, 'id') for e in executions]
     require(ids == ({'root': ['reactor-topology'], 'air-model': ['air-contract-suite', 'compiled-module'],
-                     'air-json': ['compiled-module']}[owner]),
+                     'air-json': ['air-json-suite', 'compiled-module']}[owner]),
             f'Unexpected, missing or duplicate executions: {owner}')
     for execution in executions:
         identifier = value(execution, 'id')
         children(execution, {'id', 'phase', 'goals', 'configuration'}, owner)
-        phase = {'reactor-topology': 'validate', 'air-contract-suite': 'test', 'compiled-module': 'verify'}[identifier]
+        phase = {'reactor-topology': 'validate', 'air-contract-suite': 'test', 'air-json-suite': 'test', 'compiled-module': 'verify'}[identifier]
         require(value(execution, 'phase') == phase and
                 [g.text for g in execution.findall('goals/goal')] == ['exec'],
                 f'Incorrect phase/goal: {identifier}')
         config = execution.find('configuration')
         require(config is not None, f'Missing launcher: {identifier}')
-        if identifier == 'air-contract-suite':
+        if identifier in {'air-contract-suite', 'air-json-suite'}:
             children(config, {'executable', 'workingDirectory', 'classpathScope', 'skip', 'outputFile', 'arguments'}, owner)
             required = {'executable': '${java.home}/bin/java', 'workingDirectory': '${project.basedir}',
                         'classpathScope': 'test', 'skip': '${skipTests}',
-                        'outputFile': '${project.build.directory}/contract-suite.log'}
+                        'outputFile': '${project.build.directory}/' + ('contract-suite.log' if owner == 'air-model' else 'transport-suite.log')}
             require(all(value(config, k) == v for k, v in required.items()), 'ContractSuite fork/cwd/test classpath required')
             require([(e.tag, (e.text or '').strip()) for e in config.find('arguments')] == [
-                ('argument', '-ea'), ('argument', '-classpath'), ('classpath', ''), ('argument', SUITE)],
+                ('argument', '-ea'), ('argument', '-classpath'), ('classpath', ''), ('argument', SUITE if owner == 'air-model' else JSON_SUITE)],
                 'ContractSuite must run once with assertions and test classpath')
         else:
             children(config, {'executable', 'skip', 'arguments'}, owner)
@@ -186,15 +187,33 @@ def inspect_topology(root):
         if path.suffix == '.java' and 'src' not in rel.parts:
             require(rel.as_posix() == 'examples/MinimalPublication.java', f'Unowned Java source: {rel}')
         if 'src' in rel.parts:
-            require(rel.parts[:4] in [('air-model', 'src', 'main', 'java'), ('air-model', 'src', 'test', 'java')],
-                    f'0C-I air-json must remain empty; Unowned source/resource: {rel}')
-            require(path.suffix == '.java', f'Unsupported model source/resource: {rel}')
+            if rel.parts[0] == 'air-json':
+                java_roots = ('air-json/src/main/java/io/github/gustavo2358/air/json/',
+                              'air-json/src/test/java/io/github/gustavo2358/air/json/')
+                require((rel.as_posix().startswith(java_roots) and path.suffix == '.java')
+                        or rel.as_posix() == 'air-json/src/test/resources/goback.canonical.json',
+                        f'Unowned JSON source/resource: {rel}')
+            else:
+                require(rel.parts[:4] in [('air-model', 'src', 'main', 'java'), ('air-model', 'src', 'test', 'java')],
+                        f'Unowned source/resource: {rel}')
+                require(path.suffix == '.java', f'Unsupported model source/resource: {rel}')
         if rel.parts[0] == '.mvn':
             require(False, f'Unsupported POM extension/configuration: {rel}')
     require(any((root / 'air-model/src/main/java').rglob('*.java')), 'No model production sources')
     require(not list((root / 'target').rglob('*.class')) and not list((root / 'target').glob('*.jar')),
             'Root product classfile/JAR forbidden; remove stale root build output')
-    require(not list((root / 'air-json/src').rglob('*.*')), '0C-I air-json must remain empty')
+    require(any((root / 'air-json/src/main/java').rglob('*.java')), 'Missing JSON implementation')
+    for required in ('air-json/src/main/java/io/github/gustavo2358/air/json/AirJson.java',
+                     'air-json/src/test/java/io/github/gustavo2358/air/json/CodecSuite.java',
+                     'air-json/src/test/java/io/github/gustavo2358/air/json/GobackOracle.java',
+                     'air-json/src/test/resources/goback.canonical.json', 'docs/evals/transport-checks.json'):
+        require((root / required).is_file(), f'Missing JSON suite/policy/evidence: {required}')
+    from common import read_json
+    policy = read_json(root / 'docs/evals/transport-checks.json')
+    require(policy.get('binding') == 'analysis-ir-json' and policy.get('bindingVersion') == '1.0.0'
+            and policy.get('airVersion') == '2.0.0' and policy.get('status') == 'DRAFT'
+            and policy.get('analysis_ir_pin') == '122ce54e1b9ef9b00646f93ece409ca8b63bc933'
+            and policy.get('external_dependencies') == [] and policy.get('checks'), 'Invalid JSON suite/dependency policy')
     return version
 
 
@@ -211,15 +230,16 @@ def inspect_effective(project, owner, version, root):
     for property_name in ('skipTests', 'maven.test.skip', 'maven.main.skip', 'exec.skip'):
         require(value(project, 'properties/' + property_name, 'false') == 'false', f'Skipped build/ContractSuite: {property_name}')
     suite_executions = [e for e in project.findall('build/plugins/plugin/executions/execution')
-                        if value(e, 'id') == 'air-contract-suite']
-    require(len(suite_executions) == (1 if owner == 'air-model' else 0), 'Missing/duplicate effective ContractSuite')
-    if owner == 'air-model':
+                        if value(e, 'id') in {'air-contract-suite', 'air-json-suite'}]
+    require(len(suite_executions) == 1 and value(suite_executions[0], 'id') ==
+            ('air-contract-suite' if owner == 'air-model' else 'air-json-suite'), 'Missing/duplicate effective ContractSuite')
+    if suite_executions:
         config = suite_executions[0].find('configuration')
         require(config is not None and value(config, 'skip') == 'false', 'Skipped effective ContractSuite launcher')
         require(value(config, 'classpathScope') == 'test' and
                 Path(value(config, 'workingDirectory')).resolve() == (root / owner).resolve() and
                 [(e.tag, (e.text or '').strip()) for e in config.find('arguments')] == [
-                    ('argument', '-ea'), ('argument', '-classpath'), ('classpath', ''), ('argument', SUITE)],
+                    ('argument', '-ea'), ('argument', '-classpath'), ('classpath', ''), ('argument', SUITE if owner == 'air-model' else JSON_SUITE)],
                 'Incorrect effective ContractSuite cwd/assertions/classpath')
     require(value(project, 'properties/maven.compiler.release') == '21', 'Expected effective Java release 21')
     for field, relative in {'sourceDirectory': 'src/main/java', 'testSourceDirectory': 'src/test/java',

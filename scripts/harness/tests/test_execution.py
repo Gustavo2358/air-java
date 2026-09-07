@@ -18,7 +18,7 @@ class ContractOutputTests(unittest.TestCase):
     def test_reactor_cannot_pass_with_missing_duplicated_or_reordered_modules(self):
         root = 'PASS: reactor topology 0.1.0-SNAPSHOT\n'
         model = 'PASS: compiled module air-model; checked\n'
-        codec = 'PASS: compiled module air-json; empty\n'
+        codec = 'PASS: compiled module air-json; codec\n'
         inspect_reactor_output(root + model + codec)
         for output in ('BUILD SUCCESS', root + model, root + codec, root + codec + model,
                        root + model + codec + codec, root + root + model + codec):
@@ -88,7 +88,7 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual("ERROR", report["results"][0]["status"])
 
     def test_future_gates_are_unavailable(self):
-        for gate in ("transport", "performance", "integration"):
+        for gate in ("performance", "integration"):
             with self.subTest(gate=gate):
                 code, report, called = self.invoke(gate, [])
                 self.assertEqual(3, code)
@@ -121,6 +121,25 @@ class WorkflowOrderTests(unittest.TestCase):
         for mutation in mutations:
             with self.subTest(workflow=mutation), self.assertRaises(AssertionError):
                 self.assert_scope_before_full(mutation)
+
+
+
+class TransportOutputTests(unittest.TestCase):
+    def test_json_suite_output_must_execute_exactly_once_in_order(self):
+        from contracts import inspect_transport_output
+        good = 'json-ok 1 - encode\njson-ok 2 - decode\nPASS: 2 deterministic transport checks\n'
+        self.assertEqual(2, inspect_transport_output(good, ['encode', 'decode']))
+        for bad in ('', 'BUILD SUCCESS', good + good, good.replace('json-ok 2 - decode\n', ''),
+                    good.replace('json-ok 1 - encode', 'json-ok 1 - decode'),
+                    good.replace('json-ok 2', 'json-ok 3'), good.replace('PASS: 2', 'PASS: 0')):
+            with self.subTest(output=bad), self.assertRaises(Failure):
+                inspect_transport_output(bad, ['encode', 'decode'])
+
+    def test_transport_has_an_executor_and_is_available(self):
+        self.assertNotIn('transport', runner.UNAVAILABLE)
+        with patch.object(runner.architecture, 'transport', return_value='actual suite') as call:
+            self.assertEqual('actual suite', runner.execute('transport', runner.ROOT, None))
+            call.assert_called_once_with(runner.ROOT)
 
 
 if __name__ == "__main__":

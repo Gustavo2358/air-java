@@ -11,8 +11,8 @@
   </parent>
   <artifactId>air-json</artifactId>
   <packaging>jar</packaging>
-  <name>Analysis IR JSON (empty 0C-I module)</name>
-  <!-- 0C-I: intentionally empty; first transport source requires policy and tests in 1A. -->
+  <name>Analysis IR JSON</name>
+  <!-- 1A: explicit binding codec; no external JSON dependencies. -->
   <dependencies>
     <dependency>
       <groupId>io.github.gustavo2358</groupId>
@@ -35,6 +35,22 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>exec-maven-plugin</artifactId>
         <executions>
+          <execution>
+            <id>air-json-suite</id>
+            <phase>test</phase>
+            <goals><goal>exec</goal></goals>
+            <configuration>
+              <executable>${java.home}/bin/java</executable>
+              <workingDirectory>${project.basedir}</workingDirectory>
+              <classpathScope>test</classpathScope>
+              <skip>${skipTests}</skip>
+              <outputFile>${project.build.directory}/transport-suite.log</outputFile>
+              <arguments>
+                <argument>-ea</argument><argument>-classpath</argument><classpath/>
+                <argument>io.github.gustavo2358.air.json.CodecSuite</argument>
+              </arguments>
+            </configuration>
+          </execution>
           <execution>
             <id>compiled-module</id>
             <phase>verify</phase>

@@ -19,14 +19,13 @@ O roadmap externo de 7 de setembro de 2026 foi identificado por hash e seções 
    pinado por 0B; erros de transporte separados de validação semântica.
 4. Integração com lower/CFG, primeiro E2E GOBACK e depois vertical slices.
 
-O harness e o discovery 0C-D foram mergeados. A Opção B do
-[ADR-0002](../architecture/decisions/ADR-0002.md) foi aprovada; o
-[item atual](../work/index.md) implementa 0C-I por autorização explícita:
-parent air-java-parent, diretório air-model com artifactId air-java e validation,
-mais air-json vazio com dependência direta no modelo. A entrega para review e as
-[evidências](../quality/modularization-implementation.md) não significam merge do 0C-I.
+O harness, 0C-D e 0C-I foram mergeados. A Opção B do
+[ADR-0002](../architecture/decisions/ADR-0002.md) está implementada; merge real
+0C-I: 71937dfe88bac4dae10f6f195731acac638c2d29, PR #4.
+O [item atual](../work/index.md) implementa 1A por autorização explícita:
+codec compartilhado apenas em air-json, com [cobertura e limites](../engineering/air-json.md).
 
-0A/analysis-cfg e 0B/analysis-ir foram reconfirmados como mergeados. O pin normativo
-local permanece 122ce54e1b9ef9b00646f93ece409ca8b63bc933; 0B também usa esse pin.
-Codec/round-trip/E2E/1A continuam não iniciados e exigem autorização própria.
+0B mergeado no analysis-ir foi reconfirmado em 51b4d9a8ae0364232bd97103cd73a77e1a34996c.
+Norma e binding permanecem no pin 122ce54e1b9ef9b00646f93ece409ca8b63bc933, DRAFT.
+O PR 1A não significa integração/2A/2B/E2E nem promoção normativa.
 O [backlog](../work/backlog.md) mantém essas fronteiras.
