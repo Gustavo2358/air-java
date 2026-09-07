@@ -58,6 +58,16 @@ def main():
         ('generic-constructor-as-limit', 'BindingReader.java', 'return constructor.get();',
          'try { return constructor.get(); } catch (IllegalArgumentException error) { throw Json.limit(path, "mutation: generic constructor limit"); }'),
     ]
+    # Keep the 21 earlier mutations; challenge each newly authorized boundary independently.
+    for name, restriction in (
+            ('span-below-base', 'air-java requires coordinates at or above the declared bases'),
+            ('span-inverted-lines', 'air-java requires start.line <= end.line'),
+            ('span-inverted-columns', 'air-java requires start.column <= end.column on the same line')):
+        before = f's.spanRepresentability("{restriction}")'
+        mutations.append((name + '-as-invalid', 'BindingReader.java', before,
+                          's.invalid("mutation-only", "misclassified Span")'))
+        mutations.append((name + '-as-input', 'BindingReader.java', before,
+                          'Json.input(s.path(), "misclassified Span")'))
     expected_checks = json.loads((ROOT / 'docs/evals/transport-checks.json').read_text())['checks']
     report = {'baseline': '71937dfe88bac4dae10f6f195731acac638c2d29', 'mutations': []}
     with tempfile.TemporaryDirectory(prefix='air-json-challenge-') as temporary:

@@ -181,6 +181,27 @@ de falha para proteger a fronteira. Novos drifts exigem consulta normativa e dec
 quando ambíguos. A dívida está em [AIR-MODEL-DRIFT](../work/backlog.md#backlog-air-006--air-model-drift);
 sua correção no model e novas formas de transporte permanecem fora deste PR.
 
+A decisão humana posterior ao review de ab25ea0 resolveu também as precondições
+adicionais de Span: coordenadas abaixo da base e start > end na ordem linha/coluna.
+Guardas explícitas após ler todos os campos físicos e antes do construtor produzem
+IMPLEMENTATION_LIMIT com path do Span, sem issue/rule AIR inventada. O diagnóstico
+explica que os campos físicos foram aceitos, nenhuma regra de invalidade AIR foi
+identificada no pin e air-java não consegue materializar a forma. O mesmo caminho
+trata Written.location e IncludeFrame.site. O primeiro limite encontrado é reportado;
+bases >1 conservam sua fronteira anterior e o path específico da base.
+
+Os controles preservam spans representáveis (bases 0/1, igualdade de posições,
+endExclusive verdadeiro/falso e coluna menor quando a linha final é posterior).
+Spans coerentes com bases arbitrárias chegam ao limite da base Java, sem INVALID_IR.
+Naturals inválidos continuam INPUT_ERROR antes das condições de representabilidade.
+Não se generaliza essa decisão para construtores/predicados não investigados.
+
+Há duas categorias de dívida: [drift Java](../work/backlog.md#backlog-air-006--air-model-drift)
+(bases 0/1, nonBlank genérico, EntityScope não vazio) e
+[clarificação normativa futura](../work/backlog.md#backlog-air-007--air-normative-clarification)
+(coordinate >= base e start <= end). Nenhuma regra foi promovida no pin atual;
+analysis-ir e air-model permanecem intactos. [Histórico do blocker e decisão](../quality/air-json-implementation.md#review-independente-do-head-ab25ea0--novo-blocker).
+
 Por default: 16 MiB por documento e profundidade 128; `Limits` permite configurar
 bytes e profundidade 1..256. `ValidationOptions` mantém limites independentes do
 Validator (default 128 níveis, 2.000.000 entidades, 10.000 issues). Tetos atingidos

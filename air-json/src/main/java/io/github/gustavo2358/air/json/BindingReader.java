@@ -62,6 +62,9 @@ final class BindingReader {
         AirJsonException representability(String restriction) {
             return Json.limit(path, "air-java representability limit: " + restriction);
         }
+        AirJsonException spanRepresentability(String restriction) {
+            return representability("Physical Span fields accepted; no pinned AIR invalidity rule identified; " + restriction);
+        }
         /** Only for the audited Text fields backed by Require.text; never tokens or arbitrary strings. */
         String modelText() {
             String text = text();
@@ -260,6 +263,14 @@ final class BindingReader {
         var cu = columnUnit(s.child("columnUnit")); var exclusive = s.child("endExclusive").bool();
         if (lb.compareTo(BigInteger.ONE) > 0) throw s.child("lineBase").representability("Span only supports bases 0 or 1; binding admits Natural");
         if (cb.compareTo(BigInteger.ONE) > 0) throw s.child("columnBase").representability("Span only supports bases 0 or 1; binding admits Natural");
+        // Audited Java preconditions, explicitly classified by the human decision for this pin.
+        if (start.line().compareTo(lb) < 0 || end.line().compareTo(lb) < 0
+                || start.column().compareTo(cb) < 0 || end.column().compareTo(cb) < 0)
+            throw s.spanRepresentability("air-java requires coordinates at or above the declared bases");
+        if (start.line().compareTo(end.line()) > 0)
+            throw s.spanRepresentability("air-java requires start.line <= end.line");
+        if (start.line().equals(end.line()) && start.column().compareTo(end.column()) > 0)
+            throw s.spanRepresentability("air-java requires start.column <= end.column on the same line");
         return s.construct(() -> new Origins.LineColumns(new Origins.Span(start, end, lb, cb, cu, exclusive)));
     }
     private Origins.Position position(At a) {

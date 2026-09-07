@@ -280,6 +280,48 @@ public final class CodecSuite {
             }
         });
         check("unexpected constructor exceptions are never classified generically", CodecSuite::unexpectedConstructor);
+        check("Span coordinates below declared bases are representability limits", () -> {
+            for (String field : List.of("start.line", "end.line", "start.column", "end.column")) {
+                // Bases 1 keep this case independent of the existing base >1 limit.
+                var span = edit(span("1", "1", "1", "1", "1", "1"), field.split("\\."), 0, Json.value("0"));
+                spanLimit(span);
+            }
+        });
+        check("Span inverted lines are representability limits", () -> spanLimit(span("10", "4", "9", "20", "1", "0")));
+        check("Span inverted columns on same line are representability limits", () -> spanLimit(span("4", "17", "4", "16", "1", "0")));
+        check("coherent spans preserve equality bases and lexicographic order", () -> {
+            for (boolean included : List.of(false, true)) for (String base : List.of("0", "1")) {
+                // Equality is allowed for either end convention; a later line may have a smaller column.
+                for (Json.Value span : List.of(span(base, base, base, base, base, base), span("4", "20", "5", "1", base, base)))
+                    for (boolean exclusive : List.of(false, true)) {
+                        byte[] input = spanInput(edit(span, new String[]{"endExclusive"}, 0, Json.value(exclusive)), included);
+                        var p = CODEC.decode(input); bytes(input, CODEC.encode(p)); roundTrip(p);
+                    }
+            }
+        });
+        check("coherent arbitrary bases reach only their Java representation limit", () -> {
+            for (boolean included : List.of(false, true)) {
+                String huge = "123456789012345678901234567890";
+                for (String base : List.of("2", huge)) {
+                    representability(spanPath(included) + ".lineBase", spanInput(span(base, "0", base, "1", base, "0"), included));
+                    representability(spanPath(included) + ".columnBase", spanInput(span("4", base, "5", base, "1", base), included));
+                }
+                // Both conditions may coexist; the first explicit base boundary is still a limit.
+                representability(spanPath(included) + ".lineBase", spanInput(span("1", "0", "2", "0", "2", "0"), included));
+                representability(spanPath(included) + ".columnBase", spanInput(span("4", "2", "4", "3", "1", "3"), included));
+            }
+        });
+        check("invalid Span Natural lexemes remain physical errors at both sites", () -> {
+            var coherent = span("1", "1", "1", "1", "1", "1");
+            for (boolean included : List.of(false, true))
+                for (String field : List.of("start.line", "start.column", "end.line", "end.column", "lineBase", "columnBase")) {
+                    for (String bad : List.of("-1", "01", "+1", "-0", "1.0", "1e3"))
+                        fails(INPUT_ERROR, spanInput(edit(coherent, field.split("\\."), 0, Json.value(bad)), included));
+                    // The marker occurs only at this coordinate, including inside IncludeFrame.site.
+                    String marked = new String(spanInput(edit(coherent, field.split("\\."), 0, Json.value("number-marker")), included), StandardCharsets.UTF_8);
+                    fails(INPUT_ERROR, utf8(marked.replace("\"number-marker\"", "1")));
+                }
+        });
         System.out.println("PASS: " + checks + " deterministic transport checks");
     }
     private static void check(String name, Runnable body) {
@@ -308,6 +350,29 @@ public final class CodecSuite {
         var error = fails(IMPLEMENTATION_LIMIT, input);
         equal(path, error.path()); equal(List.of(), error.issues());
         require(error.getMessage().contains("air-java representability limit"), "missing representability diagnostic");
+    }
+    private static Json.Value span(String sl, String sc, String el, String ec, String lb, String cb) {
+        return Json.object("start", Json.object("line", sl, "column", sc), "end", Json.object("line", el, "column", ec),
+                "lineBase", lb, "columnBase", cb, "columnUnit", "UNICODE_SCALAR", "endExclusive", false);
+    }
+    private static byte[] spanInput(Json.Value span, boolean included) {
+        var location = Json.object("kind", "line_columns", "span", span);
+        if (!included) return changed("publication.origins.0.location", location);
+        var frame = Json.object("including", at("publication.artifacts.0.id"), "included", at("publication.artifacts.1.id"),
+                "requestedName", "COPYBOOK", "site", location);
+        return changed("publication.origins.0.includes", new Json.Arr(List.of(frame)));
+    }
+    private static String spanPath(boolean included) {
+        return "$.publication.origins[0]." + (included ? "includes[0].site.span" : "location.span");
+    }
+    private static void spanLimit(Json.Value span) {
+        for (boolean included : List.of(false, true)) for (boolean exclusive : List.of(false, true)) {
+            byte[] input = spanInput(edit(span, new String[]{"endExclusive"}, 0, Json.value(exclusive)), included);
+            representability(spanPath(included), input);
+            var error = fails(IMPLEMENTATION_LIMIT, input);
+            require(error.getMessage().contains("Physical Span fields accepted"), "missing physical/binding boundary");
+            require(error.getMessage().contains("no pinned AIR invalidity rule identified"), "Java restriction presented as AIR rule");
+        }
     }
     /** Fault injection at the private construction boundary, independent of constructor messages. */
     private static void unexpectedConstructor() {

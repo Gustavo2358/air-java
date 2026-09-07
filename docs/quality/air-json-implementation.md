@@ -235,3 +235,94 @@ Git/scope, docs/MANIFEST e diff --check passaram após atualizar a evidência.
 Diff integral de remediation revisado, sem alteração do golden/model/pin.
 SHA publicado e CI do novo head serão recibos remotos no mesmo PR #5; resultados
 históricos não certificam o novo commit. Parar para review humano, sem merge.
+
+## Review independente do head ab25ea0 — novo blocker
+
+O commit de remediação ab25ea0c9579d91d307118b3b88f7ccf82490a99 foi publicado na
+mesma branch; head remoto e quatro runs de CI verdes confirmados e registrados
+no PR #5. A tarefa revisora 01a07d3e-2004-7483-b05f-ddc241b6bdf5 reproduziu full
+(86 harness, 172 model + 51 transporte), os 21 challenges com hashes restaurados
+iguais, 5.624 probes anteriores e um probe novo de 17 casos de Span.
+
+Parecer naquele head: **request changes, um blocker P2 de classificação**.
+As guardas autorizadas cobriam bases >1; Origins.Span também rejeita coordenadas abaixo da base e início
+posterior ao fim. Treze entradas do novo probe, inclusive IncludeFrame.site,
+escapam como IllegalArgumentException crua na API pública, sem path/código tipado.
+Reprodução mínima, repetida pela implementação: no golden original mudar somente
+publication.origins[0].location.span.start.line de "4" para "5", mantendo end.line
+"4" e end.column "16"; chamar AirJson.decode. Exit 1 em Origins.Span, via
+BindingReader.location/At.construct. Model e golden continuam byte-identical.
+
+Consulta independente e da implementação aos documentos no pin: binding §3 define
+Natural; §10.3 define Position/Span e preserva base/unidade; AIR 06 §5 exige convenção;
+I-36 proíbe span fabricado. Não foi identificada regra explícita que resolva a
+classificação dos predicados adicionais. Não se declara AIR válido um span invertido
+nem se restaura o antigo INVALID_IR sem regra. A decisão sobre os três gaps não é
+estendida automaticamente. Conforme seção 7 da instrução humana, o work item foi
+marcado blocked e houve novo pedido de decisão antes de corrigir/classificar esses casos.
+
+Encaminhamento registrado naquele ponto: após decisão, guardas focalizadas e testes
+reais pela API pública para linha/coluna, coordenadas abaixo da base e IncludeFrame.site, seguidos de challenges/gates e novo
+review do próximo head. Sem catch genérico, parsing de mensagem, alteração do model,
+regra presumida ou nova forma de transporte. Os registros desse blocker eram locais,
+sem commit/push adicional; foram preservados e incluídos na continuação abaixo.
+
+## Decisão humana e remediação focalizada de Span
+
+Retomada na mesma branch/WORK/PR #5 a partir de ab25ea0, preservando os sete arquivos
+documentais locais e seu registro do blocker. A decisão humana autoriza explicitamente
+IMPLEMENTATION_LIMIT para coordenadas abaixo da base e start > end na ordem
+linha/coluna, no pin atual. A autoridade foi reconfirmada em binding §§3/10.3 e
+AIR 06 §5 por git show no SHA 122ce54e1b9ef9b00646f93ece409ca8b63bc933; não se
+criou regra AIR por meio de predicado Java. Classificação fica limitada aos casos
+identificados/autorizados, além dos três gaps aprovados anteriormente.
+
+BindingReader lê primeiro todos os campos físicos de Span. Após as guardas anteriores
+de base >1, três guardas explícitas verificam as quatro coordenadas contra as bases,
+inversão entre linhas e inversão de colunas na mesma linha. Falha produz
+IMPLEMENTATION_LIMIT com path do Span e diagnóstico `air-java representability limit`:
+campos físicos aceitos, nenhuma regra AIR de invalidade identificada no pin e
+precondição extra do model que impede materialização. Written.location e IncludeFrame.site
+usam esse mesmo caminho. Nenhum catch genérico ou parsing de mensagem foi adicionado.
+
+RED genuíno antes da implementação: os 51 checks anteriores passaram, mas o novo
+caso de coordenada abaixo da base escapou como IllegalArgumentException crua na
+API pública. Após as guardas, **57 checks passaram**. Os seis novos checks cobrem:
+
+- as quatro coordenadas abaixo da base, com bases 1 para isolar do limite base >1;
+- start.line > end.line e inversão por coluna na mesma linha;
+- controles representáveis: bases 0/1, posições iguais, ambas as convenções de fim,
+  linha posterior com coluna menor; encode/decode e round-trip preservam os bytes;
+- bases arbitrárias coerentes (inclusive além de long) chegam ao limite de base
+  com seu path específico; casos mistos não viram INVALID_IR;
+- seis campos Natural com -1/01/+1/-0/1.0/1e3 e JSON number continuam INPUT_ERROR.
+
+Todos esses grupos exercitam origem escrita e IncludeFrame.site pela API pública.
+Os oracles de golden e ambos os round-trips, PARTIAL, UNAVAILABLE, origins,
+uncertainties, scopes, ordem e canonical JSON continuam nos 51 checks preservados.
+Finding 1 permanece intacto (mappings explícitos); INVALID_IR comprovado mantém
+rule/detail/site e issues originais do Validator. A injeção de exceção inesperada
+continua exigindo identidade preservada, sem classificação genérica.
+
+**27 challenges executados e detectados**: os 21 anteriores foram preservados e
+reexecutados, incluindo catch genérico → IMPLEMENTATION_LIMIT. As seis mutações
+novas classificam cada um dos três limites de Span como INVALID_IR e como INPUT_ERROR.
+Todas compilaram e ficaram RED pelo código errado no respectivo check; restauração
+byte a byte e segundo GREEN de 57 checks. O recibo contém checks e hashes restaurados.
+
+Backlog separa [AIR-MODEL-DRIFT](../work/backlog.md#backlog-air-006--air-model-drift)
+(bases 0/1, nonBlank genérico, EntityScope não vazio) de
+[AIR-NORMATIVE-CLARIFICATION](../work/backlog.md#backlog-air-007--air-normative-clarification)
+(coordinate >= base, start <= end). Formalização normativa ou reconciliação do model
+exige trabalho futuro separado; não houve modificação nesses repositórios/códigos.
+Golden, source lock, writer, model, POMs, workflows e executores do harness intactos.
+Sem nova forma, integração lower/CFG, segunda implementação, promoção DRAFT ou merge.
+
+Verificação final local desta decisão: full exit 0, com docs/MANIFEST (141 paths),
+86 testes do harness, arquitetura 308 model + 17 JSON classfiles e 4664 + 420
+arestas; check.sh e root mvn clean verify executaram 172 model + 57 transporte.
+Transport exit 0, 57 checks; Git/scope e diff --check passaram. Diff integral desde
+ab25ea0 revisado, incluindo os registros documentais de entrada. MANIFEST atualizado
+sem alterar a cobertura do golden/model/pin. SHA remoto e CI do novo commit são
+recibos do PR #5, não alegações antecipadas neste commit. Parar para review humano
+após o ciclo independente solicitado, sem merge/auto-merge.

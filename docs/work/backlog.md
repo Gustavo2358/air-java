@@ -8,6 +8,7 @@
 | BACKLOG-AIR-004 | integração e conformance do transporte | codec real; lower/CFG e golden frontend em seus próprios escopos |
 | BACKLOG-AIR-005 | hardening de escala e interoperabilidade | propriedade/oracle justificados; fora do primeiro harness |
 | BACKLOG-AIR-006 | AIR-MODEL-DRIFT: reconciliar restrições Java sem suporte normativo identificado | dívida registrada na remediação de PR #5; execução futura separada |
+| BACKLOG-AIR-007 | AIR-NORMATIVE-CLARIFICATION: esclarecer limites/ordem de Position e Span | decisão normativa futura em analysis-ir, sem alteração nesta sessão |
 
 Detalhes e distinção entre estado atual/futuro em [missão](../product/mission-and-roadmap.md).
 0C-D e 0C-I foram mergeados. 1A está autorizado no item atual.
@@ -30,3 +31,21 @@ A decisão humana para PR #5 autoriza somente reconhecer os três limites de
 representabilidade como IMPLEMENTATION_LIMIT no codec, com site explícito.
 Não modifica air-model nem resolve esta dívida. Não bloqueia o GOBACK E2E atual;
 integração e execução deste backlog continuam fora da autorização do checkpoint 1A.
+
+## BACKLOG-AIR-007 — AIR-NORMATIVE-CLARIFICATION
+
+Categoria distinta do drift Java em BACKLOG-AIR-006: clarificar no analysis-ir,
+em trabalho futuro separado, se Position deve exigir coordenada >= base declarada
+e se Span deve exigir start <= end na ordem linha/coluna. São precondições
+conceitualmente razoáveis, mas não há regra clara identificada no pin
+122ce54e1b9ef9b00646f93ece409ca8b63bc933 que as estabeleça.
+
+O review de ab25ea0 expôs as recusas adicionais de Origins.Span, inclusive em
+IncludeFrame.site. A decisão humana posterior autoriza IMPLEMENTATION_LIMIT
+focalizado no codec para essas formas neste checkpoint/pin. Isso não promove uma
+regra normativa por meio do construtor nem resolve esta clarificação no analysis-ir.
+
+Uma reconciliação futura deverá remover a restrição Java, formalizar regra existente
+que venha a ser localizada ou propor nova regra em revisão normativa explícita.
+Não há mudança de air-model/analysis-ir neste PR, nem implementação autorizada
+deste backlog ou bloqueio do caminho GOBACK atual.

@@ -56,6 +56,12 @@
     "Natural span bases beyond Java range are representability limits",
     "empty FactScope entities is a Java representability limit",
     "admitted blank Text is a field-specific representability limit",
-    "unexpected constructor exceptions are never classified generically"
+    "unexpected constructor exceptions are never classified generically",
+    "Span coordinates below declared bases are representability limits",
+    "Span inverted lines are representability limits",
+    "Span inverted columns on same line are representability limits",
+    "coherent spans preserve equality bases and lexicographic order",
+    "coherent arbitrary bases reach only their Java representation limit",
+    "invalid Span Natural lexemes remain physical errors at both sites"
   ]
 }

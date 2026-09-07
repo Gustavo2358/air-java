@@ -63,7 +63,7 @@
       "failing_check": "all envelope versions require exact identity",
       "last_passed": "canonical Natural lexemes enforced",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected VERSION_MISMATCH, operation succeeded",
-      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
+      "restored_sha256": "8c96dff567257be27fc5ee0bb149bb7cccba2bc3ad6a6db27d232f21b474c2d8"
     },
     {
       "name": "accept-unknown-field",
@@ -71,7 +71,7 @@
       "failing_check": "unknown fields rejected throughout supported tree",
       "last_passed": "every catalogued field required including nullable fields",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected INPUT_ERROR, operation succeeded",
-      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
+      "restored_sha256": "8c96dff567257be27fc5ee0bb149bb7cccba2bc3ad6a6db27d232f21b474c2d8"
     },
     {
       "name": "final-newline",
@@ -95,7 +95,7 @@
       "failing_check": "valid Halt unsupported and Return never silently changed",
       "last_passed": "process timestamp and private model fields forbidden",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, operation succeeded",
-      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
+      "restored_sha256": "8c96dff567257be27fc5ee0bb149bb7cccba2bc3ad6a6db27d232f21b474c2d8"
     },
     {
       "name": "runtime-enum-name",
@@ -127,7 +127,7 @@
       "failing_check": "incomplete ID and foreign or wrong domain IDs rejected",
       "last_passed": "all envelope versions require exact identity",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: incomplete AIR diagnostic",
-      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
+      "restored_sha256": "8c96dff567257be27fc5ee0bb149bb7cccba2bc3ad6a6db27d232f21b474c2d8"
     },
     {
       "name": "line-base-limit-as-invalid",
@@ -135,7 +135,7 @@
       "failing_check": "local AIR constraints and Java representability limits stay distinct",
       "last_passed": "PARTIAL without reason is INVALID_IR with AIR rule",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, actual INVALID_IR",
-      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
+      "restored_sha256": "8c96dff567257be27fc5ee0bb149bb7cccba2bc3ad6a6db27d232f21b474c2d8"
     },
     {
       "name": "column-base-limit-as-invalid",
@@ -143,7 +143,7 @@
       "failing_check": "Natural span bases beyond Java range are representability limits",
       "last_passed": "Validator issues preserve exact rule subject detail and site",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, actual INVALID_IR",
-      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
+      "restored_sha256": "8c96dff567257be27fc5ee0bb149bb7cccba2bc3ad6a6db27d232f21b474c2d8"
     },
     {
       "name": "empty-entities-limit-as-invalid",
@@ -151,7 +151,7 @@
       "failing_check": "empty FactScope entities is a Java representability limit",
       "last_passed": "Natural span bases beyond Java range are representability limits",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, actual INVALID_IR",
-      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
+      "restored_sha256": "8c96dff567257be27fc5ee0bb149bb7cccba2bc3ad6a6db27d232f21b474c2d8"
     },
     {
       "name": "blank-text-limit-as-invalid",
@@ -159,7 +159,7 @@
       "failing_check": "admitted blank Text is a field-specific representability limit",
       "last_passed": "empty FactScope entities is a Java representability limit",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, actual INVALID_IR",
-      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
+      "restored_sha256": "8c96dff567257be27fc5ee0bb149bb7cccba2bc3ad6a6db27d232f21b474c2d8"
     },
     {
       "name": "generic-constructor-as-limit",
@@ -167,11 +167,59 @@
       "failing_check": "unexpected constructor exceptions are never classified generically",
       "last_passed": "admitted blank Text is a field-specific representability limit",
       "failure": "Exception in thread \"main\" java.lang.AssertionError: Unexpected constructor exception was classified generically: io.github.gustavo2358.air.json.AirJsonException: mutation: generic constructor limit",
-      "restored_sha256": "59dd4d3495b9fba81cbffdfcfd2cdc798d9bbbad9f2fab450f77abcde7128d39"
+      "restored_sha256": "8c96dff567257be27fc5ee0bb149bb7cccba2bc3ad6a6db27d232f21b474c2d8"
+    },
+    {
+      "name": "span-below-base-as-invalid",
+      "exit_code": 1,
+      "failing_check": "Span coordinates below declared bases are representability limits",
+      "last_passed": "unexpected constructor exceptions are never classified generically",
+      "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, actual INVALID_IR",
+      "restored_sha256": "8c96dff567257be27fc5ee0bb149bb7cccba2bc3ad6a6db27d232f21b474c2d8"
+    },
+    {
+      "name": "span-below-base-as-input",
+      "exit_code": 1,
+      "failing_check": "Span coordinates below declared bases are representability limits",
+      "last_passed": "unexpected constructor exceptions are never classified generically",
+      "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, actual INPUT_ERROR",
+      "restored_sha256": "8c96dff567257be27fc5ee0bb149bb7cccba2bc3ad6a6db27d232f21b474c2d8"
+    },
+    {
+      "name": "span-inverted-lines-as-invalid",
+      "exit_code": 1,
+      "failing_check": "Span inverted lines are representability limits",
+      "last_passed": "Span coordinates below declared bases are representability limits",
+      "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, actual INVALID_IR",
+      "restored_sha256": "8c96dff567257be27fc5ee0bb149bb7cccba2bc3ad6a6db27d232f21b474c2d8"
+    },
+    {
+      "name": "span-inverted-lines-as-input",
+      "exit_code": 1,
+      "failing_check": "Span inverted lines are representability limits",
+      "last_passed": "Span coordinates below declared bases are representability limits",
+      "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, actual INPUT_ERROR",
+      "restored_sha256": "8c96dff567257be27fc5ee0bb149bb7cccba2bc3ad6a6db27d232f21b474c2d8"
+    },
+    {
+      "name": "span-inverted-columns-as-invalid",
+      "exit_code": 1,
+      "failing_check": "Span inverted columns on same line are representability limits",
+      "last_passed": "Span inverted lines are representability limits",
+      "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, actual INVALID_IR",
+      "restored_sha256": "8c96dff567257be27fc5ee0bb149bb7cccba2bc3ad6a6db27d232f21b474c2d8"
+    },
+    {
+      "name": "span-inverted-columns-as-input",
+      "exit_code": 1,
+      "failing_check": "Span inverted columns on same line are representability limits",
+      "last_passed": "Span inverted lines are representability limits",
+      "failure": "Exception in thread \"main\" java.lang.AssertionError: Expected IMPLEMENTATION_LIMIT, actual INPUT_ERROR",
+      "restored_sha256": "8c96dff567257be27fc5ee0bb149bb7cccba2bc3ad6a6db27d232f21b474c2d8"
     }
   ],
-  "initial_green": "PASS: 51 deterministic transport checks",
-  "restored_green": "PASS: 51 deterministic transport checks",
+  "initial_green": "PASS: 57 deterministic transport checks",
+  "restored_green": "PASS: 57 deterministic transport checks",
   "gate_challenges": {
     "cases": [
       {
@@ -212,7 +260,8 @@
     "exit_code": 1,
     "diagnostic": "Skipped build/ContractSuite flags forbidden: ['true', 'false', 'false', 'false']"
   },
-  "remediation_base": "b2c923230b2a857a5cb3beb8baadcb5eb9f77aef",
   "gate_evidence_scope": "Six topology mutations and Maven skip probe below are retained 1A evidence; permanent harness countercases remain mandatory.",
-  "remediation_status": "Runtime tokens explicit; INVALID_IR carries pinned rule/site; three human-authorized Java representability gaps fail explicitly without a generic constructor catch. 51 checks and 21 killed mutations."
+  "previous_remediation_base": "b2c923230b2a857a5cb3beb8baadcb5eb9f77aef",
+  "remediation_base": "ab25ea0c9579d91d307118b3b88f7ccf82490a99",
+  "remediation_status": "Human-authorized Span coordinate/base and interval-order limits checked explicitly at both location sites; 57 transport checks and all 27 mutations killed. No generic constructor catch or invented AIR rule."
 }
