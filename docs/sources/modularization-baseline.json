@@ -1,0 +1,802 @@
+{
+  "observed_date": "2026-09-07",
+  "air_java_base": "c487b80dd5548236de9114d8b3ec370eabb25c30",
+  "branch": "discovery/air-java-modularization",
+  "roadmap": {
+    "path": "../roadmap.md",
+    "sha256": "9d92d3fd4e0c6ffce8c5d2d0adc1caae32c15c70cb46cb5b5a717eba657a9e32",
+    "sections": [
+      "1.2-1.5",
+      "7 / 0C-D / 0C-I",
+      "8 / 1A"
+    ]
+  },
+  "repositories": [
+    {
+      "repository": "Gustavo2358/cobol-lower",
+      "local_head": "e2488a362478057de7d59cdf9ae2b38b1f4040d3",
+      "local_branch": "main",
+      "local_status": "",
+      "remote_main": "e2488a362478057de7d59cdf9ae2b38b1f4040d3",
+      "remote_evidence": "git ls-remote origin refs/heads/main (no fetch or checkout mutation)"
+    },
+    {
+      "repository": "Gustavo2358/analysis-cfg",
+      "local_head": "9e03274bf4296f53023cb86a8f5a29c6a09461c9",
+      "local_branch": "feat/cfg-known-subset-policy",
+      "local_status": "",
+      "remote_main": "7edb1cd7827531ab30548d878cea3a06a483bc04",
+      "remote_evidence": "git ls-remote origin refs/heads/main (no fetch or checkout mutation)"
+    },
+    {
+      "repository": "Gustavo2358/analysis-ir",
+      "local_head": "bba779613f27416addcaeb0f879f284abb409e44",
+      "local_branch": "docs/air-json-mvp-baseline",
+      "local_status": "",
+      "remote_main": "122ce54e1b9ef9b00646f93ece409ca8b63bc933",
+      "remote_evidence": "git ls-remote origin refs/heads/main (no fetch or checkout mutation)"
+    },
+    {
+      "repository": "Gustavo2358/proleap-poc",
+      "local_head": "c8a891e0827ae1dc1140246f625fd16c2ac9bd97",
+      "local_branch": "main",
+      "local_status": "",
+      "remote_main": "c8a891e0827ae1dc1140246f625fd16c2ac9bd97",
+      "remote_evidence": "git ls-remote origin refs/heads/main (no fetch or checkout mutation)"
+    }
+  ],
+  "downstream": {
+    "cobol-lower": {
+      "commit": "e2488a362478057de7d59cdf9ae2b38b1f4040d3",
+      "summary": {
+        "main": {
+          "files": 6,
+          "model_imports": 8,
+          "validation_imports": 7,
+          "model_files": 5,
+          "validation_files": 4
+        },
+        "test": {
+          "files": 4,
+          "model_imports": 5,
+          "validation_imports": 3,
+          "model_files": 4,
+          "validation_files": 3
+        }
+      },
+      "files": [
+        {
+          "path": "adapters/src/test/java/io/github/gustavo2358/lower/adapters/testing/VerticalSuite.java",
+          "model": 1,
+          "validation": 1,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.validation.AirValidator"
+          ]
+        },
+        {
+          "path": "core/src/main/java/io/github/gustavo2358/lower/application/AirOutputValidation.java",
+          "model": 1,
+          "validation": 2,
+          "imports": [
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.validation.AirValidator",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "core/src/main/java/io/github/gustavo2358/lower/application/EntryGobackLowerer.java",
+          "model": 2,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.model.Ids.*"
+          ]
+        },
+        {
+          "path": "core/src/main/java/io/github/gustavo2358/lower/application/LowerInput.java",
+          "model": 0,
+          "validation": 1,
+          "imports": [
+            "io.github.gustavo2358.air.validation.ValidationOptions"
+          ]
+        },
+        {
+          "path": "core/src/main/java/io/github/gustavo2358/lower/application/LoweringResult.java",
+          "model": 2,
+          "validation": 1,
+          "imports": [
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.model.Ids",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "core/src/main/java/io/github/gustavo2358/lower/application/OutputAssessment.java",
+          "model": 1,
+          "validation": 3,
+          "imports": [
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.validation.AirValidator",
+            "io.github.gustavo2358.air.validation.ValidationOptions",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "core/src/main/java/io/github/gustavo2358/lower/application/SourceOrigins.java",
+          "model": 2,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Origins",
+            "io.github.gustavo2358.air.model.Ids"
+          ]
+        },
+        {
+          "path": "core/src/test/java/io/github/gustavo2358/lower/testing/BoundarySuite.java",
+          "model": 1,
+          "validation": 1,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.validation.*"
+          ]
+        },
+        {
+          "path": "core/src/test/java/io/github/gustavo2358/lower/testing/LoweringSuite.java",
+          "model": 1,
+          "validation": 1,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.validation.*"
+          ]
+        },
+        {
+          "path": "core/src/test/java/io/github/gustavo2358/lower/testing/ManualAir.java",
+          "model": 2,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.model.Ids.*"
+          ]
+        }
+      ]
+    },
+    "analysis-cfg": {
+      "commit": "7edb1cd7827531ab30548d878cea3a06a483bc04",
+      "summary": {
+        "main": {
+          "files": 13,
+          "model_imports": 30,
+          "validation_imports": 7,
+          "model_files": 12,
+          "validation_files": 4
+        },
+        "test": {
+          "files": 11,
+          "model_imports": 34,
+          "validation_imports": 16,
+          "model_files": 11,
+          "validation_files": 6
+        }
+      },
+      "files": [
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/application/BuildCfg.java",
+          "model": 1,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Publication"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/application/BuildOptions.java",
+          "model": 0,
+          "validation": 1,
+          "imports": [
+            "io.github.gustavo2358.air.validation.ValidationOptions"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/application/CfgBuildCoordinator.java",
+          "model": 2,
+          "validation": 2,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities",
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.validation.ValidationIssue",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/application/CfgBuildResult.java",
+          "model": 3,
+          "validation": 1,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities",
+            "io.github.gustavo2358.air.model.Ids.PublicationId",
+            "io.github.gustavo2358.air.model.SemanticVersion",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/application/CfgPreflight.java",
+          "model": 1,
+          "validation": 3,
+          "imports": [
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.validation.AirValidator",
+            "io.github.gustavo2358.air.validation.ValidationOptions",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/domain/CfgGraph.java",
+          "model": 4,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities",
+            "io.github.gustavo2358.air.model.Ids.EntryId",
+            "io.github.gustavo2358.air.model.Operations",
+            "io.github.gustavo2358.air.model.Publication"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/domain/CfgNode.java",
+          "model": 6,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Entries",
+            "io.github.gustavo2358.air.model.Ids.EntryId",
+            "io.github.gustavo2358.air.model.Ids.PublicationId",
+            "io.github.gustavo2358.air.model.Ids.UnitId",
+            "io.github.gustavo2358.air.model.Operations",
+            "io.github.gustavo2358.air.model.Sequence"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/domain/CfgNodeId.java",
+          "model": 1,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Ids.PublicationId"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/domain/CfgProjectionIssue.java",
+          "model": 1,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Ids.Id"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/domain/CfgTransition.java",
+          "model": 1,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Ids.EntryId"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/domain/CoreCfgProjection.java",
+          "model": 8,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities",
+            "io.github.gustavo2358.air.model.Entries",
+            "io.github.gustavo2358.air.model.Evidence",
+            "io.github.gustavo2358.air.model.Ids.LabelId",
+            "io.github.gustavo2358.air.model.Operations",
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.model.Sequence",
+            "io.github.gustavo2358.air.model.Unit"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/extension/SemanticInterpreter.java",
+          "model": 1,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/extension/SemanticInterpreterRegistry.java",
+          "model": 1,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/application/BuildCfgContractTest.java",
+          "model": 1,
+          "validation": 1,
+          "imports": [
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.validation.ValidationOptions"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/application/CfgBuildCoordinatorTest.java",
+          "model": 2,
+          "validation": 3,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities",
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.validation.AirValidator",
+            "io.github.gustavo2358.air.validation.ValidationIssue",
+            "io.github.gustavo2358.air.validation.ValidationOptions"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/application/CfgPreflightTest.java",
+          "model": 4,
+          "validation": 3,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities",
+            "io.github.gustavo2358.air.model.Ids.PublicationId",
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.model.Scopes",
+            "io.github.gustavo2358.air.validation.AirValidator",
+            "io.github.gustavo2358.air.validation.ValidationIssue",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/domain/EvalCfg025Test.java",
+          "model": 3,
+          "validation": 3,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.model.Ids.*",
+            "io.github.gustavo2358.air.model.Unit",
+            "io.github.gustavo2358.air.validation.AirValidator",
+            "io.github.gustavo2358.air.validation.ValidationIssue",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/domain/EvalCfg028Test.java",
+          "model": 3,
+          "validation": 3,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.model.Ids.*",
+            "io.github.gustavo2358.air.model.Unit",
+            "io.github.gustavo2358.air.validation.AirValidator",
+            "io.github.gustavo2358.air.validation.ValidationIssue",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/domain/EvalCfg029Test.java",
+          "model": 3,
+          "validation": 3,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.model.Ids.*",
+            "io.github.gustavo2358.air.model.Unit",
+            "io.github.gustavo2358.air.validation.AirValidator",
+            "io.github.gustavo2358.air.validation.ValidationIssue",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/extension/SemanticInterpreterRegistryTest.java",
+          "model": 1,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/testing/AirPublications.java",
+          "model": 8,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities",
+            "io.github.gustavo2358.air.model.Evidence",
+            "io.github.gustavo2358.air.model.Ids.ArtifactId",
+            "io.github.gustavo2358.air.model.Ids.PublicationId",
+            "io.github.gustavo2358.air.model.Origins",
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.model.Scopes",
+            "io.github.gustavo2358.air.model.SemanticVersion"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/testing/BranchPublications.java",
+          "model": 3,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.model.Ids.*",
+            "io.github.gustavo2358.air.model.Unit"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/testing/CfgFirstPublications.java",
+          "model": 3,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.model.Ids.*",
+            "io.github.gustavo2358.air.model.Unit"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/testing/LinearPublications.java",
+          "model": 3,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.model.Ids.*",
+            "io.github.gustavo2358.air.model.Unit"
+          ]
+        }
+      ]
+    },
+    "analysis-cfg_local_branch": {
+      "commit": "9e03274bf4296f53023cb86a8f5a29c6a09461c9",
+      "summary": {
+        "main": {
+          "files": 14,
+          "model_imports": 30,
+          "validation_imports": 7,
+          "model_files": 13,
+          "validation_files": 4
+        },
+        "test": {
+          "files": 12,
+          "model_imports": 38,
+          "validation_imports": 19,
+          "model_files": 12,
+          "validation_files": 7
+        }
+      },
+      "files": [
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/application/BuildCfg.java",
+          "model": 1,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Publication"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/application/BuildOptions.java",
+          "model": 0,
+          "validation": 1,
+          "imports": [
+            "io.github.gustavo2358.air.validation.ValidationOptions"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/application/CfgBuildCoordinator.java",
+          "model": 2,
+          "validation": 2,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities",
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.validation.ValidationIssue",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/application/CfgBuildResult.java",
+          "model": 3,
+          "validation": 1,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities",
+            "io.github.gustavo2358.air.model.Ids.PublicationId",
+            "io.github.gustavo2358.air.model.SemanticVersion",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/application/CfgPreflight.java",
+          "model": 1,
+          "validation": 3,
+          "imports": [
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.validation.AirValidator",
+            "io.github.gustavo2358.air.validation.ValidationOptions",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/domain/CfgGraph.java",
+          "model": 4,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities",
+            "io.github.gustavo2358.air.model.Ids.EntryId",
+            "io.github.gustavo2358.air.model.Operations",
+            "io.github.gustavo2358.air.model.Publication"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/domain/CfgNode.java",
+          "model": 6,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Entries",
+            "io.github.gustavo2358.air.model.Ids.EntryId",
+            "io.github.gustavo2358.air.model.Ids.PublicationId",
+            "io.github.gustavo2358.air.model.Ids.UnitId",
+            "io.github.gustavo2358.air.model.Operations",
+            "io.github.gustavo2358.air.model.Sequence"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/domain/CfgNodeId.java",
+          "model": 1,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Ids.PublicationId"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/domain/CfgProjectionIssue.java",
+          "model": 1,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Ids.Id"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/domain/CfgTransition.java",
+          "model": 1,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Ids.EntryId"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/domain/CoreCfgProjection.java",
+          "model": 7,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities",
+            "io.github.gustavo2358.air.model.Entries",
+            "io.github.gustavo2358.air.model.Ids.LabelId",
+            "io.github.gustavo2358.air.model.Operations",
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.model.Sequence",
+            "io.github.gustavo2358.air.model.Unit"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/domain/ProjectionPolicy.java",
+          "model": 1,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Evidence"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/extension/SemanticInterpreter.java",
+          "model": 1,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/main/java/io/github/gustavo2358/analysis/cfg/extension/SemanticInterpreterRegistry.java",
+          "model": 1,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/application/BuildCfgContractTest.java",
+          "model": 1,
+          "validation": 1,
+          "imports": [
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.validation.ValidationOptions"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/application/CfgBuildCoordinatorTest.java",
+          "model": 2,
+          "validation": 3,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities",
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.validation.AirValidator",
+            "io.github.gustavo2358.air.validation.ValidationIssue",
+            "io.github.gustavo2358.air.validation.ValidationOptions"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/application/CfgPreflightTest.java",
+          "model": 4,
+          "validation": 3,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities",
+            "io.github.gustavo2358.air.model.Ids.PublicationId",
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.model.Scopes",
+            "io.github.gustavo2358.air.validation.AirValidator",
+            "io.github.gustavo2358.air.validation.ValidationIssue",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/domain/EvalCfg025Test.java",
+          "model": 3,
+          "validation": 3,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.model.Ids.*",
+            "io.github.gustavo2358.air.model.Unit",
+            "io.github.gustavo2358.air.validation.AirValidator",
+            "io.github.gustavo2358.air.validation.ValidationIssue",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/domain/EvalCfg028Test.java",
+          "model": 3,
+          "validation": 3,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.model.Ids.*",
+            "io.github.gustavo2358.air.model.Unit",
+            "io.github.gustavo2358.air.validation.AirValidator",
+            "io.github.gustavo2358.air.validation.ValidationIssue",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/domain/EvalCfg029Test.java",
+          "model": 3,
+          "validation": 3,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.model.Ids.*",
+            "io.github.gustavo2358.air.model.Unit",
+            "io.github.gustavo2358.air.validation.AirValidator",
+            "io.github.gustavo2358.air.validation.ValidationIssue",
+            "io.github.gustavo2358.air.validation.ValidationResult"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/domain/EvalCfg030Test.java",
+          "model": 4,
+          "validation": 3,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.model.Ids.*",
+            "io.github.gustavo2358.air.model.Unit",
+            "io.github.gustavo2358.air.validation.AirValidator",
+            "io.github.gustavo2358.air.validation.ValidationOptions",
+            "io.github.gustavo2358.air.validation.ValidationResult",
+            "io.github.gustavo2358.air.model.Evidence.InventoryStatus.*"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/extension/SemanticInterpreterRegistryTest.java",
+          "model": 1,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/testing/AirPublications.java",
+          "model": 8,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.Capabilities",
+            "io.github.gustavo2358.air.model.Evidence",
+            "io.github.gustavo2358.air.model.Ids.ArtifactId",
+            "io.github.gustavo2358.air.model.Ids.PublicationId",
+            "io.github.gustavo2358.air.model.Origins",
+            "io.github.gustavo2358.air.model.Publication",
+            "io.github.gustavo2358.air.model.Scopes",
+            "io.github.gustavo2358.air.model.SemanticVersion"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/testing/BranchPublications.java",
+          "model": 3,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.model.Ids.*",
+            "io.github.gustavo2358.air.model.Unit"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/testing/CfgFirstPublications.java",
+          "model": 3,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.model.Ids.*",
+            "io.github.gustavo2358.air.model.Unit"
+          ]
+        },
+        {
+          "path": "cfg-kernel/src/test/java/io/github/gustavo2358/analysis/cfg/testing/LinearPublications.java",
+          "model": 3,
+          "validation": 0,
+          "imports": [
+            "io.github.gustavo2358.air.model.*",
+            "io.github.gustavo2358.air.model.Ids.*",
+            "io.github.gustavo2358.air.model.Unit"
+          ]
+        }
+      ]
+    }
+  },
+  "checkpoint_0b": {
+    "pr": "https://github.com/Gustavo2358/analysis-ir/pull/3",
+    "state": "OPEN",
+    "merge_commit": null,
+    "head": "bba779613f27416addcaeb0f879f284abb409e44",
+    "candidate_pin": "122ce54e1b9ef9b00646f93ece409ca8b63bc933",
+    "status": "Read as pending context; not merged/approved; main lacks checkpoint-0b-mvp.md"
+  },
+  "probe_evidence": {
+    "method": "git archive snapshots under /tmp only; isolated Maven cache with all ecosystem artifacts removed before B install; no deploy/publication",
+    "java": "Temurin 25.0.4, release 21",
+    "maven": "3.9.16",
+    "classfile_equivalence": {
+      "equal_classfiles": 308,
+      "model_classfiles": 283,
+      "validation_classfiles": 25,
+      "jar_byte_equal": false,
+      "nonclass_changes": [
+        "META-INF/maven/io.github.gustavo2358/air-java/pom.xml"
+      ]
+    },
+    "challenge_results": {
+      "consumer-B": {
+        "exit": 0,
+        "expected": 0
+      },
+      "consumer-no-parent": {
+        "exit": 1,
+        "expected": 1
+      },
+      "consumer-parent-restored": {
+        "exit": 0,
+        "expected": 0
+      },
+      "duplicate-gav": {
+        "exit": 1,
+        "expected": 1
+      },
+      "model-runtime-leak": {
+        "exit": 0,
+        "expected": 0
+      },
+      "current-gate-with-unused-runtime-json": {
+        "result": "308 Java 21 classfiles; 4664 dependencies; model/validation boundary preserved",
+        "interpretation": "PASS is existing metadata blind spot; future model graph must be empty"
+      }
+    },
+    "log_sha256": {
+      "baseline.log": "f8a52ebffc864becd23f164e08d115a4b7c7f111788db6e2ad0f80a64b6052f3",
+      "B-install.log": "7c83c599fe7abc14b0afefb725367162e4b28de2dae6d406e2ec72c7fb44a02e",
+      "B-install-restored.log": "04bc5501270efb159b1b3c2f4e0b9021d5530f59dad0c35236e739db8e3471c6",
+      "B-effective-tree.log": "71f4add6ba547badb05e0a330c845055c251ec017906b45f00af35a2a47da0e6",
+      "lower-B.log": "d5423a20c5d1ef91702b42de83a34eac5dc8623f31a9faa17713f36196d655f5",
+      "cfg-B.log": "5463c88d97f994aa5441fb627cd3e3b7d5c79a280945d53088167e90e84a8c9d",
+      "consumer-B.log": "def15067e5c150713bf89bf2810374b48135b050ed51dd6e1e29f1d58461acb8",
+      "consumer-no-parent.log": "f17e10205805e845cac90c936b43cb4b24f2e3314d58da7e6d55451d08d4995c",
+      "consumer-parent-restored.log": "5f2da00ce42e8df7ae01663c3fb53dc7a89b1cede51740e1e10626d80b4a89d0",
+      "duplicate-gav.log": "4f908001703ad24211233be6134eca6c2f157fef7baf231f858d66325df56e43",
+      "model-runtime-leak.log": "cfcaa70287b1408af6af8f117b604a77bf7ce91748d9bf85c6c1c2e0bedffd47",
+      "A-install.log": "03af1a365ab76055f3873f706fc178457685950f85867efd4760f42fe8978c66",
+      "consumer-A-old-gav.log": "539cf8e36d30b4446aeb03e80b8ea75cfead1548fc78fff138875ecc03d72cbc",
+      "rollback-baseline.log": "39e1933217967217ed9c69c3f6b7bbb8df19e89d95a0e7830419cce132112c62",
+      "consumer-rollback-no-parent.log": "55a6cfb998ee3ac1bd859d018119279455bc87f571c6a91c49ebdad344e86eea"
+    }
+  }
+}

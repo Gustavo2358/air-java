@@ -1,5 +1,4 @@
 # Histórico de trabalho
 
-Nenhum work item do novo harness foi encerrado ainda. Registros futuros contêm
-resultado, conhecimento promovido, evidência, limitações e merge SHA confirmado.
-Não mover item para completed apenas porque o PR foi aberto.
+[WORK-AIR-HARNESS-001](WORK-AIR-HARNESS-001.md) encerrado após merge confirmado.
+Cada registro distingue merge, evidência histórica e aprovação humana.

@@ -1,6 +1,7 @@
 import contextlib
 import io
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -83,6 +84,33 @@ class RunnerTests(unittest.TestCase):
                 self.assertEqual(3, code)
                 self.assertEqual([], called)
                 self.assertEqual("UNAVAILABLE", report["results"][0]["status"])
+
+
+class WorkflowOrderTests(unittest.TestCase):
+    def assert_scope_before_full(self, workflow):
+        # Deliberately cover the two unconditional steps, without a YAML dependency.
+        steps = re.split(r"(?m)^      - ", workflow)[1:]
+        gates = [step.rstrip() for step in steps if "scripts/harness/run.py" in step]
+        self.assertEqual([
+            "name: Check active work scope\n        run: python3 -B scripts/harness/run.py ci-scope",
+            "name: Full library harness\n        run: python3 -B scripts/harness/run.py full",
+        ], gates, "CI must authorize scope before unconditional full")
+        self.assertIn("permissions:\n  contents: read\njobs:", workflow)
+
+    def test_ci_authorizes_scope_before_full(self):
+        self.assert_scope_before_full((runner.ROOT / ".github/workflows/harness.yml").read_text())
+
+    def test_reversed_missing_or_optional_gate_is_rejected(self):
+        workflow = (runner.ROOT / ".github/workflows/harness.yml").read_text()
+        scope = "      - name: Check active work scope\n        run: python3 -B scripts/harness/run.py ci-scope\n"
+        full = "      - name: Full library harness\n        run: python3 -B scripts/harness/run.py full\n"
+        mutations = [workflow.replace(scope + full, full + scope),
+                     workflow.replace(scope, ""), workflow.replace(full, ""),
+                     workflow.replace(scope, scope + "        continue-on-error: true\n"),
+                     workflow.replace(full, full + "        if: false\n")]
+        for mutation in mutations:
+            with self.subTest(workflow=mutation), self.assertRaises(AssertionError):
+                self.assert_scope_before_full(mutation)
 
 
 if __name__ == "__main__":
