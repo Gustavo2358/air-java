@@ -1,17 +1,18 @@
-# Gates do reactor — política 0C-I
+# Gates do reactor — política 1A sobre a topologia 0C-I
 
 Implementação da Opção B aprovada no [ADR-0002](../architecture/decisions/ADR-0002.md).
 [Discovery e probes anteriores](../quality/modularization-discovery.md) registram
 as falhas que motivaram o desenho; [evidência 0C-I](../quality/modularization-implementation.md)
-registra os resultados atuais. Não há biblioteca arquitetural externa.
+registra os resultados históricos. [Evidência 1A](../quality/air-json-implementation.md)
+registra a implementação atual. Não há biblioteca arquitetural externa.
 
 ## Ownership e dependências
 
-| Owner físico | Artefato / classes | Grafo autorizado em 0C-I |
+| Owner físico | Artefato / classes | Grafo autorizado em 1A |
 | --- | --- | --- |
 | root | air-java-parent:pom; sem produto | nenhuma dependência herdada; modules exatamente air-model, air-json |
 | air-model | air-java:jar; packages model + validation | zero dependências Maven, inclusive runtime/optional/test; somente JDK pela allowlist |
-| air-json | air-json:jar; vazio explícito | uma aresta direta compile para air-java na versão conjunta; fechamento sem outras dependências |
+| air-json | air-json:jar; package json, codec explícito | uma aresta direta compile para air-java na versão conjunta; fechamento sem outras dependências |
 
 Todos usam groupId `io.github.gustavo2358` e versão conjunta `0.1.0-SNAPSHOT`.
 `air-model` é diretório, **air-java é o artifactId preservado**. Validation fica
@@ -32,11 +33,21 @@ prefix/sem fonte correspondente e JAR stale falham. Classes aninhadas participam
 da inspeção; JAR e saída compilada devem ter o mesmo inventário e bytes. Diretórios
 target dos módulos são saídas de build, nunca fontes ou entradas do MANIFEST.
 
-Em `air-json`, **qualquer fonte, recurso, teste ou classfile invalida o estado
-vazio de 0C-I**. Módulo/POM/aresta ausentes também falham. O primeiro código de 1A
-exigirá nova política de ownership/classpath, biblioteca explícita e suíte nominal
-própria; não existe allowlist antecipada de JSON, I/O ou rede nem zero testes
-apresentado como conformidade de transporte.
+Em `air-json`, a política temporária “primeiro código → RED” de 0C-I foi
+substituída: implementação real, CodecSuite, GobackOracle, golden e
+[política nominal de transporte](../evals/transport-checks.json) são obrigatórios.
+Código JSON sem suíte/política/evidência, fonte fora do owner, módulo/POM/aresta
+omitidos e dependência externa não autorizada ficam RED. O conjunto 1A fica GREEN.
+Nenhum inventário de testes vem da saída sob teste. Não há código de produção em
+resources; somente o golden nomeado é autorizado como test resource.
+
+JSON permite classes próprias apenas no package `io.github.gustavo2358.air.json`,
+model/validation e a allowlist JDK do núcleo, mais classes explícitas de UTF-8 e
+ByteBuffer. Não abre java.nio.file, java.net ou allowlist global de bibliotecas.
+JAR com modelo copiado/shaded é recusado pelo prefixo, ownership e igualdade de
+inventário/bytes. Relocação usual preservando nome de classe do model também é
+recusada mesmo quando adiciona fonte local. Isso não é detector de plágio semântico
+por renomeação arbitrária; self-review verifica ausência de duplicação do domínio.
 
 ## Bytecode do modelo
 
@@ -54,16 +65,19 @@ allowlist. Suporte gerado a records/lambdas permanece permitido.
 ## Entradas sem recursão
 
 1. `run.py architecture`: topologia/POMs locais, compilação temporária do modelo
-   com JDK release 21 e CP vazio, ownership e jdeps. Não usa outputs anteriores.
+   com JDK release 21 e CP vazio; depois compila JSON só com esse model, verificando
+   ownership e jdeps de ambos. Não usa outputs anteriores.
 2. `scripts/check.sh`: valida os mesmos owners e POMs, compila modelo e testes
    temporariamente, executa JVM `java -ea` no cwd air-model, compara inventário
-   nominal e gera/verifica ambos os JARs nos targets dos módulos. Funciona de
+   nominal do model; compila JSON e sua suíte contra esse modelo isolado e confere
+   os checks de transporte antes de gerar/verificar ambos os JARs. Funciona de
    outro cwd e offline, sem Maven/download. Resíduo JAR/classes no root é falha
    explícita; `mvn clean` remove outputs de um checkout single-module anterior.
 3. Root Maven `validate`: inspeção focalizada `--topology`, não herdada. Modelo
    executa a ContractSuite em `test` via exec:exec, JVM separada, cwd
    `${project.basedir}`, classpathScope test, `-ea`. Nenhuma edição da suíte para
-   contornar seus dois scans relativos de src/main/java.
+   contornar seus dois scans relativos de src/main/java. JSON tem execução própria
+   air-json-suite/CodecSuite, também com JVM/cwd/classpath de seu owner.
 4. `verify` de cada JAR: help 3.5.1 gera effective-pom.xml; dependency 3.8.1 gera
    dependency-tree.json (sem filtro que oculte runtime); exec 3.5.0 chama apenas
    a inspeção compiled desse owner. Compiler 3.13.0/jar 3.4.2 são gerenciados no
@@ -79,12 +93,14 @@ python3 -B scripts/harness/architecture.py --module air-model \
 Modo compiled exige paths absolutos desse módulo; sem fallback para cache/owner
 vizinho. Valida GAV, dependencies efetivas, árvore resolvida (incluindo fechamento),
 Java release, paths efetivos, skips, classfiles e JAR. A ausência de classfiles do
-modelo falha, mesmo com JAR antigo presente. O JSON vazio pode não ter diretório
-target/classes, mas seu JAR/POM/grafo são obrigatórios.
+modelo ou JSON falha, mesmo com JAR antigo presente. Ambos exigem classfiles,
+JAR/POM/grafo e evidência de execução da suíte própria.
 
-## Suíte, reactor e manifesto
+## Suítes, reactor e manifesto
 
-A JVM grava `air-model/target/contract-suite.log`. Verify valida e apresenta esse
+A JVM do JSON grava `air-json/target/transport-suite.log`: os 43 nomes/números/ordem
+e resumo são comparados ao inventário de transporte, sem aceitar Surefire vazio.
+A JVM do model grava `air-model/target/contract-suite.log`. Verify valida e apresenta esse
 log somente após conferir [contract-checks.json](../evals/contract-checks.json):
 mesmos 172 nomes, ordem, números e um resumo. Suite ausente/duplicada/reordenada/
 incompleta, skip ou execução herdada falham. O inventário não deriva do resultado
@@ -115,10 +131,10 @@ paths antigos dos moves, target/caches/classes/JARs ou manifesto de si próprio.
 
 - model/validation e validation → model GREEN; inversão, I/O, rede, reflexão,
   processos e JSON RED; records/lambdas GREEN;
-- JSON → modelo vazio GREEN; aresta ausente/incorreta, inversão e ciclo RED;
+- JSON implementado → modelo, com suíte/política/golden, GREEN; aresta ausente/incorreta, inversão e ciclo RED;
 - runtime Jackson/optional no POM ou grafo, inclusive sem bytecode reference RED;
-- terceiro/missing módulo, fontes no root, cópia de modelo no JSON, primeira
-  fonte/recurso/teste JSON, classfile/JAR inesperado ou ausente RED;
+- terceiro/missing módulo, fontes no root, cópia/shading de modelo no JSON,
+  fonte/resource sem owner ou código sem suíte/política, classfile/JAR ausente RED;
 - suíte ou reactor omitido/duplicado/reordenado/incompleto/skip RED;
 - metadata efetiva com paths de outro owner e JAR com bytes stale RED.
 
@@ -128,5 +144,6 @@ com o inventário capturado da baseline, sem hardcode de 308 como regra futura.
 Limites: jdeps não prova acesso dinâmico por Class/method handles, verdade do
 produtor, semântica AIR ou performance. A forma Maven fechada limita configuração
 suportada, não constitui sandbox contra código de build arbitrário. Review humano
-e oráculos de domínio continuam necessários. Transporte/integration/performance
-permanecem UNAVAILABLE.
+e oráculos de domínio continuam necessários. Integration/performance permanecem UNAVAILABLE. O gate transport executa a suíte
+[1A](air-json.md) isoladamente. Full inclui a mesma suíte em semantic e Maven;
+não chama Maven de dentro de qualquer scanner compiled.

@@ -1,7 +1,7 @@
 # air-java
 
 Modelo Java imutável e Validator estrutural para **Analysis IR 2.0.0**.
-A autoridade semântica é `Gustavo2358/analysis-ir`, cuja `main` está fixada em
+A autoridade semântica é `Gustavo2358/analysis-ir`, com baseline normativo fixado em
 `122ce54e1b9ef9b00646f93ece409ca8b63bc933` por
 `docs/sources.lock.json`. Este repositório implementa a AIR; não a redefine.
 
@@ -24,12 +24,12 @@ A versão da biblioteca é independente da versão semântica da AIR.
 | --- | --- | --- |
 | raiz | `io.github.gustavo2358:air-java-parent:pom` | parent/aggregator, sem dependências herdadas |
 | `air-model` | `io.github.gustavo2358:air-java:jar` | modelo + validation, packages públicos preservados |
-| `air-json` | `io.github.gustavo2358:air-json:jar` | vazio em 0C-I; dependência compile direta em air-java |
+| `air-json` | `io.github.gustavo2358:air-json:jar` | codec AIR JSON 1A; dependência compile direta em air-java |
 
 `air-model` é o diretório físico; **`air-java` permanece o artifactId consumido**.
 A direção é `air-json → air-java`, nunca o inverso. Para consumo via cache Maven,
 instale o reactor completo (`mvn install`): o POM do parent também é necessário.
-Nenhum codec ou biblioteca JSON faz parte de 0C-I.
+0C-I foi mergeado no PR #4; 1A acrescenta o codec sem dependência JSON externa.
 
 ## Fronteira
 
@@ -39,9 +39,10 @@ definitions ou possible values. Nenhum campo semântico é um payload livre como
 `Map<String,Object>`.
 
 O modelo é transport-independent. `analysis-ir/bindings/json-v1.md` é uma
-especificação de transporte **DRAFT** e não é implementada por esta biblioteca.
-O módulo irmão `air-json` está vazio no checkpoint 0C-I. O futuro codec compartilhado
-pertence a esse módulo, fora do domínio, e exige o checkpoint 1A.
+especificação de transporte **DRAFT**. O módulo irmão `air-json` implementa as formas
+GOBACK do 0B no pin acima, com API `new AirJson().encode(Publication)` e
+`decode(byte[])`, escrita canônica e falhas tipadas. [Cobertura, API e limites](docs/engineering/air-json.md).
+Formas ainda não implementadas falham explicitamente. Sem integração lower/CFG ou E2E.
 
 ## Conteúdo
 
@@ -51,6 +52,7 @@ pertence a esse módulo, fora do domínio, e exige o checkpoint 1A.
 - `validation`: índices por identidade, checks de fechamento/ownership/tipos,
   prova finita de `sameDomain` e diagnósticos explícitos de limites/obrigações;
 - `air-model/src/test`: suíte determinística sem framework externo;
+- `air-json/src`: codec explícito e suíte com golden manual, preservação e negativos;
 - `examples/MinimalPublication.java`: construção e validação sem transporte;
 - `docs/reconciliation-air-2.md`: discovery AIR ↔ Java e evidência da migração;
 - `docs/model-catalog.md`: catálogo informativo da API Java atual;

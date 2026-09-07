@@ -1,6 +1,6 @@
 # Evidência 0C-I — implementação da Opção B
 
-[Work item](../work/active/WORK-AIR-MODULARIZATION-002/work-item.json),
+[Work item](../work/history/WORK-AIR-MODULARIZATION-002.md),
 [ADR-0002](../architecture/decisions/ADR-0002.md),
 [gates](../engineering/modularization-gates.md).
 Self-review desta sessão; não é review independente ou aprovação humana.

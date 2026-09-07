@@ -29,8 +29,8 @@ contexto padrão nem instruções atuais.
 ## Regras universais
 
 - Preserve imutabilidade transitiva, identidades completas e versões distintas.
-- `air-model` produz o artefato `air-java` com model + validation; `air-json` está
-  vazio em 0C-I e depende diretamente dele. Primeiro código JSON exige política/testes.
+- `air-model` produz o artefato `air-java` com model + validation; `air-json` contém
+  o codec 1A e depende diretamente dele. [Política/suíte JSON](docs/engineering/air-json.md) obrigatórias.
 - `model` não depende de `validation`; ambos dependem apenas de `java.base`, dentro
   da política de packages do gate. JSON/Jackson/Gson, arquivo, rede, CLI, frameworks,
   COBOL, CFG, effects calculados, RD e values calculados ficam fora do núcleo.

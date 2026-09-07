@@ -32,13 +32,14 @@ def check(root, *, maven=False):
         command = [str(root / "scripts/check.sh")]
     output = run(command, root)
     count = inspect_output(output, expected)
+    transport_count = inspect_transport_output(output, read_json(root / "docs/evals/transport-checks.json")["checks"])
     if maven:
         require("BUILD SUCCESS" in output, "Maven did not complete")
         inspect_reactor_output(output)
     for owner, artifact in MODULES.items():
         require((root / owner / 'target' / f'{artifact}-{version}.jar').is_file(),
                 f'Missing reactor artifact: {owner}')
-    return f"{count} deterministic checks executed via {'Maven clean verify' if maven else 'scripts/check.sh'}"
+    return f"{count} model + {transport_count} transport deterministic checks executed via {'Maven clean verify' if maven else 'scripts/check.sh'}"
 
 
 def inspect_reactor_output(output):
@@ -47,3 +48,14 @@ def inspect_reactor_output(output):
             'Missing or duplicated reactor topology verification')
     owners = re.findall(r'^PASS: compiled module ([\w-]+);', output, re.M)
     require(owners == ['air-model', 'air-json'], 'Incomplete, duplicated or reordered reactor verification')
+
+
+def inspect_transport_output(output, expected):
+    require(expected and len(set(expected)) == len(expected), 'Empty/duplicate transport inventory')
+    records = [(int(n), name) for n, name in re.findall(r'^json-ok (\d+) - (.+)$', output, re.M)]
+    summaries = re.findall(r'^PASS: (\d+) deterministic transport checks$', output, re.M)
+    require([name for _, name in records] == expected, 'Transport inventory missing, duplicated or reordered')
+    require([n for n, _ in records] == list(range(1, len(expected) + 1)), 'Invalid transport numbering')
+    require(summaries == [str(len(expected))], 'Missing, duplicate or incorrect transport summary')
+    require(not re.search(r'^FAIL\b', output, re.M), 'Transport failure in output')
+    return len(expected)

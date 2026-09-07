@@ -9,7 +9,7 @@
   "scope": "implemented",
   "full": "implemented",
   "performance": "unavailable",
-  "transport": "unavailable",
+  "transport": "implemented",
   "integration": "unavailable",
   "ci-scope": "implemented"
 }

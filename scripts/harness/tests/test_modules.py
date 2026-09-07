@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from common import ROOT, Failure
 import architecture
-from module_policy import GROUP, SUITE, inspect_graph, inspect_effective
+from module_policy import GROUP, SUITE, JSON_SUITE, inspect_graph, inspect_effective
 
 
 class ModuleTests(unittest.TestCase):
@@ -25,13 +25,20 @@ class ModuleTests(unittest.TestCase):
         src = self.root / "air-model/src/main/java/Value.java"
         src.parent.mkdir(parents=True)
         src.write_text("package io.github.gustavo2358.air.model; public class Value {}")
+        for name in ('air-json/src/main/java/io/github/gustavo2358/air/json/AirJson.java',
+                     'air-json/src/test/java/io/github/gustavo2358/air/json/CodecSuite.java',
+                     'air-json/src/test/java/io/github/gustavo2358/air/json/GobackOracle.java',
+                     'air-json/src/test/resources/goback.canonical.json', 'docs/evals/transport-checks.json'):
+            target = self.root / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / name, target)
 
     def mutate(self, path, old, new):
         p = self.root / path
         self.assertIn(old, p.read_text())
         p.write_text(p.read_text().replace(old, new))
 
-    def test_authorized_empty_json_requires_both_modules_and_edge(self):
+    def test_authorized_json_requires_implementation_suite_policy_modules_and_edge(self):
         self.assertEqual("0.1.0-SNAPSHOT", architecture.inspect_topology(self.root))
 
     def test_missing_module(self):
@@ -59,14 +66,45 @@ class ModuleTests(unittest.TestCase):
                     architecture.inspect_topology(self.root)
                 p.unlink()
 
-    def test_first_json_code_or_test_invalidates_empty_policy(self):
+    def test_json_code_without_ownership_or_suite_policy_is_rejected(self):
         for name in ("src/main/java/Codec.java", "src/test/java/CodecTest.java", "src/main/resources/binding.json"):
             p = self.root / "air-json" / name
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_text("first transport content")
-            with self.assertRaisesRegex(Failure, "0C-I.*empty"):
+            with self.assertRaisesRegex(Failure, "Unowned JSON"):
                 architecture.inspect_topology(self.root)
             p.unlink()
+
+    def test_json_implementation_without_suite_policy_or_golden_is_red(self):
+        for name in ('air-json/src/test/java/io/github/gustavo2358/air/json/CodecSuite.java',
+                     'air-json/src/test/resources/goback.canonical.json', 'docs/evals/transport-checks.json'):
+            p = self.root / name
+            original = p.read_bytes()
+            p.unlink()
+            with self.subTest(path=name), self.assertRaisesRegex(Failure, 'Missing JSON suite/policy/evidence'):
+                architecture.inspect_topology(self.root)
+            p.write_bytes(original)
+        architecture.inspect_topology(self.root)
+
+    def test_json_suite_launch_cannot_be_omitted_or_skipped(self):
+        p = self.root / 'air-json/pom.xml'
+        original = p.read_text()
+        for old, new in [('<id>air-json-suite</id>', '<id>ignored</id>'),
+                         ('<skip>${skipTests}</skip>', '<skip>true</skip>'),
+                         ('<argument>-ea</argument>', '<argument>-da</argument>'),
+                         ('<id>compiled-module</id>', '<id>air-json-suite</id>')]:
+            p.write_text(original.replace(old, new))
+            with self.subTest(mutation=new), self.assertRaises(Failure):
+                architecture.inspect_topology(self.root)
+        p.write_text(original)
+        architecture.inspect_topology(self.root)
+
+    def test_unapproved_external_json_dependency_is_red(self):
+        self.mutate('air-json/pom.xml', '</dependencies>',
+                    '<dependency><groupId>com.google.code.gson</groupId><artifactId>gson</artifactId>'
+                    '<version>2.13.2</version></dependency></dependencies>')
+        with self.assertRaisesRegex(Failure, 'exactly one direct compile dependency'):
+            architecture.inspect_topology(self.root)
 
     def test_inverse_runtime_optional_parent_and_cycle_dependencies(self):
         for owner, dependency in (
@@ -82,7 +120,7 @@ class ModuleTests(unittest.TestCase):
                     architecture.inspect_topology(self.root)
                 p.write_text(original)
 
-    def test_empty_json_without_edge_is_not_accepted(self):
+    def test_json_without_model_edge_is_not_accepted(self):
         self.mutate("air-json/pom.xml", "<artifactId>air-java</artifactId>", "<artifactId>other</artifactId>")
         with self.assertRaisesRegex(Failure, "direct compile dependency"):
             architecture.inspect_topology(self.root)
@@ -207,16 +245,34 @@ class CompiledOwnershipTests(unittest.TestCase):
             with self.assertRaisesRegex(Failure, 'without source owner'):
                 architecture.inspect_owned_classes(root, 'air-model', root / 'classes')
 
-    def test_json_cannot_contain_model_classes_or_first_codec(self):
+    def test_json_cannot_contain_model_classes_or_unowned_codec(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             for name in ('io/github/gustavo2358/air/model/Publication.class', 'io/github/gustavo2358/air/json/Codec.class'):
                 path = root / name
                 path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(b'copied or first class')
-                with self.subTest(name=name), self.assertRaisesRegex(Failure, '0C-I.*empty'):
+                import struct
+                path.write_bytes(struct.pack('>IHH', 0xCAFEBABE, 0, 65))
+                with self.subTest(name=name), self.assertRaisesRegex(Failure, 'Unexpected production class|without source owner'):
                     architecture.inspect_owned_classes(root, 'air-json', root)
                 path.unlink()
+
+    def test_relocated_model_class_with_source_owner_is_rejected(self):
+        import struct
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            model = root / 'air-model/src/main/java/io/github/gustavo2358/air/model/Publication.java'
+            model.parent.mkdir(parents=True)
+            model.write_text('model source')
+            name = 'io/github/gustavo2358/air/json/Publication'
+            source = root / ('air-json/src/main/java/' + name + '.java')
+            source.parent.mkdir(parents=True)
+            source.write_text('relocated model source')
+            compiled = root / ('classes/' + name + '.class')
+            compiled.parent.mkdir(parents=True)
+            compiled.write_bytes(struct.pack('>IHH', 0xCAFEBABE, 0, 65))
+            with self.assertRaisesRegex(Failure, 'Copied/shaded model'):
+                architecture.inspect_owned_classes(root, 'air-json', root / 'classes')
 
     def test_model_output_cannot_be_missing(self):
         with tempfile.TemporaryDirectory() as temp, self.assertRaisesRegex(Failure, 'No production classfiles'):

@@ -1,7 +1,7 @@
 {
   "active": [
     {
-      "id": "WORK-AIR-MODULARIZATION-002",
+      "id": "WORK-AIR-JSON-001",
       "status": "ready_for_review"
     }
   ],
@@ -15,6 +15,11 @@
       "id": "WORK-AIR-MODULARIZATION-001",
       "status": "completed",
       "merge_commit": "59120faebfe8381df445fd6ea74822bb83f08554"
+    },
+    {
+      "id": "WORK-AIR-MODULARIZATION-002",
+      "status": "completed",
+      "merge_commit": "71937dfe88bac4dae10f6f195731acac638c2d29"
     }
   ]
 }

@@ -23,5 +23,5 @@
     "consulted_draft_transport": "bindings/json-v1.md"
   },
   "library_version": "0.1.0-SNAPSHOT",
-  "json_binding_status": "DRAFT transport specification; not implemented by this library"
+  "json_binding_status": "DRAFT; shared Java codec implements the declared 1A GOBACK coverage; no full qualification"
 }
