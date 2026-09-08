@@ -9,14 +9,14 @@ import static io.github.gustavo2358.air.json.Json.*;
 /** Explicit semantic-to-wire mapping. Field names and variants come from the pinned binding. */
 final class BindingWriter {
     private static Arr empty(List<?> items, String path) {
-        if (!items.isEmpty()) throw limit(path, "Binding form outside implemented 1A coverage");
+        if (!items.isEmpty()) throw limit(path, "Binding form outside implemented 1A/4B coverage");
         return new Arr(List.of());
     }
     Value envelope(Publication p) {
         return object("binding", "analysis-ir-json", "bindingVersion", "1.0.0", "airVersion", "2.0.0",
                 "publication", object("id", id(p.id()), "capabilities", manifest(p.capabilities()),
                 "artifacts", array(p.artifacts(), this::artifact), "units", array(p.units(), this::unit),
-                "storage", empty(p.storage(), "$.publication.storage"),
+                "storage", array(p.storage(), this::storage),
                 "resources", empty(p.resources(), "$.publication.resources"),
                 "artifactRelations", empty(p.artifactRelations(), "$.publication.artifactRelations"),
                 "origins", array(p.origins(), this::origin), "coverage", coverage(p.coverage()),
@@ -36,7 +36,7 @@ final class BindingWriter {
         if (u.body() != Unit.BodyAvailability.AVAILABLE)
             throw limit("$.publication.units.body", "BodyKnowledge.unavailable not implemented");
         return object("id", id(u.id()), "containingUnit", optional(u.containingUnit(), this::id),
-                "objects", empty(u.objects(), "$.publication.units.objects"),
+                "objects", array(u.objects(), this::objectDeclaration),
                 "visibleObjects", empty(u.visibleObjects(), "$.publication.units.visibleObjects"),
                 "entries", array(u.entries(), this::entry), "sequences", array(u.sequences(), this::sequence),
                 "completionPorts", empty(u.completionPorts(), "$.publication.units.completionPorts"),
@@ -59,7 +59,7 @@ final class BindingWriter {
         return object("kind", "none");
     }
     private Value sequence(Sequence s) {
-        return object("label", id(s.label()), "instructions", empty(s.instructions(), "$.sequence.instructions"),
+        return object("label", id(s.label()), "instructions", array(s.instructions(), this::instruction),
                 "terminator", operation(s.terminator()), "origin", id(s.origin()));
     }
     private Value operation(Terminator t) {
@@ -70,6 +70,60 @@ final class BindingWriter {
         return object("id", id(h.id()), "origin", id(h.origin()), "coverage", coverageStatus(h.coverage()),
                 "precision", precision(h.precision()), "uncertainties", array(h.uncertainties(), this::id));
     }
+    private Value objectDeclaration(Memory.ObjectDeclaration o) {
+        return object("id", id(o.id()), "displayName", optional(o.displayName(), Json::value), "typeRef", typeRef(o.typeRef()),
+                "storage", binding(o.storage()), "visibility", visibility(o.visibility()), "origin", id(o.origin()),
+                "coverage", coverageStatus(o.coverage()), "precision", precision(o.precision()));
+    }
+    private Value typeRef(Types.TypeRef t) {
+        if (!(t instanceof Types.Known k) || k.type() != Types.Builtin.TEXT)
+            throw limit("$.typeRef", "Only known(text) implemented");
+        return object("kind", "known", "type", object("kind", "text"));
+    }
+    private Value binding(Memory.Binding b) {
+        if (!(b instanceof Memory.CellBinding c)) throw limit("$.object.storage", "Only StorageBinding.cell implemented");
+        return object("kind", "cell", "storage", id(c.storage()));
+    }
+    private Value storage(Memory.Storage s) {
+        if (!(s instanceof Memory.Cell c)) throw limit("$.publication.storage", "Only Storage.cell implemented");
+        return object("kind", "cell", "header", storageHeader(c.header()), "typeRef", typeRef(c.typeRef()));
+    }
+    private Value storageHeader(Memory.StorageHeader h) {
+        return object("id", id(h.id()), "owner", optional(h.owner(), this::id), "lifetime", lifetime(h.lifetime()),
+                "visibility", visibility(h.visibility()), "origin", id(h.origin()));
+    }
+    private Value operandHeader(Operand.Header h) {
+        return object("id", id(h.id()), "role", role(h.role()), "origin", id(h.origin()));
+    }
+    private Value place(Place p) {
+        if (!(p instanceof Places.ObjectPlace o)) throw limit("$.place", "Only Place.object implemented");
+        return object("kind", "object", "header", operandHeader(o.header()), "object", id(o.object()));
+    }
+    private Value literalValue(Values.LiteralValue v) {
+        if (!(v instanceof Values.TextValue t)) throw limit("$.literal.value", "Only LiteralValue.text implemented");
+        return object("kind", "text", "value", t.value());
+    }
+    private Value expression(Expression e) {
+        if (!(e instanceof Expressions.Literal l)) throw limit("$.expression", "Only Expression.literal implemented");
+        return object("kind", "literal", "header", operandHeader(l.header()), "value", literalValue(l.value()));
+    }
+    private Value instruction(Instruction i) {
+        if (!(i instanceof Operations.Assign a)) throw limit("$.sequence.instructions", "Only Instruction.assign implemented");
+        return object("kind", "assign", "header", header(a.header()), "destination", place(a.destination()), "value", expression(a.value()));
+    }
+    // Binding §10.4: closed tables; Java enum spelling never supplies wire tokens.
+    private String lifetime(Memory.Lifetime value) { return switch (value) {
+        case ACTIVATION -> "ACTIVATION"; case PERSISTENT -> "PERSISTENT"; case EXTERNAL -> "EXTERNAL";
+    }; }
+    private String visibility(Memory.Visibility value) { return switch (value) {
+        case PRIVATE -> "PRIVATE"; case SHARED -> "SHARED"; case UNKNOWN -> "UNKNOWN";
+    }; }
+    private String role(Operand.Role value) { return switch (value) {
+        case VALUE_READ -> "VALUE_READ"; case VALUE_WRITE -> "VALUE_WRITE"; case ADDRESS_READ -> "ADDRESS_READ";
+        case PREDICATE -> "PREDICATE"; case CALL_TARGET -> "CALL_TARGET"; case ARGUMENT_VALUE -> "ARGUMENT_VALUE";
+        case ARGUMENT_REFERENCE -> "ARGUMENT_REFERENCE"; case RESULT_TARGET -> "RESULT_TARGET";
+        case RESOURCE_TARGET -> "RESOURCE_TARGET"; case CONTROL_TARGET -> "CONTROL_TARGET";
+    }; }
     private Value precision(Evidence.Precision p) {
         return object("control", claim(p.control()), "storage", claim(p.storage()), "effects", claim(p.effects()),
                 "values", claim(p.values()), "dependencies", claim(p.dependencies()));

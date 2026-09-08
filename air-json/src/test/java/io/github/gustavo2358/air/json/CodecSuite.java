@@ -322,6 +322,30 @@ public final class CodecSuite {
                     fails(INPUT_ERROR, utf8(marked.replace("\"number-marker\"", "1")));
                 }
         });
+        check("4B manual scalar AIR oracle validates independently", () -> {
+            var expected = ScalarAssignOracle.publication();
+            var result = AirValidator.validate(expected);
+            equal(ValidationResult.Status.STRUCTURALLY_VALID, result.status());
+            equal(List.of(), result.issues());
+            equal(2, result.statistics().operations()); equal(2, result.statistics().operands());
+        });
+        check("4B Java oracle has no transport or golden dependency", ScalarAssignChecks::independentOracle);
+        check("4B independent golden and model satisfy all four equalities", ScalarAssignChecks::golden);
+        check("4B PARTIAL inventories origins precision and uncertainties preserved", ScalarAssignChecks::partialEvidence);
+        check("4B text and nullable fields preserve exact values", ScalarAssignChecks::textAndNullable);
+        check("4B object and cell references must close", ScalarAssignChecks::dangling);
+        check("4B storage kind domain and owner remain validated", ScalarAssignChecks::storageAndDomain);
+        check("4B operand operation and entry owners cannot be repaired", ScalarAssignChecks::operandOwners);
+        check("4B Assign destination and source roles remain validated", ScalarAssignChecks::roles);
+        check("4B conflicting literal domain remains a Validator rule", ScalarAssignChecks::literalConflict);
+        check("4B Assign terminator and Return instruction fail I-04", ScalarAssignChecks::slots);
+        check("4B all supported fields required and unknown fields rejected", ScalarAssignChecks::fields);
+        check("4B null tokens kinds and ID shapes preserve physical taxonomy", ScalarAssignChecks::wrongPhysicalValues);
+        check("4B recognized unsupported forms remain IMPLEMENTATION_LIMIT", ScalarAssignChecks::unsupported);
+        check("4B every Lifetime Visibility and OperandRole token has a literal oracle", ScalarAssignChecks::enumTables);
+        check("4B ordered Assigns preserve independent wire and model arrays", ScalarAssignChecks::order);
+        check("4B default and configured transport and Validator limits unchanged", ScalarAssignChecks::limits);
+        check("4B scale N and 2N and repeated references preserve linear structure", ScalarAssignChecks::scale);
         System.out.println("PASS: " + checks + " deterministic transport checks");
     }
     private static void check(String name, Runnable body) {
@@ -579,8 +603,8 @@ public final class CodecSuite {
         fails(IMPLEMENTATION_LIMIT,changed("publication.origins.0",Json.object("kind","contractual","id",at("publication.origins.0.id"),"authority","test","version","1")));
         fails(IMPLEMENTATION_LIMIT,changed("publication.units.0.entries.0.signature.parameters.remainder",Json.object("kind","unknown","uncertainty",at("publication.uncertainties.0.id"))));
         // Nonempty containers never become empty successful Publications, regardless of deferred element form.
-        for(String path:List.of("publication.storage","publication.resources","publication.artifactRelations","publication.premises",
-                "publication.units.0.objects","publication.units.0.visibleObjects","publication.units.0.completionPorts",
+        for(String path:List.of("publication.resources","publication.artifactRelations","publication.premises",
+                "publication.units.0.visibleObjects","publication.units.0.completionPorts",
                 "publication.units.0.entries.0.state.conditions","publication.units.0.entries.0.signature.parameters.known",
                 "publication.units.0.sequences.0.terminator.values"))
             fails(IMPLEMENTATION_LIMIT,changed(path,new Json.Arr(List.of(Json.object("kind","deferred-element")))));

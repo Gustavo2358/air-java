@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Opt-in mutation challenge of the 1A codec in a disposable copy; never called by Maven."""
+"""Opt-in mutation challenge of the 1A/4B codec in a disposable copy; never called by Maven."""
 from __future__ import annotations
 import argparse
 import hashlib
@@ -68,8 +68,30 @@ def main():
                           's.invalid("mutation-only", "misclassified Span")'))
         mutations.append((name + '-as-input', 'BindingReader.java', before,
                           'Json.input(s.path(), "misclassified Span")'))
+    mutations.extend([
+        ('4b-drop-object', 'BindingWriter.java', 'array(u.objects(), this::objectDeclaration)', 'array(u.objects().stream().skip(1).toList(), this::objectDeclaration)'),
+        ('4b-drop-cell', 'BindingWriter.java', 'array(p.storage(), this::storage)', 'array(p.storage().stream().skip(1).toList(), this::storage)'),
+        ('4b-ignore-instructions', 'BindingReader.java', 'a.child("instructions").list(this::instruction)', 'List.of()'),
+        ('4b-swap-write-role', 'BindingWriter.java', 'case VALUE_WRITE -> "VALUE_WRITE";', 'case VALUE_WRITE -> "VALUE_READ";'),
+        ('4b-repair-operand-owner', 'BindingReader.java', 'return new Operations.Assign(header(a.child("header")), place(a.child("destination")), expression(a.child("value")));',
+         'var h = header(a.child("header")); var d = (Places.ObjectPlace)place(a.child("destination")); var oh = d.header(); return new Operations.Assign(h, new Places.ObjectPlace(new Operand.Header(new OperandId(new OperationOwner(h.id()), oh.id().localId()), oh.role(), oh.origin()), d.object()), expression(a.child("value")));'),
+        ('4b-runtime-enum-name', 'BindingWriter.java', '"role", role(h.role())', '"role", h.role().name()'),
+        ('4b-unsupported-as-invalid', 'BindingReader.java', 'throw a.unsupported("Instruction " + kind)', 'throw a.invalid("I-04", "mutation: unsupported is invalid")'),
+        ('4b-drop-destination', 'BindingWriter.java', '"destination", place(a.destination())', '"destination", null'),
+        ('4b-drop-literal-value', 'BindingWriter.java', '"value", literalValue(l.value())', '"value", null'),
+        ('4b-reverse-instructions-reader', 'BindingReader.java', 'a.child("instructions").list(this::instruction)', 'a.child("instructions").list(this::instruction).reversed()'),
+        ('4b-sort-instructions-writer', 'BindingWriter.java', 'array(s.instructions(), this::instruction)', 'array(s.instructions().stream().sorted(java.util.Comparator.comparing(i -> i.header().id().localId())).toList(), this::instruction)'),
+        ('4b-normalize-text', 'BindingWriter.java', '"value", t.value()', '"value", t.value().strip()'),
+        ('4b-replace-text-by-constant', 'BindingWriter.java', '"value", t.value()', '"value", "CHANGED"'),
+        ('4b-derived-model-oracle', 'air-json/src/test/java/io/github/gustavo2358/air/json/ScalarAssignOracle.java',
+         'static Publication publication() { return publication(1, 1); }',
+         'static Publication publication() { try { return new AirJson().decode(java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/test/resources/scalar-assign.canonical.json"))); } catch (java.io.IOException e) { throw new AssertionError(e); } }'),
+        ('4b-altered-manual-golden', 'air-json/src/test/resources/scalar-assign.canonical.json', '"value":"PROGA"', '"value":"CHANGED"'),
+    ])
     expected_checks = json.loads((ROOT / 'docs/evals/transport-checks.json').read_text())['checks']
-    report = {'baseline': '71937dfe88bac4dae10f6f195731acac638c2d29', 'mutations': []}
+    report = {'baseline': 'b78f4068d8a479f48eb048b8d76fa60a0997dc4a', 'mutations': []}
+    logs = args.output.with_suffix('.logs')
+    logs.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='air-json-challenge-') as temporary:
         root = Path(temporary)
         for owner in ('air-model', 'air-json'):
@@ -88,16 +110,19 @@ def main():
         compile_(root / 'air-json/src/test/java', tests, f'{model}:{codec}')
         code, log = suite()
         if code: raise RuntimeError('Baseline not GREEN:\n' + log)
+        (logs / 'initial-green.log').write_text(log)
         report['initial_green'] = re.search(r'PASS: \d+ deterministic transport checks', log).group()
         for name, filename, before, after in mutations:
-            path = root / PACKAGE / filename
+            path = root / (filename if '/' in filename else PACKAGE + filename)
             original = path.read_bytes()
             source = original.decode()
             if source.count(before) != 1: raise RuntimeError(f'Ambiguous mutation site: {name}')
             try:
                 path.write_text(source.replace(before, after))
                 compile_codec()
+                compile_(root / 'air-json/src/test/java', tests, f'{model}:{codec}')
                 code, log = suite()
+                (logs / (name + '.log')).write_text(log)
                 if code == 0: raise RuntimeError('SURVIVING mutation: ' + name)
                 passed = re.findall(r'^json-ok \d+ - (.+)$', log, re.M)
                 failure = next((line for line in log.splitlines() if line.startswith('Exception')), '')
@@ -108,7 +133,9 @@ def main():
                 path.write_bytes(original)
                 if path.read_bytes() != original: raise RuntimeError('Restoration failed')
         compile_codec()
+        compile_(root / 'air-json/src/test/java', tests, f'{model}:{codec}')
         code, log = suite()
+        (logs / 'restored-green.log').write_text(log)
         if code: raise RuntimeError('Restored suite not GREEN:\n' + log)
         report['restored_green'] = re.search(r'PASS: \d+ deterministic transport checks', log).group()
     args.output.parent.mkdir(parents=True, exist_ok=True)

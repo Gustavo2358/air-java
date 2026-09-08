@@ -54,7 +54,7 @@ final class BindingReader {
             if (!elements().isEmpty()) throw unsupported("Nonempty inventory");
         }
         String kind() { return child("kind").text(); }
-        AirJsonException unsupported(String form) { return Json.limit(path, form + " outside implemented 1A coverage"); }
+        AirJsonException unsupported(String form) { return Json.limit(path, form + " outside implemented 1A/4B coverage"); }
         AirJsonException invalid(String rule, String detail) {
             return new AirJsonException(INVALID_IR, path, detail,
                     List.of(new ValidationIssue(ValidationIssue.Kind.INVALID_IR, rule, Optional.empty(), detail)));
@@ -84,12 +84,12 @@ final class BindingReader {
         var p = e.child("publication").fields("id", "capabilities", "artifacts", "units", "storage", "resources",
                 "artifactRelations", "origins", "coverage", "uncertainties", "premises");
         var manifest = manifest(p.child("capabilities"));
-        p.child("storage").empty(); p.child("resources").empty(); p.child("artifactRelations").empty(); p.child("premises").empty();
+        var storage = p.child("storage").list(this::storage); p.child("resources").empty(); p.child("artifactRelations").empty(); p.child("premises").empty();
         var id = publicationId(p.child("id")); var artifacts = p.child("artifacts").list(this::artifact);
         var units = p.child("units").list(this::unit); var origins = p.child("origins").list(this::origin);
         var coverage = coverage(p.child("coverage")); var gaps = p.child("uncertainties").list(this::uncertainty);
         return new Publication(id, SemanticVersion.AIR_2_0_0, manifest, artifacts, units,
-                List.of(), List.of(), List.of(), origins, coverage, gaps, List.of());
+                storage, List.of(), List.of(), origins, coverage, gaps, List.of());
     }
     private void version(At at, String expected) {
         String actual = at.text();
@@ -116,13 +116,13 @@ final class BindingReader {
             case "unavailable" -> { body.fields("kind", "uncertainty"); throw body.unsupported("BodyKnowledge.unavailable"); }
             default -> throw Json.input(body.path(), "Unknown BodyKnowledge kind");
         }
-        a.child("objects").empty(); a.child("visibleObjects").empty(); a.child("completionPorts").empty();
+        var objects = a.child("objects").list(this::objectDeclaration); a.child("visibleObjects").empty(); a.child("completionPorts").empty();
         var id = unitId(a.child("id")); var containing = a.child("containingUnit").optional(this::unitId);
         var entries = a.child("entries").list(this::entry); var sequences = a.child("sequences").list(this::sequence);
         var coverage = coverage(a.child("coverage")); var origin = originId(a.child("origin"));
         if (entries.isEmpty()) throw a.child("entries").invalid("AIR-01 §2", "Available body requires at least one entry");
         if (sequences.isEmpty()) throw a.child("sequences").invalid("AIR-01 §3", "Available body requires at least one sequence");
-        return a.construct(() -> new Unit(id, containing, List.of(), List.of(), entries, sequences, List.of(),
+        return a.construct(() -> new Unit(id, containing, objects, List.of(), entries, sequences, List.of(),
                 Unit.BodyAvailability.AVAILABLE, Optional.empty(), coverage, origin));
     }
     private Entries.Entry entry(At a) {
@@ -147,13 +147,15 @@ final class BindingReader {
     }
     private Sequence sequence(At a) {
         a.fields("label", "instructions", "terminator", "origin");
-        for (At instruction : a.child("instructions").elements()) {
-            String kind = operationFields(instruction);
-            if (!Set.of("assign", "havoc.must", "havoc.may", "nop", "copy_bytes").contains(kind))
-                throw instruction.invalid("I-04", "AIR 01 §3: terminator in instructions");
-            throw instruction.unsupported("Instruction " + kind);
-        }
-        return new Sequence(labelId(a.child("label")), List.of(), operation(a.child("terminator")), originId(a.child("origin")));
+        return new Sequence(labelId(a.child("label")), a.child("instructions").list(this::instruction),
+                operation(a.child("terminator")), originId(a.child("origin")));
+    }
+    private Instruction instruction(At a) {
+        String kind = operationFields(a);
+        if (!Set.of("assign", "havoc.must", "havoc.may", "nop", "copy_bytes").contains(kind))
+            throw a.invalid("I-04", "AIR 01 §3: terminator in instructions");
+        if (!kind.equals("assign")) throw a.unsupported("Instruction " + kind);
+        return new Operations.Assign(header(a.child("header")), place(a.child("destination")), expression(a.child("value")));
     }
     /** Recognize the binding's operation catalogue, never private Java kind names. */
     private String operationFields(At a) {
@@ -188,6 +190,104 @@ final class BindingReader {
         return new Operations.Header(operationId(a.child("id")), originId(a.child("origin")), coverageStatus(a.child("coverage")),
                 precision(a.child("precision")), a.child("uncertainties").list(this::uncertaintyId));
     }
+    private Memory.ObjectDeclaration objectDeclaration(At a) {
+        a.fields("id", "displayName", "typeRef", "storage", "visibility", "origin", "coverage", "precision");
+        return new Memory.ObjectDeclaration(objectId(a.child("id")), a.child("displayName").optional(At::text),
+                typeRef(a.child("typeRef")), binding(a.child("storage")), visibility(a.child("visibility")),
+                originId(a.child("origin")), coverageStatus(a.child("coverage")), precision(a.child("precision")));
+    }
+    private Types.TypeRef typeRef(At a) {
+        return switch (a.kind()) {
+            case "known" -> {
+                a.fields("kind", "type"); var type = a.child("type");
+                switch (type.kind()) {
+                    case "text" -> type.fields("kind");
+                    case "bool", "int", "decimal", "bytes", "opaque_type", "label" -> throw type.unsupported("Type " + type.kind());
+                    default -> throw Json.input(type.path(), "Unknown Type kind");
+                }
+                yield Types.known(Types.Builtin.TEXT);
+            }
+            case "unknown_type" -> throw a.unsupported("TypeRef.unknown_type");
+            default -> throw Json.input(a.path(), "Unknown TypeRef kind");
+        };
+    }
+    private Memory.Binding binding(At a) {
+        return switch (a.kind()) {
+            case "cell" -> {
+                a.fields("kind", "storage"); yield new Memory.CellBinding(storageId(a.child("storage")));
+            }
+            case "view", "alias", "alternatives", "unknown" -> throw a.unsupported("StorageBinding " + a.kind());
+            default -> throw Json.input(a.path(), "Unknown StorageBinding kind");
+        };
+    }
+    private Memory.Storage storage(At a) {
+        return switch (a.kind()) {
+            case "cell" -> {
+                a.fields("kind", "header", "typeRef");
+                yield new Memory.Cell(storageHeader(a.child("header")), typeRef(a.child("typeRef")));
+            }
+            case "region" -> throw a.unsupported("Storage.region");
+            default -> throw Json.input(a.path(), "Unknown Storage kind");
+        };
+    }
+    private Memory.StorageHeader storageHeader(At a) {
+        a.fields("id", "owner", "lifetime", "visibility", "origin");
+        var id = storageId(a.child("id")); var owner = a.child("owner").optional(this::unitId);
+        var lifetime = lifetime(a.child("lifetime")); var visibility = visibility(a.child("visibility"));
+        var origin = originId(a.child("origin"));
+        if (lifetime == Memory.Lifetime.ACTIVATION && owner.isEmpty())
+            throw a.child("owner").invalid("AIR-03 §2", "Activation storage requires its owning unit");
+        return new Memory.StorageHeader(id, owner, lifetime, visibility, origin);
+    }
+    private Operand.Header operandHeader(At a) {
+        a.fields("id", "role", "origin");
+        return new Operand.Header(operandId(a.child("id")), role(a.child("role")), originId(a.child("origin")));
+    }
+    private Place place(At a) {
+        return switch (a.kind()) {
+            case "object" -> {
+                a.fields("kind", "header", "object");
+                yield new Places.ObjectPlace(operandHeader(a.child("header")), objectId(a.child("object")));
+            }
+            case "choice", "region_slice" -> throw a.unsupported("Place " + a.kind());
+            default -> throw Json.input(a.path(), "Unknown Place kind");
+        };
+    }
+    private Expression expression(At a) {
+        return switch (a.kind()) {
+            case "literal" -> {
+                a.fields("kind", "header", "value");
+                yield new Expressions.Literal(operandHeader(a.child("header")), literalValue(a.child("value")));
+            }
+            case "read", "unknown", "unary", "binary", "quantize", "fit_text", "slice_text", "trim_right" ->
+                    throw a.unsupported("Expression " + a.kind());
+            default -> throw Json.input(a.path(), "Unknown Expression kind");
+        };
+    }
+    private Values.LiteralValue literalValue(At a) {
+        return switch (a.kind()) {
+            case "text" -> {
+                a.fields("kind", "value"); yield new Values.TextValue(a.child("value").text());
+            }
+            case "bool", "int", "decimal", "bytes", "label" -> throw a.unsupported("LiteralValue " + a.kind());
+            default -> throw Json.input(a.path(), "Unknown LiteralValue kind");
+        };
+    }
+    private Memory.Lifetime lifetime(At a) { return switch (a.text()) {
+        case "ACTIVATION" -> Memory.Lifetime.ACTIVATION; case "PERSISTENT" -> Memory.Lifetime.PERSISTENT;
+        case "EXTERNAL" -> Memory.Lifetime.EXTERNAL;
+        default -> throw Json.input(a.path(), "Unknown Lifetime token"); }; }
+    private Memory.Visibility visibility(At a) { return switch (a.text()) {
+        case "PRIVATE" -> Memory.Visibility.PRIVATE; case "SHARED" -> Memory.Visibility.SHARED;
+        case "UNKNOWN" -> Memory.Visibility.UNKNOWN;
+        default -> throw Json.input(a.path(), "Unknown Visibility token"); }; }
+    private Operand.Role role(At a) { return switch (a.text()) {
+        case "VALUE_READ" -> Operand.Role.VALUE_READ; case "VALUE_WRITE" -> Operand.Role.VALUE_WRITE;
+        case "ADDRESS_READ" -> Operand.Role.ADDRESS_READ; case "PREDICATE" -> Operand.Role.PREDICATE;
+        case "CALL_TARGET" -> Operand.Role.CALL_TARGET; case "ARGUMENT_VALUE" -> Operand.Role.ARGUMENT_VALUE;
+        case "ARGUMENT_REFERENCE" -> Operand.Role.ARGUMENT_REFERENCE; case "RESULT_TARGET" -> Operand.Role.RESULT_TARGET;
+        case "RESOURCE_TARGET" -> Operand.Role.RESOURCE_TARGET; case "CONTROL_TARGET" -> Operand.Role.CONTROL_TARGET;
+        default -> throw Json.input(a.path(), "Unknown OperandRole token"); }; }
     private Evidence.Precision precision(At a) {
         a.fields("control", "storage", "effects", "values", "dependencies");
         return new Evidence.Precision(claim(a.child("control")), claim(a.child("storage")), claim(a.child("effects")),
@@ -334,6 +434,9 @@ final class BindingReader {
     private EntryId entryId(At a) { return typedId(a, EntryId.class); }
     private LabelId labelId(At a) { return typedId(a, LabelId.class); }
     private OperationId operationId(At a) { return typedId(a, OperationId.class); }
+    private ObjectId objectId(At a) { return typedId(a, ObjectId.class); }
+    private StorageId storageId(At a) { return typedId(a, StorageId.class); }
+    private OperandId operandId(At a) { return typedId(a, OperandId.class); }
     private OriginId originId(At a) { return typedId(a, OriginId.class); }
     private UncertaintyId uncertaintyId(At a) { return typedId(a, UncertaintyId.class); }
     private Evidence.Dimension dimension(At a) { return switch (a.text()) {

@@ -1,0 +1,77 @@
+{
+  "id": "WORK-AIR-JSON-002",
+  "title": "4B: transporte escalar Object/Cell/Assign text",
+  "status": "ready_for_review",
+  "authorization": "implementation",
+  "authorization_evidence": "Solicitação explícita do usuário em 2026-09-08: implementar somente CP4B em air-json, golden independente, negativos, escala N/2N, challenges compiláveis, gates, commits/push/PR e CI no head exato; parar para review humano sem merge. Repos irmãos read-only e air-model intacto.",
+  "goal": "Transportar canonicamente Object → Cell known(text), ObjectPlace, Literal(TextValue), Assign ordenado e Return, preservando parcialidade e validação.",
+  "checkpoint": "4B",
+  "base_commit": "b78f4068d8a479f48eb048b8d76fa60a0997dc4a",
+  "branch": "feat/air-json-scalar-assign",
+  "must_read": [
+    "AGENTS.md",
+    "docs/work/index.md",
+    "docs/engineering/air-json.md",
+    "docs/engineering/performance.md",
+    "docs/engineering/work-item-protocol.md",
+    "docs/engineering/session-and-review.md",
+    "docs/engineering/gates.md",
+    "docs/engineering/testing.md",
+    "docs/engineering/semantic-policy.md",
+    "docs/architecture/boundaries.md",
+    "docs/architecture/invariants.md",
+    "docs/engineering/change-control.md",
+    "docs/sources.lock.json",
+    "docs/sources/air-json-baseline.json"
+  ],
+  "change_scope": [
+    "air-json/",
+    "docs/work/",
+    "docs/engineering/air-json.md",
+    "docs/engineering/performance.md",
+    "docs/evals/transport-checks.json",
+    "docs/quality/air-json-scalar-assign.md",
+    "docs/quality/air-json-scalar-challenges.json",
+    "scripts/challenge_json.py",
+    "MANIFEST.sha256",
+    "scripts/harness/module_policy.py",
+    "scripts/harness/tests/test_modules.py",
+    "docs/quality/air-json-implementation.md"
+  ],
+  "must_not_change": [
+    "air-model/",
+    "air-json/src/test/resources/goback.canonical.json",
+    "docs/sources.lock.json",
+    "docs/sources/air-json-baseline.json",
+    "pom.xml",
+    ".github/",
+    "examples/"
+  ],
+  "invariants": [
+    "INV-AIR-001",
+    "INV-AIR-002",
+    "INV-AIR-003",
+    "INV-AIR-004",
+    "INV-AIR-005",
+    "INV-AIR-006",
+    "INV-AIR-007"
+  ],
+  "evals": [
+    "EVAL-AIR-001",
+    "EVAL-AIR-002",
+    "EVAL-AIR-003",
+    "EVAL-AIR-004",
+    "EVAL-AIR-005",
+    "EVAL-AIR-006",
+    "EVAL-AIR-007"
+  ],
+  "gates": [
+    "architecture",
+    "semantic",
+    "transport",
+    "full",
+    "git",
+    "scope"
+  ],
+  "stop_condition": "Push normal, PR aberto e CI verde no head exato; aguardar review humano. Sem merge/auto-merge, publicação Maven, CP4C/4D, alteração de model, pin ou repositórios irmãos."
+}
