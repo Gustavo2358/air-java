@@ -1,6 +1,7 @@
-# Codec compartilhado AIR JSON — cobertura 1A
+# Codec compartilhado AIR JSON — cobertura 1A + 4B
 
-O módulo `air-json` implementa o subset transitivo do GOBACK descrito por 0B contra
+O módulo `air-json` implementa o subset transitivo do GOBACK descrito por 0B e
+o transporte escalar Object/Cell/Assign text de 4B contra
 **analysis-ir-json / bindingVersion 1.0.0 / airVersion 2.0.0, DRAFT**, no SHA
 `122ce54e1b9ef9b00646f93ece409ca8b63bc933`. A autoridade é AIR → binding → codec.
 [Baseline e arquivos consultados](../sources/air-json-baseline.json).
@@ -68,6 +69,8 @@ resolver seus plugins previamente fixados; o codec não adicionou bibliotecas.
   `Enum.name()`, `toString()` ou `String.valueOf(enum)`. O oracle literal cobre os
   20 tokens, inclusive os não exercitados pelo golden; um check do bytecode do
   writer rejeita a volta à autoridade de runtime mesmo quando os bytes coincidem.
+  4B acrescenta tabelas fechadas para os 16 tokens de Lifetime, Visibility e OperandRole;
+  tokens de role válidos fisicamente continuam sujeitos ao papel exigido pelo Validator.
 - Naturais implementados (Position/Span) usam BigInteger e strings canônicas, sem
   teto int/long/2^53. `0` é aceito, negativos/`-0`/`+1`/zeros iniciais/fração/expoente não.
   Inteiros assinados em valores, decimal e Base64 ainda não têm cobertura de codec;
@@ -87,7 +90,7 @@ resolver seus plugins previamente fixados; o codec não adicionou bibliotecas.
 O binding cobre todo o catálogo de suas §§1–12. A tabela descreve somente o que
 esta implementação aceita; GOBACK é testemunho, não perfil nem restrição normativa.
 
-| Formas do binding | 1A implementa | Golden GOBACK / casos dirigidos |
+| Formas do binding | Cobertura implementada | Golden / casos dirigidos |
 | --- | --- | --- |
 | Envelope, Publication, SemanticVersion | versões exatas e todos os contêineres | publicação completa; ambos os round-trips |
 | Manifest | required/provided vazios | ambos presentes; conteúdo dá UNSUPPORTED_CAPABILITY |
@@ -95,19 +98,25 @@ esta implementação aceita; GOBACK é testemunho, não perfil nem restrição n
 | Unit, BodyKnowledge | available; containingUnit nullable | Unit com Entry/Sequence; inventários múltiplos em variação |
 | Entry, Signature | initialLabel nullable; parameters/results known vazios, remainder none | assinatura fechada, origem própria; ausência de label em available é INVALID_IR |
 | EntryState | conditions vazio; uncertainties transportadas | vazio no golden |
-| Sequence, OperationHeader, Return | instructions e values vazios; Return, header inteiro | controle sem Halt, successor ou entryScope |
+| Sequence, OperationHeader, Return | instructions ordenadas de Assign; Return com values vazio | GOBACK vazio byte-identical; Assign seguido de Return |
 | IDs | todas as formas da §4, inclusive OperandId com owner entry/operation | oito domínios exercitados no golden; demais IDs isolados, sem suporte a suas definições |
 | Origin | written, derived | oito origens; escrita null/aproximada e IncludeFrames em variação |
 | Location, Span, Position, IncludeFrame | line_columns; medidas BigInteger; site nullable | quatro spans exatos; bases/unidades/exclusividade/includes e números grandes em variações |
 | Coverage, CoverageItem | inventário/scope/items/reasons; elimination null | PARTIAL global/unit; dois itens e outputs heterogêneos |
 | Precision, Claim, Uncertainty, Dimension | todos os campos/tokens catalogados | cinco claims e cinco lacunas; dados opacos modificados em teste |
 | FactScope | publication, unit, entities | três formas preservadas; IDs não ampliam escopos |
-| storage/resources/artifactRelations/premises; objects/visibleObjects/completionPorts | contêineres vazios obrigatórios | omissão/null recusados; conteúdo falha explicitamente |
+| ObjectDeclaration | oito campos do binding, displayName nullable, TypeRef e binding preservados | WS-PGM, nomes vazios/espaçados/Unicode/null sem joins textuais |
+| TypeRef, Type | known(text) | Object/Cell; demais formas reconhecidas dão IMPLEMENTATION_LIMIT |
+| Storage, StorageHeader, StorageBinding | Cell, header completo e cell(StorageId) | owner nullable; ACTIVATION requer owner por AIR 03 §2 |
+| OperandHeader, Place, Expression, LiteralValue | occurrence id/role/origin; ObjectPlace; Literal(TextValue) | duas ocorrências pertencentes ao Assign; sem TypeRef duplicado no Place |
+| Assign | header, destination, value | somente ObjectPlace ← Literal(TextValue); sameDomain pelo Validator |
+| resources/artifactRelations/premises; visibleObjects/completionPorts | contêineres vazios obrigatórios | omissão/null recusados; conteúdo falha explicitamente |
 
 **Fora da cobertura:** BodyKnowledge.unavailable, origens contractual/unavailable,
 Location.offsets, Elimination com conteúdo, Capability com conteúdo, Parameter /
-ResultSlot / UnknownBound.unknown, TypeRef/Type, valores/literais (incluindo bytes e
-decimal), expressões/locais, objetos/memória, condições iniciais, recursos/relações,
+ResultSlot / UnknownBound.unknown, TypeRef.unknown_type, tipos além de text,
+literais além de TextValue, expressões além de Literal, Places além de ObjectPlace,
+storage/bindings além de Cell/CellBinding, condições iniciais, recursos/relações,
 premissas, demais operações core, invocações e extensões/envelopes conservadores.
 O envelope JSON top-level está implementado; `Envelopes.Envelope` de efeitos/controle
 é outra forma do binding e permanece fora da cobertura. Return não ganha tal envelope.
@@ -150,6 +159,7 @@ integralmente nos testes de encode/decode, inclusive rule/subject/detail.
 | Uncertainty sem domínio afetado | AIR 06 §4: domínio afetado identificável |
 | ID de domínio incompatível | I-02 e AIR 01 §4 |
 | Terminador em instructions/operação comum como terminador | I-04 e AIR 01 §3 |
+| StorageHeader ACTIVATION sem owner | AIR 03 §2: instância por ativação da unidade proprietária |
 
 A decisão humana da remediação classifica os três gaps conhecidos abaixo como
 `IMPLEMENTATION_LIMIT`, com `path()` do campo e diagnóstico
@@ -228,3 +238,34 @@ interoperabilidade cross-language, promoção DRAFT e qualificação completa da
 permanecem DEFERRED. Dois callers do mesmo codec não são implementações independentes.
 Claim desta entrega: implementação Java compartilhada do subset necessário ao primeiro
 E2E contra o draft pinado, com regras físicas e preservação testadas no escopo declarado.
+
+## Checkpoint 4B — transporte escalar
+
+[Handoff e evidência](../quality/air-json-scalar-assign.md) documentam contrato 4C,
+probe N/2N, limites e pin handoff 4D. O código de produção muda somente os mappings
+privados do `air-json`. `air-model`, Validator, camada física, API pública,
+POMs/dependências, versões e source lock permanecem intactos.
+
+[Golden escalar manual](../../air-json/src/test/resources/scalar-assign.canonical.json):
+14.554 bytes, SHA-256 `40b9cec1bcc1c1e40cf3b9e3c48e834835e478e1d84bccafa575d63497ef3b60`.
+Os fatos wire foram escritos manualmente e ordenados/minificados com JSON padrão Python,
+sem encoder AIR. [Oracle Java](../../air-json/src/test/java/io/github/gustavo2358/air/json/ScalarAssignOracle.java)
+foi construído separadamente, sem ler o golden ou usar qualquer mapping.
+Não representa saída do lower nem afirma proveniência COBOL: os IDs são opacos,
+as oito origens escritas são aproximadas sem spans, as quatro dimensões não
+certificadas permanecem UNAVAILABLE e a lacuna de inventário de entradas é preservada.
+
+A suíte compara as quatro igualdades e bytes determinísticos; guarda o hash literal
+e verifica que o bytecode do oracle não depende do codec/arquivo. Isso protege a
+independência do teste, sem alegar segunda implementação do binding.
+O golden GOBACK 1A permanece inalterado. Os 57 checks anteriores permanecem;
+seu teste de inventários adiados retira objects/storage da lista de contêineres
+sem cobertura. Os novos contracasos os validam por shape, inclusive elemento
+arbitrário que agora é INPUT_ERROR. Essa mudança decorre da cobertura, sem aceitar
+conteúdo silenciosamente ou alterar expected para encobrir defeito.
+
+O scanner do harness permite exatamente o novo resource e exige ambos os goldens;
+o contracaso de remoção verifica a exigência. Não há allowlist genérica para resources.
+Qualquer forma reconhecida fora do subset interrompe em IMPLEMENTATION_LIMIT,
+sem certificação do restante do payload. TextValue e displayName não recebem trim,
+case folding ou normalização Unicode; somente a gramática física vigente se aplica.

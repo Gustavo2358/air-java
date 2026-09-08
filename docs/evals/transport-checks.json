@@ -62,6 +62,24 @@
     "Span inverted columns on same line are representability limits",
     "coherent spans preserve equality bases and lexicographic order",
     "coherent arbitrary bases reach only their Java representation limit",
-    "invalid Span Natural lexemes remain physical errors at both sites"
+    "invalid Span Natural lexemes remain physical errors at both sites",
+    "4B manual scalar AIR oracle validates independently",
+    "4B Java oracle has no transport or golden dependency",
+    "4B independent golden and model satisfy all four equalities",
+    "4B PARTIAL inventories origins precision and uncertainties preserved",
+    "4B text and nullable fields preserve exact values",
+    "4B object and cell references must close",
+    "4B storage kind domain and owner remain validated",
+    "4B operand operation and entry owners cannot be repaired",
+    "4B Assign destination and source roles remain validated",
+    "4B conflicting literal domain remains a Validator rule",
+    "4B Assign terminator and Return instruction fail I-04",
+    "4B all supported fields required and unknown fields rejected",
+    "4B null tokens kinds and ID shapes preserve physical taxonomy",
+    "4B recognized unsupported forms remain IMPLEMENTATION_LIMIT",
+    "4B every Lifetime Visibility and OperandRole token has a literal oracle",
+    "4B ordered Assigns preserve independent wire and model arrays",
+    "4B default and configured transport and Validator limits unchanged",
+    "4B scale N and 2N and repeated references preserve linear structure"
   ]
 }

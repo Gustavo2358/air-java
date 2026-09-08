@@ -28,7 +28,8 @@ class ModuleTests(unittest.TestCase):
         for name in ('air-json/src/main/java/io/github/gustavo2358/air/json/AirJson.java',
                      'air-json/src/test/java/io/github/gustavo2358/air/json/CodecSuite.java',
                      'air-json/src/test/java/io/github/gustavo2358/air/json/GobackOracle.java',
-                     'air-json/src/test/resources/goback.canonical.json', 'docs/evals/transport-checks.json'):
+                     'air-json/src/test/resources/goback.canonical.json',
+                     'air-json/src/test/resources/scalar-assign.canonical.json', 'docs/evals/transport-checks.json'):
             target = self.root / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / name, target)
@@ -77,7 +78,8 @@ class ModuleTests(unittest.TestCase):
 
     def test_json_implementation_without_suite_policy_or_golden_is_red(self):
         for name in ('air-json/src/test/java/io/github/gustavo2358/air/json/CodecSuite.java',
-                     'air-json/src/test/resources/goback.canonical.json', 'docs/evals/transport-checks.json'):
+                     'air-json/src/test/resources/goback.canonical.json',
+                     'air-json/src/test/resources/scalar-assign.canonical.json', 'docs/evals/transport-checks.json'):
             p = self.root / name
             original = p.read_bytes()
             p.unlink()

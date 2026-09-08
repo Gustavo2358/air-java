@@ -1,6 +1,6 @@
 # Evidência 1A — codec AIR JSON compartilhado
 
-[Work item](../work/active/WORK-AIR-JSON-001/work-item.json),
+[Work item](../work/history/WORK-AIR-JSON-001.md),
 [API/cobertura](../engineering/air-json.md), [baseline](../sources/air-json-baseline.json).
 Self-review desta sessão; não é revisão independente nem aprovação humana.
 
