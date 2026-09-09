@@ -2,6 +2,13 @@
   "baseline_commit": "6a4091e5394fc22b3d2ada9abbdb530eb3572a58",
   "source": "src/test/java/io/github/gustavo2358/air/validation/ContractSuite.java",
   "checks": [
+    "CORE-SIZE iterative semantic nesting",
+    "CORE-SIZE retention continues validation",
+    "CORE-SIZE independent cardinality series",
+    "CORE-SIZE indexed reference lookup",
+    "CORE-SIZE operational failure and counters",
+    "CORE-SIZE omitted kinds retain classification",
+    "CORE-SIZE recursive families use explicit frames",
     "semver parse",
     "bad semver rejected",
     "negative version rejected",

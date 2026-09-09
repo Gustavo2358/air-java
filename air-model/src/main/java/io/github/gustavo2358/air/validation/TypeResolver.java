@@ -10,24 +10,36 @@ final class TypeResolver {
     final ValidationContext c;
     final Map<OperandId, Optional<TypeRef>> types = new LinkedHashMap<>();
     TypeResolver(ValidationContext c) { this.c=c; }
-    Optional<TypeRef> type(Operand operand) { return type(operand,0); }
-    private Optional<TypeRef> type(Operand operand,int depth) {
-        c.depth(depth);
+    Optional<TypeRef> type(Operand operand) {
         Optional<TypeRef> cached=types.get(operand.header().id()); if(cached!=null) return cached;
-        Optional<TypeRef> result=calculate(operand,depth);
-        result.ifPresent(t -> c.type(t,operand.header().id()));
-        types.put(operand.header().id(),result); return result;
+        Set<OperandId> active=new HashSet<>();
+        Walk.run(operand,0,Operands::children,new Walk.Visitor<Operand>() {
+            public boolean enter(Operand node,long depth) {
+                c.depth(depth);
+                // Duplicate/cyclic occurrence IDs were diagnosed by PublicationIndex.
+                return !types.containsKey(node.header().id()) && active.add(node.header().id());
+            }
+            public void exit(Operand node,long depth) {
+                Optional<TypeRef> result=calculate(node);
+                result.ifPresent(t -> c.type(t,node.header().id()));
+                types.put(node.header().id(),result); active.remove(node.header().id());
+            }
+        });
+        return cached(operand);
     }
-    private Optional<TypeRef> calculate(Operand operand,int depth) {
+    private Optional<TypeRef> cached(Operand operand) {
+        return types.getOrDefault(operand.header().id(),Optional.empty());
+    }
+    private Optional<TypeRef> calculate(Operand operand) {
         return switch(operand) {
             case Expressions.Literal l -> known(l.value().type());
             case Places.ObjectPlace p -> Optional.ofNullable(c.index.objects.get(p.object())).map(Memory.ObjectDeclaration::typeRef);
             case Places.Choice p -> Optional.of(p.typeRef());
             case Places.RegionSlice p -> Optional.of(p.typeRef());
-            case Expressions.Read r -> type(r.place(),depth+1);
+            case Expressions.Read r -> cached(r.place());
             case Expressions.Unknown u -> Optional.of(u.typeRef());
             case Expressions.Unary u -> {
-                Optional<TypeRef> t=type(u.argument(),depth+1);
+                Optional<TypeRef> t=cached(u.argument());
                 yield switch(u.operator()) {
                     case NOT -> { expect(t,Builtin.BOOL,u.header().id()); yield known(Builtin.BOOL); }
                     case NEG -> { numeric(t,u.header().id()); yield t; }
@@ -36,7 +48,7 @@ final class TypeResolver {
                 };
             }
             case Expressions.Binary b -> {
-                Optional<TypeRef> l=type(b.left(),depth+1), r=type(b.right(),depth+1);
+                Optional<TypeRef> l=cached(b.left()), r=cached(b.right());
                 if(!sameKnown(l,r)) c.error("I-08",b.header().id(),"binary operator requires matching known domains, not shared unknown_type");
                 yield switch(b.operator()) {
                     case EQ, NE -> known(Builtin.BOOL);
@@ -46,14 +58,14 @@ final class TypeResolver {
                     case CONCAT -> { textOrBytes(l,b.header().id()); textOrBytes(r,b.header().id()); yield l; }
                 };
             }
-            case Expressions.Quantize q -> { expect(type(q.value(),depth+1),Builtin.DECIMAL,q.header().id()); yield known(Builtin.DECIMAL); }
-            case Expressions.FitText f -> { expect(type(f.value(),depth+1),Builtin.TEXT,f.header().id()); yield known(Builtin.TEXT); }
+            case Expressions.Quantize q -> { expect(cached(q.value()),Builtin.DECIMAL,q.header().id()); yield known(Builtin.DECIMAL); }
+            case Expressions.FitText f -> { expect(cached(f.value()),Builtin.TEXT,f.header().id()); yield known(Builtin.TEXT); }
             case Expressions.SliceText s -> {
-                expect(type(s.value(),depth+1),Builtin.TEXT,s.header().id());
-                expect(type(s.start(),depth+1),Builtin.INT,s.header().id());
-                expect(type(s.count(),depth+1),Builtin.INT,s.header().id()); yield known(Builtin.TEXT);
+                expect(cached(s.value()),Builtin.TEXT,s.header().id());
+                expect(cached(s.start()),Builtin.INT,s.header().id());
+                expect(cached(s.count()),Builtin.INT,s.header().id()); yield known(Builtin.TEXT);
             }
-            case Expressions.TrimRight t -> { expect(type(t.value(),depth+1),Builtin.TEXT,t.header().id()); yield known(Builtin.TEXT); }
+            case Expressions.TrimRight t -> { expect(cached(t.value()),Builtin.TEXT,t.header().id()); yield known(Builtin.TEXT); }
         };
     }
     void expect(Optional<TypeRef> actual,Type expected,Id owner) {

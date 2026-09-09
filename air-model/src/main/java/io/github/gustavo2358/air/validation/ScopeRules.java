@@ -12,21 +12,29 @@ final class ScopeRules {
     static final Region ALL=new Region(Kind.ALL,Optional.empty()), EMPTY=new Region(Kind.EMPTY,Optional.empty());
     final ValidationContext c;
     ScopeRules(ValidationContext c) { this.c=c; }
-    Region scope(DomainProofScope scope,Id owner) { return scope(scope,owner,0); }
-    private Region scope(DomainProofScope s,Id owner,int depth) {
-        c.depth(depth);
-        return switch(s) {
-            case PublicationDomain ignored -> ALL;
-            case UnitDomain u -> { c.ref(u.unit(),owner); yield region(Kind.UNIT,u.unit()); }
-            case EntryDomain e -> { c.ref(e.entry(),owner); yield region(Kind.ENTRY,e.entry()); }
-            case OperationDomain o -> { c.ref(o.operation(),owner); yield region(Kind.OPERATION,o.operation()); }
-            case InvocationDomain i -> {
-                c.ref(i.invocation(),owner);
-                if(!(c.index.operations.get(i.invocation()) instanceof Operations.Invoke)) c.error("I-52",owner,"invocation scope requires an invoke");
-                yield region(Kind.INVOCATION,i.invocation());
+    Region scope(DomainProofScope scope,Id owner) {
+        Region[] result={ALL};
+        Walk.run(scope,0,s -> s instanceof Intersection i ? List.of(i.left(),i.right()) : List.of(),
+                new Walk.Visitor<DomainProofScope>() {
+            public boolean enter(DomainProofScope s,long depth) {
+                c.depth(depth);
+                Region leaf=switch(s) {
+                    case PublicationDomain ignored -> ALL;
+                    case UnitDomain u -> { c.ref(u.unit(),owner); yield region(Kind.UNIT,u.unit()); }
+                    case EntryDomain e -> { c.ref(e.entry(),owner); yield region(Kind.ENTRY,e.entry()); }
+                    case OperationDomain o -> { c.ref(o.operation(),owner); yield region(Kind.OPERATION,o.operation()); }
+                    case InvocationDomain i -> {
+                        c.ref(i.invocation(),owner);
+                        if(!(c.index.operations.get(i.invocation()) instanceof Operations.Invoke)) c.error("I-52",owner,"invocation scope requires an invoke");
+                        yield region(Kind.INVOCATION,i.invocation());
+                    }
+                    case Intersection ignored -> ALL;
+                };
+                // Static scope intersection is associative; still visit every leaf for diagnostics.
+                result[0]=intersect(result[0],leaf); return true;
             }
-            case Intersection i -> intersect(scope(i.left(),owner,depth+1),scope(i.right(),owner,depth+1));
-        };
+        });
+        return result[0];
     }
     Region intersect(Region a,Region b) {
         if(a.kind()==Kind.EMPTY || b.kind()==Kind.EMPTY) return EMPTY;

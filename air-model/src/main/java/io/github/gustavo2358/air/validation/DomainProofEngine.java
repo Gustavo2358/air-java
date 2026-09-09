@@ -105,7 +105,7 @@ final class DomainProofEngine {
     }
 
     boolean same(DomainSubject left,DomainSubject right,ProofSite site) {
-        c.domainQueries++;
+        c.query();
         register(left); register(right);
         Graph base=graph(site);
         if(base.root(key(left)).equals(base.root(key(right)))) return true;
@@ -169,35 +169,53 @@ final class DomainProofEngine {
         expandUniversal(graph,proof.assertion().right(),proof.premise().id(),0);
     }
 
-    private void expandUniversal(Graph graph,DomainSubject subject,Id premise,int depth) {
-        c.depth(depth);
-        if(!(subject instanceof OperandDomain domain)) return;
+    private List<DomainSubject> choiceChildren(DomainSubject subject,boolean closedOnly) {
+        if(!(subject instanceof OperandDomain domain)) return List.of();
         Operand operand=c.index.operands.get(domain.operand());
         if(operand instanceof Expressions.Read read)
-            expandUniversal(graph,new OperandDomain(read.place().header().id()),premise,depth+1);
-        if(operand instanceof Places.Choice choice) for(Place candidate:choice.candidates()) {
-            DomainSubject candidateDomain=new OperandDomain(candidate.header().id());
-            link(graph,subject,candidateDomain,premise);
-            expandUniversal(graph,candidateDomain,premise,depth+1);
-        }
+            return List.of(new OperandDomain(read.place().header().id()));
+        if(!(operand instanceof Places.Choice choice)
+                || closedOnly && !(choice.remainder() instanceof Scopes.NoMemory)) return List.of();
+        return new AbstractList<DomainSubject>() {
+            public int size() { return choice.candidates().size(); }
+            public DomainSubject get(int index) { return new OperandDomain(choice.candidates().get(index).header().id()); }
+        };
+    }
+    private record Expansion(DomainSubject subject,DomainSubject parent) {}
+    private void expandUniversal(Graph graph,DomainSubject subject,Id premise,int depth) {
+        Set<DomainSubject> visited=new HashSet<>();
+        Walk.run(new Expansion(subject,null),depth,node -> {
+            List<DomainSubject> children=choiceChildren(node.subject(),false);
+            return new AbstractList<Expansion>() {
+                public int size() { return children.size(); }
+                public Expansion get(int index) { return new Expansion(children.get(index),node.subject()); }
+            };
+        },new Walk.Visitor<Expansion>() {
+            public boolean enter(Expansion node,long nesting) {
+                if(node.parent() instanceof OperandDomain parent
+                        && c.index.operands.get(parent.operand()) instanceof Places.Choice)
+                    link(graph,node.parent(),node.subject(),premise);
+                c.depth(nesting); return visited.add(node.subject());
+            }
+        });
     }
 
     private void normalizeChoice(Graph graph,DomainSubject subject,int depth) {
-        c.depth(depth);
-        if(!(subject instanceof OperandDomain domain)) return;
-        Operand operand=c.index.operands.get(domain.operand());
-        if(operand instanceof Expressions.Read read) {
-            normalizeChoice(graph,new OperandDomain(read.place().header().id()),depth+1);
-            return;
-        }
-        if(!(operand instanceof Places.Choice choice)
-                || !(choice.remainder() instanceof Scopes.NoMemory) || choice.candidates().isEmpty()) return;
-        for(Place candidate:choice.candidates())
-            normalizeChoice(graph,new OperandDomain(candidate.header().id()),depth+1);
-        Key first=graph.root(key(new OperandDomain(choice.candidates().get(0).header().id())));
-        if(choice.candidates().stream().allMatch(candidate ->
-                graph.root(key(new OperandDomain(candidate.header().id()))).equals(first)))
-            graph.union(key(subject),first);
+        Set<DomainSubject> visited=new HashSet<>();
+        Walk.run(subject,depth,node -> choiceChildren(node,true),new Walk.Visitor<DomainSubject>() {
+            public boolean enter(DomainSubject node,long nesting) {
+                c.depth(nesting); return visited.add(node);
+            }
+            public void exit(DomainSubject node,long nesting) {
+                if(!(node instanceof OperandDomain domain)
+                        || !(c.index.operands.get(domain.operand()) instanceof Places.Choice choice)
+                        || !(choice.remainder() instanceof Scopes.NoMemory) || choice.candidates().isEmpty()) return;
+                Key first=graph.root(key(new OperandDomain(choice.candidates().get(0).header().id())));
+                if(choice.candidates().stream().allMatch(candidate ->
+                        graph.root(key(new OperandDomain(candidate.header().id()))).equals(first)))
+                    graph.union(key(node),first);
+            }
+        });
     }
 
     private void register(DomainSubject subject) {
@@ -310,14 +328,14 @@ final class DomainProofEngine {
 
     private static final class Graph {
         private final Map<Key,Key> parents=new HashMap<>();
-        private final Map<Key,Integer> sizes=new HashMap<>();
+        private final Map<Key,Long> sizes=new HashMap<>();
         private final Map<Key,Type> concrete=new HashMap<>();
         private final Graph base;
         Graph() { this.base=null; }
         Graph(Graph base) { this.base=base; }
         Key ensure(Key key) {
             if(base!=null) key=base.root(key);
-            parents.putIfAbsent(key,key); sizes.putIfAbsent(key,1);
+            parents.putIfAbsent(key,key); sizes.putIfAbsent(key,1L);
             if(key instanceof TypeKey type) concrete.putIfAbsent(key,type.type());
             if(base!=null) {
                 Type type=base.concrete.get(key);
@@ -341,7 +359,7 @@ final class DomainProofEngine {
                 Key swap=x; x=y; y=swap;
                 Type typeSwap=tx; tx=ty; ty=typeSwap;
             }
-            parents.put(y,x); sizes.put(x,sizes.get(x)+sizes.get(y));
+            parents.put(y,x); sizes.put(x,Math.addExact(sizes.get(x),sizes.get(y)));
             if(tx==null && ty!=null) concrete.put(x,ty);
             return valid;
         }

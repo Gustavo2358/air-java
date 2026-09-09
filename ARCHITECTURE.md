@@ -67,9 +67,12 @@ CFG, effects analysis, reaching definitions ou possible values. `disjoint_storag
 é checado quanto a forma/fechamento, mas sua verdade física permanece obrigação da
 autoridade. Envelopes são validados, não executados.
 
-Limites operacionais de profundidade, entidades e diagnósticos pertencem ao
-Validator e produzem `INCOMPLETE_VALIDATION`. Eles não truncam inventários nem
-mudam naturais AIR em `int`/`long` semântico.
+Budgets de profundidade/entidades são opt-in e produzem RESOURCE_LIMIT,
+com status INCOMPLETE_VALIDATION e traversalCompleted=false. Defaults usam o teto
+de representabilidade da API Java, sem limite arbitrário de cobertura. Retenção
+finita de diagnósticos não interrompe trabalho: contagens por kind determinam o
+status, inclusive para mensagens omitidas. Percursos dependentes da profundidade
+usam frames explícitos. [Contrato de capacidade](docs/quality/air-capacity.md).
 
 ## Extensões
 

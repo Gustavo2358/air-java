@@ -92,7 +92,7 @@ não alega certificação de todas as dimensões semânticas daquele invariável
    Sem implementação do manifesto, o resultado é unsupported/limit, nunca
    `TYPE_UNKNOWN` ou semântica inventada.
 8. **Transporte.** JSON, schema, reader/writer, filesystem e round-trip ficam em
-   adapters. O binding JSON DRAFT da AIR não foi implementado.
+   adapters. O módulo air-json implementa somente o subset 1A + 4B declarado na política.
 
 ## Detalhes Java sem autoridade semântica
 
@@ -101,9 +101,12 @@ de bytes como `List<Integer>`, o booleano interno de signedness de codec e índi
 do Validator são escolhas de implementação. `ProofSite` representa o site estático
 usado internamente para aplicar a regra AIR; não é inventário publicado.
 
-`ValidationOptions` usa limites finitos do processo. Ao atingi-los, o resultado é
-`INCOMPLETE_VALIDATION`; a AIR não recebe teto de cardinalidade e nenhum inventário
-é silenciosamente truncado.
+`ValidationOptions` default não impõe cardinalidade/profundidade arbitrária.
+Os tetos int são representabilidade da API; budgets menores são opt-in. Exhaustion
+produz RESOURCE_LIMIT, status INCOMPLETE_VALIDATION (ou INVALID_IR se já foi
+provado erro) e traversalCompleted=false. Contagens por kind preservam inclusive
+issues não retidos; reter até K mensagens não para a validação. Não há recuperação
+de OOM nem promessa de recursos ilimitados. [CORE-SIZE-001](quality/air-capacity.md).
 
 ## Consumo por cobol-lowering
 

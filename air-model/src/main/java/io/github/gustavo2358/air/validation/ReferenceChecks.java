@@ -11,6 +11,7 @@ final class ReferenceChecks {
 
     final ValidationContext c;
     final Map<UnitId,Set<ObjectId>> visible=new HashMap<>();
+    private final Map<Control.InvocationOutcomes,Set<Control.OutcomeKey>> outcomeKeys=new IdentityHashMap<>();
 
     ReferenceChecks(ValidationContext c) { this.c=c; }
 
@@ -170,7 +171,7 @@ final class ReferenceChecks {
                 boolean profile=capability.name().startsWith("AIR-");
                 if(profile) c.obligation("profile",c.index.publication.id(),
                         "declared profile requires separate oracle evidence: "+capability);
-                else if(!standard && manifest.required().contains(capability))
+                else if(!standard && c.required.contains(capability))
                     c.unsupported("I-43",c.index.publication.id(),
                             "extension semantic contract is not implemented by this validator: "+capability);
             }
@@ -316,37 +317,44 @@ final class ReferenceChecks {
         }
     }
 
-    void memoryBound(Scopes.MemoryBound bound,Id owner,int depth) {
+    void memoryBound(Scopes.MemoryBound bound,Id owner,long depth) {
         c.depth(depth);
         if(bound instanceof Scopes.WithinMemory within) memory(within.scope(),owner,depth+1);
     }
 
-    void memory(Scopes.MemoryScope scope,Id owner,int depth) {
-        c.depth(depth);
-        switch(scope) {
-            case Scopes.ObjectsMemory objects -> c.refs(objects.objects(),owner);
-            case Scopes.StorageMemory storage -> c.refs(storage.storage(),owner);
-            case Scopes.VisibleMemory visible -> c.ref(visible.unit(),owner);
-            case Scopes.AllMemory all -> c.ref(all.publication(),owner);
-            case Scopes.MemoryUnion union -> {
-                for(Scopes.MemoryScope member:union.members()) memory(member,owner,depth+1);
+    void memory(Scopes.MemoryScope scope,Id owner,long depth) {
+        Walk.run(scope,depth,node -> node instanceof Scopes.MemoryUnion union ? union.members() : List.of(),
+                new Walk.Visitor<Scopes.MemoryScope>() {
+            public boolean enter(Scopes.MemoryScope node,long nesting) {
+                c.depth(nesting);
+                switch(node) {
+                    case Scopes.ObjectsMemory objects -> c.refs(objects.objects(),owner);
+                    case Scopes.StorageMemory storage -> c.refs(storage.storage(),owner);
+                    case Scopes.VisibleMemory visible -> c.ref(visible.unit(),owner);
+                    case Scopes.AllMemory all -> c.ref(all.publication(),owner);
+                    case Scopes.MemoryUnion ignored -> { }
+                }
+                return true;
             }
-        }
+        });
     }
 
-    void controlScope(Scopes.ControlScope scope,UnitId unit,Id owner,int depth) {
-        c.depth(depth);
-        switch(scope) {
-            case Scopes.LabelsControl labels -> {
-                for(LabelId label:labels.labels()) label(label,unit,owner);
+    void controlScope(Scopes.ControlScope scope,UnitId unit,Id owner,long depth) {
+        Walk.run(scope,depth,node -> node instanceof Scopes.ControlUnion union ? union.members() : List.of(),
+                new Walk.Visitor<Scopes.ControlScope>() {
+            public boolean enter(Scopes.ControlScope node,long nesting) {
+                c.depth(nesting);
+                switch(node) {
+                    case Scopes.LabelsControl labels -> {
+                        for(LabelId label:labels.labels()) label(label,unit,owner);
+                    }
+                    case Scopes.UnitControl target -> c.ref(target.unit(),owner);
+                    case Scopes.AllControl all -> c.ref(all.publication(),owner);
+                    case Scopes.ControlUnion ignored -> { }
+                }
+                return true;
             }
-            case Scopes.UnitControl target -> c.ref(target.unit(),owner);
-            case Scopes.AllControl all -> c.ref(all.publication(),owner);
-            case Scopes.ControlUnion union -> {
-                for(Scopes.ControlScope member:union.members())
-                    controlScope(member,unit,owner,depth+1);
-            }
-        }
+        });
     }
 
     void outcomes(Control.InvocationOutcomes outcomes,UnitId unit,Id owner) {
@@ -417,17 +425,21 @@ final class ReferenceChecks {
         }
     }
 
-    static boolean hasOutcome(Control.InvocationOutcomes outcomes,Control.OutcomeKey key) {
-        return switch(key) {
-            case Control.NormalOutcome ignored -> outcomes.known().stream().anyMatch(Control.Normal.class::isInstance);
-            case Control.ExceptionOutcome tag -> outcomes.known().stream()
-                    .anyMatch(item -> item instanceof Control.Exceptional exceptional
-                            && exceptional.tag().equals(tag.tag()));
-            case Control.OtherExceptionOutcome ignored -> outcomes.known().stream()
-                    .anyMatch(Control.AnyException.class::isInstance);
-            case Control.HaltOutcome ignored -> outcomes.known().contains(Control.HaltAlternative.INSTANCE);
-            case Control.DivergeOutcome ignored -> outcomes.known().contains(Control.Diverge.INSTANCE);
-        };
+    boolean hasOutcome(Control.InvocationOutcomes outcomes,Control.OutcomeKey key) {
+        Set<Control.OutcomeKey> keys=outcomeKeys.computeIfAbsent(outcomes,value -> {
+            Set<Control.OutcomeKey> result=new HashSet<>();
+            for(Control.InvocationAlternative alternative:value.known()) {
+                switch(alternative) {
+                    case Control.Normal ignored -> result.add(Control.NormalOutcome.INSTANCE);
+                    case Control.Exceptional tag -> result.add(new Control.ExceptionOutcome(tag.tag()));
+                    case Control.AnyException ignored -> result.add(Control.OtherExceptionOutcome.INSTANCE);
+                    case Control.HaltAlternative ignored -> result.add(Control.HaltOutcome.INSTANCE);
+                    case Control.Diverge ignored -> result.add(Control.DivergeOutcome.INSTANCE);
+                }
+            }
+            return result;
+        });
+        return keys.contains(key);
     }
 
     void envelope(Envelopes.Envelope envelope,OperationId owner,boolean allowContinue) {
@@ -498,8 +510,46 @@ final class ReferenceChecks {
         }
     }
 
+    private record BindingNode(Memory.Binding binding,Types.TypeRef type,Types.TypeRef parentType) {}
     private void binding(Memory.Binding binding,Types.TypeRef type,Id owner,int depth) {
-        c.depth(depth);
+        Walk.run(new BindingNode(binding,type,null),depth,node -> {
+            if(!(node.binding() instanceof Memory.AlternativesBinding alternatives)) return List.of();
+            // Lazy indexed view: no list of all sibling frames retained at each level.
+            return new AbstractList<BindingNode>() {
+                public int size() { return alternatives.alternatives().size(); }
+                public BindingNode get(int index) {
+                    Memory.Binding child=alternatives.alternatives().get(index);
+                    return new BindingNode(child,associatedType(child).orElse(node.type()),node.type());
+                }
+            };
+        },new Walk.Visitor<BindingNode>() {
+            public boolean enter(BindingNode node,long nesting) {
+                c.depth(nesting);
+                if(node.parentType() instanceof Types.Known && !TypeResolver.sameRef(node.type(),node.parentType()))
+                    c.error("I-51",owner,"known association domain contradicts an alternative");
+                bindingLeaf(node.binding(),node.type(),owner,nesting);
+                return true;
+            }
+            public void exit(BindingNode node,long nesting) {
+                if(!(node.binding() instanceof Memory.AlternativesBinding alternatives)) return;
+                Types.TypeRef declared=node.type();
+                Types.TypeRef first=null; boolean homogeneous=true;
+                for(Memory.Binding alternative:alternatives.alternatives()) {
+                    Types.TypeRef candidate=associatedType(alternative).orElse(declared);
+                    if(first==null) first=candidate;
+                    else if(!TypeResolver.sameRef(candidate,first)) homogeneous=false;
+                }
+                if(declared instanceof Types.UnknownType && alternatives.remainder() instanceof Scopes.NoMemory
+                        && first instanceof Types.Known && homogeneous)
+                    c.error("I-51",owner,"closed homogeneous association must retain known domain");
+                if(declared instanceof Types.Known && alternatives.remainder() instanceof Scopes.WithinMemory)
+                    c.issue(ValidationIssue.Kind.VALIDATION_LIMIT,"ASSOCIATION_DOMAIN_BOUND",owner,
+                            "known domain of open storage alternatives needs evidence outside this validator slice");
+                memoryBound(alternatives.remainder(),owner,nesting+1);
+            }
+        });
+    }
+    private void bindingLeaf(Memory.Binding binding,Types.TypeRef type,Id owner,long depth) {
         switch(binding) {
             case Memory.CellBinding cellBinding -> {
                 c.ref(cellBinding.storage(),owner);
@@ -527,25 +577,8 @@ final class ReferenceChecks {
                     c.error("I-13",owner,"binary codec width differs from view extent");
             }
             case Memory.AlternativesBinding alternatives -> {
-                List<Types.TypeRef> candidates=new ArrayList<>();
-                for(Memory.Binding alternative:alternatives.alternatives()) {
-                    Types.TypeRef candidate=associatedType(alternative).orElse(type);
-                    candidates.add(candidate);
-                    if(type instanceof Types.Known && !TypeResolver.sameRef(candidate,type))
-                        c.error("I-51",owner,"known association domain contradicts an alternative");
-                    binding(alternative,candidate,owner,depth+1);
-                }
-                if(type instanceof Types.UnknownType
-                        && alternatives.remainder() instanceof Scopes.NoMemory
-                        && !candidates.isEmpty() && candidates.get(0) instanceof Types.Known
-                        && candidates.stream().allMatch(candidate ->
-                                TypeResolver.sameRef(candidate,candidates.get(0))))
-                    c.error("I-51",owner,"closed homogeneous association must retain known domain");
-                if(type instanceof Types.Known
-                        && alternatives.remainder() instanceof Scopes.WithinMemory)
-                    c.issue(ValidationIssue.Kind.VALIDATION_LIMIT,"ASSOCIATION_DOMAIN_BOUND",owner,
-                            "known domain of open storage alternatives needs evidence outside this validator slice");
-                memoryBound(alternatives.remainder(),owner,depth+1);
+                // Contradictions belong to the declared parent type, before child checks.
+                // The traversal still checks every alternative and the remainder.
             }
             case Memory.UnknownBinding unknown -> {
                 memory(unknown.scope(),owner,depth+1); c.uncertainty(unknown.reason(),null,owner);
