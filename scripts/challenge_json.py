@@ -29,13 +29,13 @@ def main():
         ('drop-uncertainty', 'BindingWriter.java', 'array(p.uncertainties(), this::uncertainty)', 'array(p.uncertainties().stream().skip(1).toList(), this::uncertainty)'),
         ('drop-origin', 'BindingWriter.java', 'array(p.origins(), this::origin)', 'array(p.origins().stream().skip(1).toList(), this::origin)'),
         ('sort-artifacts', 'BindingWriter.java', 'array(p.artifacts(), this::artifact)', 'array(p.artifacts().stream().sorted(java.util.Comparator.comparing(a -> a.id().localId())).toList(), this::artifact)'),
-        ('accept-duplicate', 'Json.java', 'if (fields.containsKey(key)) throw error("Duplicate property: " + key);', '// mutation: overwrite duplicate'),
+        ('accept-duplicate', 'Json.java', 'if (frame.fields.containsKey(key)) throw error("Duplicate property: " + key);', '// mutation: overwrite duplicate'),
         ('accept-number', 'Json.java', 'default -> throw error("Expected binding JSON value; numbers must be canonical decimal strings");',
          'default -> { int start = position; while (position < text.length() && "0123456789-+.eE".indexOf(text.charAt(position)) >= 0) position++; if (start == position) throw error("Expected value"); yield new Text(text.substring(start, position)); }'),
         ('accept-version', 'BindingReader.java', 'if (!expected.equals(actual)) throw new AirJsonException(VERSION_MISMATCH, at.path(), "Expected " + expected + ", received " + actual);', '// mutation: accept versions'),
         ('accept-unknown-field', 'BindingReader.java', 'if (!required.contains(name)) throw Json.input(path + "." + name, "Unknown field");', 'if (!required.contains(name)) { /* mutation: ignore field */ }'),
-        ('final-newline', 'Json.java', 'writer.out.toString().getBytes(StandardCharsets.UTF_8)', '(writer.out.toString() + "\\n").getBytes(StandardCharsets.UTF_8)'),
-        ('noncanonical-nonascii-escaping', 'Json.java', 'else out.append(c);', 'else if (c == \'á\') out.append("\\\\u00e1"); else out.append(c);'),
+        ('final-newline', 'Json.java', 'return bytes;', 'byte[] changed = java.util.Arrays.copyOf(bytes, bytes.length + 1); changed[bytes.length] = 10; return changed;'),
+        ('noncanonical-nonascii-escaping', 'Json.java', 'else scalar(c);', 'else if (c == \'á\') ascii("\\\\u00e1"); else scalar(c);'),
         ('ignore-valid-halt', 'BindingReader.java', 'if (!kind.equals("return")) throw a.unsupported("Operation " + kind);',
          'if (!kind.equals("return")) return new Operations.Return(header(a.child("header")), List.of());'),
         ('runtime-enum-name', 'BindingWriter.java', '"inventory", inventoryStatus(c.inventory())', '"inventory", c.inventory().name()'),
@@ -89,7 +89,7 @@ def main():
         ('4b-altered-manual-golden', 'air-json/src/test/resources/scalar-assign.canonical.json', '"value":"PROGA"', '"value":"CHANGED"'),
     ])
     expected_checks = json.loads((ROOT / 'docs/evals/transport-checks.json').read_text())['checks']
-    report = {'baseline': 'b78f4068d8a479f48eb048b8d76fa60a0997dc4a', 'mutations': []}
+    report = {'baseline': 'ce530a7e17ab12b23c48f29425f503ff920b09fb', 'mutations': []}
     logs = args.output.with_suffix('.logs')
     logs.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='air-json-challenge-') as temporary:

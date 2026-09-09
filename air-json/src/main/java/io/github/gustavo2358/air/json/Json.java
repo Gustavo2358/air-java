@@ -6,6 +6,8 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +27,10 @@ final class Json {
     static AirJsonException input(String path, String message) { return new AirJsonException(INPUT_ERROR, path, message); }
     static AirJsonException limit(String path, String message) { return new AirJsonException(IMPLEMENTATION_LIMIT, path, message); }
 
+    static AirJsonException resource(String path, String message) { return new AirJsonException(RESOURCE_LIMIT, path, message); }
+
     static Value parse(byte[] bytes, AirJson.Limits limits) {
-        if (bytes.length > limits.maximumDocumentBytes()) throw limit("$", "Document byte limit exceeded");
+        if (bytes.length > limits.maximumDocumentBytes()) throw resource("$", "Document byte limit exceeded");
         String text;
         try {
             text = StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
@@ -34,7 +38,7 @@ final class Json {
         } catch (CharacterCodingException error) { throw input("$", "Invalid UTF-8"); }
         if (text.startsWith("\ufeff")) throw input("$", "BOM forbidden");
         var parser = new Parser(text, limits.maximumDepth());
-        Value value = parser.value(0);
+        Value value = parser.value();
         parser.whitespace();
         if (parser.position != text.length()) throw parser.error("Trailing content or second document");
         if (!(value instanceof Obj)) throw input("$", "Document root must be an object");
@@ -65,46 +69,64 @@ final class Json {
             return false;
         }
         void expect(char c) { if (!take(c)) throw error("Expected '" + c + "'"); }
-        Value value(int depth) {
+        private static final class Container {
+            final Map<String,Value> fields;
+            final List<Value> values;
+            String key;
+            int state; // 0 first member, 1 awaiting value, 2 delimiter, 3 member after comma
+            Container(boolean object) {
+                fields=object ? new LinkedHashMap<>() : null;
+                values=object ? null : new ArrayList<>();
+            }
+            void accept(Value value) {
+                if(fields!=null) fields.put(key,value); else values.add(value);
+                state=2;
+            }
+            char close() { return fields!=null ? '}' : ']'; }
+            Value finish() { return fields!=null ? new Obj(fields) : new Arr(values); }
+        }
+        Value value() {
+            var stack=new ArrayDeque<Container>();
+            Value pending=token(stack);
+            while(true) {
+                if(pending!=null) {
+                    if(stack.isEmpty()) return pending;
+                    stack.peek().accept(pending); pending=null;
+                }
+                Container frame=stack.peek(); whitespace();
+                if((frame.state==0 || frame.state==2) && take(frame.close())) {
+                    pending=frame.finish(); stack.pop(); continue;
+                }
+                if(frame.state==2) { expect(','); frame.state=3; whitespace(); }
+                if(frame.state==0 || frame.state==3) {
+                    if(frame.fields!=null) {
+                        String key=string(); whitespace(); expect(':');
+                        // Check the unescaped name before insertion; null is a real value.
+                        if (frame.fields.containsKey(key)) throw error("Duplicate property: " + key);
+                        frame.key=key;
+                    }
+                    frame.state=1;
+                }
+                pending=token(stack);
+            }
+        }
+        Value token(ArrayDeque<Container> stack) {
             whitespace();
-            if (depth > maximumDepth) throw limit("$@" + position, "JSON depth limit exceeded");
-            if (position == text.length()) throw error("Expected value");
-            return switch (text.charAt(position)) {
-                case '{' -> object(depth + 1);
-                case '[' -> array(depth + 1);
+            if(stack.size()>maximumDepth) throw resource("$@"+position,"JSON depth limit exceeded");
+            if(position==text.length()) throw error("Expected value");
+            return switch(text.charAt(position)) {
+                case '{' -> { position++; stack.push(new Container(true)); yield null; }
+                case '[' -> { position++; stack.push(new Container(false)); yield null; }
                 case '"' -> new Text(string());
-                case 't' -> literal("true", new Bool(true));
-                case 'f' -> literal("false", new Bool(false));
-                case 'n' -> literal("null", Nil.INSTANCE);
-                // The binding contains no JSON-number-valued field, including deferred forms.
+                case 't' -> literal("true",new Bool(true));
+                case 'f' -> literal("false",new Bool(false));
+                case 'n' -> literal("null",Nil.INSTANCE);
                 default -> throw error("Expected binding JSON value; numbers must be canonical decimal strings");
             };
         }
         Value literal(String token, Value value) {
             if (!text.startsWith(token, position)) throw error("Invalid literal");
             position += token.length(); return value;
-        }
-        Obj object(int depth) {
-            expect('{'); whitespace();
-            var fields = new LinkedHashMap<String, Value>();
-            if (take('}')) return new Obj(fields);
-            do {
-                whitespace(); String key = string(); whitespace(); expect(':');
-                // Test presence BEFORE inserting, after unescaping: escaped aliases are duplicates.
-                if (fields.containsKey(key)) throw error("Duplicate property: " + key);
-                fields.put(key, value(depth)); whitespace();
-                if (take('}')) return new Obj(fields);
-                expect(',');
-            } while (true);
-        }
-        Arr array(int depth) {
-            expect('['); whitespace(); var values = new ArrayList<Value>();
-            if (take(']')) return new Arr(values);
-            do {
-                values.add(value(depth)); whitespace();
-                if (take(']')) return new Arr(values);
-                expect(',');
-            } while (true);
         }
         String string() {
             expect('"'); var result = new StringBuilder();
@@ -173,60 +195,86 @@ final class Json {
         return Integer.compare(a.length() - ai, b.length() - bi);
     }
     static byte[] write(Value value, AirJson.Limits limits) {
-        var writer = new Writer(limits); writer.write(value, 0);
-        byte[] bytes = writer.out.toString().getBytes(StandardCharsets.UTF_8);
-        if (bytes.length > limits.maximumDocumentBytes()) throw limit("$", "Output byte limit exceeded");
+        // First pass validates scalars/depth and counts exact escaped UTF-8 bytes.
+        var measure=new Writer(limits,null); measure.write(value);
+        byte[] bytes=new byte[Math.toIntExact(measure.position)];
+        new Writer(limits,bytes).write(value);
         return bytes;
     }
     private static final class Writer {
         private final AirJson.Limits limits;
-        private final StringBuilder out = new StringBuilder();
-        Writer(AirJson.Limits limits) { this.limits = limits; }
-        void write(Value value, int depth) {
-            if (depth > limits.maximumDepth()) throw limit("$", "Output depth limit exceeded");
-            switch (value) {
-                case Obj obj -> {
-                    out.append('{'); var keys = new ArrayList<>(obj.fields().keySet());
-                    keys.sort(Json::compareScalars);
-                    boolean first = true;
-                    for (String key : keys) {
-                        if (!first) out.append(','); first = false;
-                        string(key); out.append(':'); write(obj.fields().get(key), depth + 1);
-                    }
-                    out.append('}');
-                }
-                case Arr arr -> {
-                    out.append('['); boolean first = true;
-                    for (Value element : arr.values()) {
-                        if (!first) out.append(','); first = false; write(element, depth + 1);
-                    }
-                    out.append(']');
-                }
-                case Text text -> string(text.value());
-                case Bool bool -> out.append(bool.value() ? "true" : "false");
-                case Nil ignored -> out.append("null");
+        private final byte[] output;
+        private long position;
+        private static final class Frame {
+            final Value node;
+            final Iterator<?> children;
+            boolean first=true;
+            Frame(Value node) {
+                this.node=node;
+                if(node instanceof Obj obj) {
+                    var keys=new ArrayList<>(obj.fields().keySet()); keys.sort(Json::compareScalars);
+                    children=keys.iterator();
+                } else children=((Arr)node).values().iterator();
             }
-            if (out.length() > limits.maximumDocumentBytes()) throw limit("$", "Output size limit exceeded");
+        }
+        Writer(AirJson.Limits limits,byte[] output) { this.limits=limits; this.output=output; }
+        void write(Value root) {
+            var stack=new ArrayDeque<Frame>();
+            node(root,0,stack);
+            while(!stack.isEmpty()) {
+                Frame frame=stack.peek();
+                if(!frame.children.hasNext()) {
+                    octet(frame.node instanceof Obj ? '}' : ']'); stack.pop(); continue;
+                }
+                if(!frame.first) octet(','); frame.first=false;
+                Value child;
+                if(frame.node instanceof Obj obj) {
+                    String key=(String)frame.children.next(); string(key); octet(':'); child=obj.fields().get(key);
+                } else child=(Value)frame.children.next();
+                node(child,stack.size(),stack);
+            }
+        }
+        void node(Value value,int depth,ArrayDeque<Frame> stack) {
+            if(depth>limits.maximumDepth()) throw resource("$","Output depth limit exceeded");
+            switch(value) {
+                case Obj ignored -> { octet('{'); stack.push(new Frame(value)); }
+                case Arr ignored -> { octet('['); stack.push(new Frame(value)); }
+                case Text text -> string(text.value());
+                case Bool bool -> ascii(bool.value() ? "true" : "false");
+                case Nil ignored -> ascii("null");
+            }
+        }
+        void octet(int value) {
+            if(position>=limits.maximumDocumentBytes()) throw resource("$","Output byte limit exceeded");
+            if(output!=null) output[(int)position]=(byte)value;
+            position++;
+        }
+        void ascii(String text) { for(int i=0;i<text.length();i++) octet(text.charAt(i)); }
+        void scalar(int value) {
+            if(value<0x80) octet(value);
+            else if(value<0x800) { octet(0xc0 | value >> 6); octet(0x80 | value & 63); }
+            else if(value<0x10000) {
+                octet(0xe0 | value >> 12); octet(0x80 | value >> 6 & 63); octet(0x80 | value & 63);
+            } else {
+                octet(0xf0 | value >> 18); octet(0x80 | value >> 12 & 63);
+                octet(0x80 | value >> 6 & 63); octet(0x80 | value & 63);
+            }
         }
         void string(String text) {
-            scalars(text, "$");
-            if (text.length() > limits.maximumDocumentBytes() - out.length()) throw limit("$", "Output size limit exceeded");
-            out.append('"');
-            for (int i = 0; i < text.length(); i++) {
-                char c = text.charAt(i);
-                switch (c) {
-                    case '"' -> out.append("\\\""); case '\\' -> out.append("\\\\");
-                    case '\b' -> out.append("\\b"); case '\f' -> out.append("\\f");
-                    case '\n' -> out.append("\\n"); case '\r' -> out.append("\\r"); case '\t' -> out.append("\\t");
+            scalars(text,"$"); octet('"');
+            for(int i=0;i<text.length();) {
+                int c=text.codePointAt(i); i+=Character.charCount(c);
+                switch(c) {
+                    case '"' -> ascii("\\\""); case '\\' -> ascii("\\\\");
+                    case '\b' -> ascii("\\b"); case '\f' -> ascii("\\f");
+                    case '\n' -> ascii("\\n"); case '\r' -> ascii("\\r"); case '\t' -> ascii("\\t");
                     default -> {
-                        if (c < 0x20) out.append("\\u00").append("0123456789abcdef".charAt(c / 16))
-                                .append("0123456789abcdef".charAt(c % 16));
-                        else out.append(c);
+                        if(c<0x20) { ascii("\\u00"); octet("0123456789abcdef".charAt(c / 16)); octet("0123456789abcdef".charAt(c % 16)); }
+                        else scalar(c);
                     }
                 }
-                if (out.length() > limits.maximumDocumentBytes()) throw limit("$", "Output size limit exceeded");
             }
-            out.append('"');
+            octet('"');
         }
     }
 }

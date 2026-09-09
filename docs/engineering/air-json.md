@@ -22,7 +22,7 @@ Publication restored = codec.decode(canonical);
 pública do módulo. Não há Map público, annotations no model, serialização de records, DTOs
 acoplados ao model, adaptador Path/arquivo, streams de filesystem, CLI ou rede.
 O codec é imutável e não mantém estado de uma chamada para outra. O model e seu
-Validator permanecem intactos em `air-model`, artefato Maven `air-java`.
+Validator pertencem a `air-model`, artefato Maven `air-java`.
 
 Ambos os métodos retornam somente após sucesso integral. `decode` valida bytes,
 campos/formas e versões, materializa os fatos exatos e chama `AirValidator`.
@@ -135,8 +135,9 @@ físico, espécie válida ainda sem implementação não vira INVALID_IR por ess
 | VERSION_MISMATCH | binding ou qualquer versão diferente do envelope exato |
 | INVALID_IR | constraint local AIR ou erro de fechamento/ownership/validação |
 | UNSUPPORTED_CAPABILITY | manifesto com conteúdo ainda não negociado/suportado ou issue do Validator |
-| INCOMPLETE_VALIDATION | limite ou obrigação inconclusiva do Validator; nunca sucesso silencioso |
-| IMPLEMENTATION_LIMIT | forma fora da cobertura, limite explícito do transporte ou representabilidade Java identificada |
+| INCOMPLETE_VALIDATION | check semântico indecidido ou obrigação do Validator; nunca sucesso silencioso |
+| IMPLEMENTATION_LIMIT | forma fora da cobertura ou drift de representabilidade Java identificado |
+| RESOURCE_LIMIT | budget operacional de bytes/depth/Validator ou teto de representação do buffer/contadores |
 
 `path()` aponta para o campo, objeto local ou posição física (`$@N`, índice UTF-16
 na string decodificada). `issues()` conserva rule/subject/detail originais quando
@@ -212,13 +213,31 @@ Há duas categorias de dívida: [drift Java](../work/backlog.md#backlog-air-006-
 (coordinate >= base e start <= end). Nenhuma regra foi promovida no pin atual;
 analysis-ir e air-model permanecem intactos. [Histórico do blocker e decisão](../quality/air-json-implementation.md#review-independente-do-head-ab25ea0--novo-blocker).
 
-Por default: 16 MiB por documento e profundidade 128; `Limits` permite configurar
-bytes e profundidade 1..256. `ValidationOptions` mantém limites independentes do
-Validator (default 128 níveis, 2.000.000 entidades, 10.000 issues). Tetos atingidos
-nunca mudam números ou retornam prefixos. A materialização usa uma árvore intermediária;
-esta entrega não é streaming nem gate de desempenho. Parser caminha pelo documento;
-writer ordena propriedades por objeto e percorre arrays sem ordenar. Conversão de
-BigInteger e Validator têm custos próprios; não se alega tempo linear universal.
+Defaults de bytes/depth e de entidades/nesting do Validator usam Integer.MAX_VALUE,
+limite de representação dos buffers/índices/contadores da API Java em memória,
+sem teto semântico de cobertura. Os construtores existentes com limites positivos
+continuam disponíveis como budgets operacionais opt-in (sem antigos máximos
+128/256/512). Uma exhaustion retorna RESOURCE_LIMIT e não expõe produto parcial.
+Malformed JSON continua INPUT_ERROR; forma fora do subset continua IMPLEMENTATION_LIMIT.
+OOM/erros fatais JVM não são capturados nem convertidos em invalidade AIR.
+
+`maximumIssues` controla retenção, sem parar traversal. `ValidationResult` preserva
+os dois accessors e construtor anteriores e acrescenta `diagnostics()` e
+`hasIssues(kind)`: classificação usa contagens totais, inclusive mensagens omitidas.
+O codec usa esses totais, nunca deduz validade de um prefixo vazio. Falhas após
+Validator expõem `AirJsonException.validationResult()` (Optional); `issues()`
+permanece a lista retida. RESOURCE_LIMIT prevalece no codec quando houve exhaustion operacional,
+mesmo havendo erro detectado; o resultado associado preserva ambos.
+
+O parser físico usa frames explícitos e mantém UTF-8 estrito e a mesma gramática.
+Depth continua contando arestas Value→Value a partir da raiz 0, inclusive folhas,
+não níveis semânticos AIR. O writer usa duas passagens iterativas: conta bytes
+UTF-8 canônicos exatos e valida depth/scalars antes de alocar um único byte[] de
+saída; depois preenche esse buffer privado. Um budget exato inclui escapes e
+multibyte Unicode. Não há StringBuilder/String de documento no encode.
+A árvore intermediária continua presente; decode mantém bytes/string/árvore/model
+nas fases aplicáveis. Não é streaming nem promessa de heap ilimitado.
+[Discovery, custos e compatibilidade](../quality/air-capacity.md).
 
 ## Evidência, risco e continuação
 

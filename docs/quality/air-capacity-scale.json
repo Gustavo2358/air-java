@@ -1,0 +1,56 @@
+{
+  "base": "ce530a7e17ab12b23c48f29425f503ff920b09fb",
+  "measurement": "logical counters only; no heap/RSS measurement or timing SLA",
+  "jvm_flags": [
+    "-Xms64m",
+    "-Xmx1536m",
+    "-Xss256k",
+    "-XX:+UseG1GC"
+  ],
+  "warmup": "none; correctness probes, each scenario in a fresh JVM",
+  "probes": [
+    {
+      "dimension": "entities",
+      "n": 500001,
+      "exit_code": 0,
+      "counters": "CAPACITY dimension=entities n=500001 entities=500002 status=STRUCTURALLY_VALID",
+      "log_sha256": "87e65e3aee87d669914dd21e3088e1a0cfb5b03ba4e096a4bfef5bbbc856f846"
+    },
+    {
+      "dimension": "entities",
+      "n": 1000002,
+      "exit_code": 0,
+      "counters": "CAPACITY dimension=entities n=1000002 entities=1000003 status=STRUCTURALLY_VALID",
+      "log_sha256": "4b5e0181e9166576c51989fe4d2c54cb75720f5a111e5ef4da1a3fd90b93e808"
+    },
+    {
+      "dimension": "entities",
+      "n": 2000004,
+      "exit_code": 0,
+      "counters": "CAPACITY dimension=entities n=2000004 entities=2000005 status=STRUCTURALLY_VALID",
+      "log_sha256": "1675054bac54f6bfb857852bba5152c622c1e5248ecb8c9166c4d7ebaae5371a"
+    },
+    {
+      "dimension": "json-bytes",
+      "n": 5242880,
+      "exit_code": 0,
+      "counters": "CAPACITY dimension=json-bytes n=5242880 bytes=5243468 entities=2 operations=0 operands=0 queries=0 status=STRUCTURALLY_VALID",
+      "log_sha256": "beea6dcbf35dc52aba3afc5900c04d7aa5af3d7410d0d9480d466c3d29858daa"
+    },
+    {
+      "dimension": "json-bytes",
+      "n": 10485760,
+      "exit_code": 0,
+      "counters": "CAPACITY dimension=json-bytes n=10485760 bytes=10486348 entities=2 operations=0 operands=0 queries=0 status=STRUCTURALLY_VALID",
+      "log_sha256": "a97182dc89db330c1454f9c68fb7a079cbf6765a6bc4ce29eab31ae01c33b4c3"
+    },
+    {
+      "dimension": "json-bytes",
+      "n": 20971520,
+      "exit_code": 0,
+      "counters": "CAPACITY dimension=json-bytes n=20971520 bytes=20972108 entities=2 operations=0 operands=0 queries=0 status=STRUCTURALLY_VALID",
+      "log_sha256": "28f95351ff104862e1f3722a9020dadf4a09472843080cf9a8c998674862a27d"
+    }
+  ],
+  "java": "openjdk version \"25.0.4\" 2026-07-21 LTS\nOpenJDK Runtime Environment Temurin-25.0.4+7 (build 25.0.4+7-LTS)\nOpenJDK 64-Bit Server VM Temurin-25.0.4+7 (build 25.0.4+7-LTS, mixed mode, sharing)"
+}

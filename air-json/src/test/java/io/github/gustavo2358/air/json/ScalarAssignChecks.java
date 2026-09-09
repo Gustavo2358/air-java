@@ -231,29 +231,28 @@ final class ScalarAssignChecks {
         equal(p, CODEC.decode(input)); bytes(input, CODEC.encode(p));
     }
     static void limits() {
-        equal(new AirJson.Limits(16 * 1024 * 1024, 128), AirJson.Limits.defaults());
+        equal(new AirJson.Limits(Integer.MAX_VALUE, Integer.MAX_VALUE), AirJson.Limits.defaults());
         var limited = new AirJson(new AirJson.Limits(GOLDEN.length - 1, 128), ValidationOptions.defaults());
-        failure(IMPLEMENTATION_LIMIT, () -> limited.encode(EXPECTED)); failure(IMPLEMENTATION_LIMIT, () -> limited.decode(GOLDEN));
+        failure(RESOURCE_LIMIT, () -> limited.encode(EXPECTED)); failure(RESOURCE_LIMIT, () -> limited.decode(GOLDEN));
         var boundedValidator = new AirJson(AirJson.Limits.defaults(), new ValidationOptions(128, 10, 100));
-        failure(INCOMPLETE_VALIDATION, () -> boundedValidator.encode(EXPECTED));
-        failure(INCOMPLETE_VALIDATION, () -> boundedValidator.decode(GOLDEN));
+        failure(RESOURCE_LIMIT, () -> boundedValidator.encode(EXPECTED));
+        failure(RESOURCE_LIMIT, () -> boundedValidator.decode(GOLDEN));
     }
     static void scale() {
         var small = probe(1000, 1000); var large = probe(2000, 2000);
         require(large.bytes() > small.bytes() * 1.9 && large.bytes() < small.bytes() * 2.1, "Nonlinear wire size");
         require(large.nodes() > small.nodes() * 1.9 && large.nodes() < small.nodes() * 2.1, "Nonlinear physical traversal");
         equal(2 * small.queries(), large.queries());
-        // 10,000 occurrences remain references to ONE definition, with explicit test-only byte limit.
+        // 10,000 occurrences remain references to ONE definition and exceed the old default bytes.
         probe(1, 10000);
     }
     private record Probe(int bytes, long nodes, long queries) {}
     private static Probe probe(int objectCount, int assignCount) {
-        var codec = new AirJson(new AirJson.Limits(64 * 1024 * 1024, 128), ValidationOptions.defaults());
+        var codec = new AirJson();
         var p = publication(objectCount, assignCount); long start = System.nanoTime();
         byte[] output = codec.encode(p); var decoded = codec.decode(output); equal(p, decoded);
         bytes(output, codec.encode(decoded));
-        if (output.length > AirJson.Limits.defaults().maximumDocumentBytes())
-            failure(IMPLEMENTATION_LIMIT, () -> CODEC.decode(output));
+        equal(p, CODEC.decode(output));
         var result = AirValidator.validate(decoded); equal(List.of(), result.issues());
         equal(assignCount + 1, result.statistics().operations()); equal(assignCount * 2, result.statistics().operands());
         equal(objectCount, decoded.units().get(0).objects().size()); equal(objectCount, decoded.storage().size());

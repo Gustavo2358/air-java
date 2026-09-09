@@ -31,6 +31,10 @@ public final class CodecSuite {
         golden = Files.readAllBytes(Path.of("src/test/resources/goback.canonical.json"));
         text = new String(golden, StandardCharsets.UTF_8);
         tree = Json.parse(golden, AirJson.Limits.defaults());
+        check("CORE-SIZE physical JSON stack and malformed distinction", JsonCapacityChecks::physicalDepth);
+        check("CORE-SIZE exact UTF-8 byte budgets", JsonCapacityChecks::byteBudgets);
+        check("CORE-SIZE JSON independent cardinality series", JsonCapacityChecks::series);
+        check("CORE-SIZE codec operational result remains explicit", JsonCapacityChecks::validationBudget);
         check("manual AIR oracle valid and complete", () -> {
             equal(ValidationResult.Status.STRUCTURALLY_VALID, AirValidator.validate(EXPECTED).status());
             equal(2, EXPECTED.artifacts().size()); equal(8, EXPECTED.origins().size()); equal(5, EXPECTED.uncertainties().size());
@@ -209,16 +213,16 @@ public final class CodecSuite {
                 changed("publication.capabilities.required", new Json.Arr(List.of(Json.object("name", "control.local", "version", "1"))))));
         check("document and depth limits explicit in both directions", () -> {
             var small = new AirJson(new AirJson.Limits(20,128), ValidationOptions.defaults());
-            failure(IMPLEMENTATION_LIMIT, () -> small.decode(golden)); failure(IMPLEMENTATION_LIMIT, () -> small.encode(EXPECTED));
+            failure(RESOURCE_LIMIT, () -> small.decode(golden)); failure(RESOURCE_LIMIT, () -> small.encode(EXPECTED));
             var shallow = new AirJson(new AirJson.Limits(1_000_000,2), ValidationOptions.defaults());
-            failure(IMPLEMENTATION_LIMIT, () -> shallow.decode(golden)); failure(IMPLEMENTATION_LIMIT, () -> shallow.encode(EXPECTED));
-            fails(IMPLEMENTATION_LIMIT, utf8("{\"deep\":" + "[".repeat(300) + "null" + "]".repeat(300) + "}"));
+            failure(RESOURCE_LIMIT, () -> shallow.decode(golden)); failure(RESOURCE_LIMIT, () -> shallow.encode(EXPECTED));
+            fails(INPUT_ERROR, utf8("{\"deep\":" + "[".repeat(300) + "null" + "]".repeat(300) + "}"));
         });
         check("Validator limits remain INCOMPLETE_VALIDATION", () -> {
             var small = new AirJson(AirJson.Limits.defaults(), new ValidationOptions(128,1,10));
-            var error = failure(INCOMPLETE_VALIDATION, () -> small.decode(golden));
-            require(error.issues().stream().anyMatch(i -> i.kind() == ValidationIssue.Kind.VALIDATION_LIMIT), "missing validation limit");
-            failure(INCOMPLETE_VALIDATION, () -> small.encode(EXPECTED));
+            var error = failure(RESOURCE_LIMIT, () -> small.decode(golden));
+            require(error.issues().stream().anyMatch(i -> i.kind() == ValidationIssue.Kind.RESOURCE_LIMIT), "missing validation limit");
+            failure(RESOURCE_LIMIT, () -> small.encode(EXPECTED));
         });
         check("all complete ID wire shapes including future operand references", CodecSuite::ids);
         check("all supported wire tokens have independent binding oracles", CodecSuite::tokens);
@@ -344,7 +348,7 @@ public final class CodecSuite {
         check("4B recognized unsupported forms remain IMPLEMENTATION_LIMIT", ScalarAssignChecks::unsupported);
         check("4B every Lifetime Visibility and OperandRole token has a literal oracle", ScalarAssignChecks::enumTables);
         check("4B ordered Assigns preserve independent wire and model arrays", ScalarAssignChecks::order);
-        check("4B default and configured transport and Validator limits unchanged", ScalarAssignChecks::limits);
+        check("4B default representability and opt-in operational budgets", ScalarAssignChecks::limits);
         check("4B scale N and 2N and repeated references preserve linear structure", ScalarAssignChecks::scale);
         System.out.println("PASS: " + checks + " deterministic transport checks");
     }

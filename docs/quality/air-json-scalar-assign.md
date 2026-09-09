@@ -1,6 +1,6 @@
 # Checkpoint 4B — AIR escalar compartilhada
 
-Work item: [WORK-AIR-JSON-002](../work/active/WORK-AIR-JSON-002/work-item.json).
+Work item: [WORK-AIR-JSON-002](../work/history/WORK-AIR-JSON-002.md).
 Baseline limpa e sincronizada: `b78f4068d8a479f48eb048b8d76fa60a0997dc4a`.
 Branch: `feat/air-json-scalar-assign`. O PR #5 de 1A foi confirmado MERGED via GitHub
 em 2026-09-07T21:30:12Z e seu lifecycle foi arquivado. Sem alteração dos repos irmãos.

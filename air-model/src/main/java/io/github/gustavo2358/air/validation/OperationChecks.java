@@ -192,6 +192,8 @@ final class OperationChecks {
         if(opaque.header().uncertainties().isEmpty())
             c.error("I-26",id,"opaque requires uncertainty references");
         c.refs(opaque.valueResults(),id);
+        Set<OperandId> writes=new HashSet<>(opaque.envelope().memory().knownWrites());
+        writes.addAll(opaque.envelope().memory().mustOverwrite());
         for(OperandId result:opaque.valueResults()) {
             Operand operand=c.index.operands.get(result);
             if(!(operand instanceof Place place))
@@ -199,8 +201,7 @@ final class OperationChecks {
             else role(place,Operand.Role.RESULT_TARGET);
             if(!result.owner().equals(new OperationOwner(id)))
                 c.error("I-11",id,"opaque result belongs to another operation");
-            if(!opaque.envelope().memory().knownWrites().contains(result)
-                    && !opaque.envelope().memory().mustOverwrite().contains(result))
+            if(!writes.contains(result))
                 c.error("I-26",id,"opaque value result must also be declared by its memory envelope");
         }
     }
@@ -312,6 +313,8 @@ final class OperationChecks {
                     "producer must cover every activation entry that can execute this return; validator does not select one");
             return;
         }
+        if(entries.get(0).signature().results().remainder() instanceof Interactions.NoRemainder
+                && entries.get(0).signature().results().known().isEmpty() && returned.values().isEmpty()) return;
         for(Entries.Entry entry:entries) validateReturnForEntry(returned,entry);
     }
 

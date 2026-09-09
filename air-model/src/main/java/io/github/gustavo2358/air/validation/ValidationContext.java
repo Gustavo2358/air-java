@@ -9,14 +9,33 @@ final class ValidationContext {
     final List<ValidationIssue> issues=new ArrayList<>();
     final PublicationIndex index;
     long domainQueries;
-    ValidationContext(Publication p,ValidationOptions options) { this.options=options; this.index=new PublicationIndex(p,this); }
-    void depth(int depth) { if(depth>options.maximumNesting()) throw new Limit("nesting limit"); }
+    final Map<ValidationIssue.Kind,Long> issueCounts=new EnumMap<>(ValidationIssue.Kind.class);
+    boolean traversalCompleted=true;
+    final Set<Capabilities.Capability> required;
+    ValidationContext(Publication p,ValidationOptions options) { this.options=options; this.index=new PublicationIndex(p,this); this.required=new HashSet<>(p.capabilities().required()); }
+    void depth(long depth) { if(depth>options.maximumNesting()) throw new Limit("nesting limit"); }
     void error(String rule,Id id,String message) { issue(ValidationIssue.Kind.INVALID_IR,rule,id,message); }
     void obligation(String rule,Id id,String message) { issue(ValidationIssue.Kind.SEMANTIC_OBLIGATION,rule,id,message); }
     void unsupported(String rule,Id id,String message) { issue(ValidationIssue.Kind.UNSUPPORTED_CAPABILITY,rule,id,message); }
     void issue(ValidationIssue.Kind kind,String rule,Id id,String message) {
-        if(issues.size()>=options.maximumIssues()) throw new Limit("diagnostic limit");
-        issues.add(new ValidationIssue(kind,rule,Optional.ofNullable(id),message));
+        count(kind);
+        if(issues.size()<options.maximumIssues())
+            issues.add(new ValidationIssue(kind,rule,Optional.ofNullable(id),message));
+    }
+    private void count(ValidationIssue.Kind kind) {
+        try { issueCounts.merge(kind,1L,Math::addExact); }
+        catch(ArithmeticException overflow) { throw new Limit("diagnostic counter representability"); }
+    }
+    void resourceLimit(String message) {
+        traversalCompleted=false;
+        count(ValidationIssue.Kind.RESOURCE_LIMIT);
+        // One mandatory operational marker is retained outside the message budget.
+        issues.add(new ValidationIssue(ValidationIssue.Kind.RESOURCE_LIMIT,"ANALYSIS_LIMIT",
+                Optional.of(index.publication.id()),message));
+    }
+    void query() {
+        if(domainQueries==Long.MAX_VALUE) throw new Limit("query counter representability");
+        domainQueries++;
     }
     void ref(Id id,Id owner) {
         if(!index.identities.contains(id)) error("I-02",owner,"dangling reference: "+id);
@@ -43,7 +62,7 @@ final class ValidationContext {
         }
     }
     void capability(Capabilities.Capability required,Id owner) {
-        if(!index.publication.capabilities().required().contains(required))
+        if(!this.required.contains(required))
             error("I-43",owner,"used capability missing from required manifest: "+required);
     }
     static final class Limit extends RuntimeException {

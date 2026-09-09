@@ -1,10 +1,16 @@
 package io.github.gustavo2358.air.validation;
 
-/** Validation work limits; hitting a limit never reports a successful check. */
+/**
+ * Opt-in operational work bounds and diagnostic retention. Maximum int denotes the
+ * representability ceiling of this in-memory Java API, not an AIR semantic limit.
+ * maximumIssues limits retained messages only; validation continues and counts all kinds.
+ */
 public record ValidationOptions(int maximumNesting, int maximumEntities, int maximumIssues) {
-    public static ValidationOptions defaults() { return new ValidationOptions(128, 2_000_000, 10_000); }
+    public static ValidationOptions defaults() {
+        return new ValidationOptions(Integer.MAX_VALUE, Integer.MAX_VALUE, 10_000);
+    }
     public ValidationOptions {
-        if(maximumNesting<1 || maximumNesting>512 || maximumEntities<1 || maximumIssues<1)
-            throw new IllegalArgumentException("positive limits required; nesting must be <=512");
+        if(maximumNesting<1 || maximumEntities<1 || maximumIssues<1)
+            throw new IllegalArgumentException("positive operational limits required");
     }
 }

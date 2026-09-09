@@ -18,6 +18,10 @@ ownership e precondições decidíveis da publicação. `STRUCTURALLY_VALID` sig
 que não encontrou erro ou limite; `INVALID_IR` identifica contradição;
 `INCOMPLETE_VALIDATION` preserva versão/capacidade não interpretada ou limite.
 `SEMANTIC_OBLIGATION` é um kind de issue, não quarto status de sucesso.
+RESOURCE_LIMIT é kind operacional; diagnostics.traversalCompleted informa se
+houve interrupção. Status e hasIssues usam contagens totais, não só o prefixo
+retido em issues. INVALID_IR já provado pode coexistir com traversal incompleto;
+nenhum deles permite isStructurallyValid=true.
 
 Unknown de tipo não é wildcard. Compartilhar uncertainty não prova sameDomain;
 premissa por site não se transfere por nome/autoridade igual. Disjunção estrutural

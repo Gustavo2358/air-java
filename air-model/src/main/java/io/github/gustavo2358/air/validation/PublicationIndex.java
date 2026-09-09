@@ -65,10 +65,13 @@ final class PublicationIndex {
         if(!identities.add(id)) context.error("I-01",id,"duplicate identity");
     }
     private void operand(Operand o,OperandOwner expected,int depth) {
-        context.depth(depth);
-        OperandId id=o.header().id(); add(id);
-        if(!id.owner().equals(expected)) context.error("I-11",id,"operand belongs to another operation/entry");
-        if(operands.putIfAbsent(id,o)!=null) return;
-        for(Operand child:Operands.children(o)) operand(child,expected,depth+1);
+        Walk.run(o,depth,Operands::children,new Walk.Visitor<Operand>() {
+            public boolean enter(Operand node,long nesting) {
+                context.depth(nesting);
+                OperandId id=node.header().id(); add(id);
+                if(!id.owner().equals(expected)) context.error("I-11",id,"operand belongs to another operation/entry");
+                return operands.putIfAbsent(id,node)==null;
+            }
+        });
     }
 }

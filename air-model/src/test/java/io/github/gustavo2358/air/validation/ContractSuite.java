@@ -14,6 +14,13 @@ public final class ContractSuite {
     private static int passed;
     private ContractSuite() {}
     public static void main(String[] args) throws Exception {
+        test("CORE-SIZE iterative semantic nesting",CapacityChecks::nesting);
+        test("CORE-SIZE retention continues validation",CapacityChecks::retention);
+        test("CORE-SIZE independent cardinality series",CapacityChecks::series);
+        test("CORE-SIZE indexed reference lookup",CapacityChecks::indexedReferences);
+        test("CORE-SIZE operational failure and counters",CapacityChecks::operational);
+        test("CORE-SIZE omitted kinds retain classification",CapacityChecks::omittedKinds);
+        test("CORE-SIZE recursive families use explicit frames",CapacityChecks::recursiveFamilies);
         test("semver parse",()->eq(SemanticVersion.AIR_2_0_0,SemanticVersion.parse("2.0.0")));
         test("bad semver rejected",()->throwsType(IllegalArgumentException.class,()->SemanticVersion.parse("02.0.0")));
         test("negative version rejected",()->throwsType(IllegalArgumentException.class,()->new SemanticVersion(BigInteger.valueOf(-1),BigInteger.ZERO,BigInteger.ZERO)));
@@ -110,7 +117,7 @@ public final class ContractSuite {
         test("ASCII codec rejects non-ASCII literal",()->invalid(regionWrite("ABCé").build(),"I-46"));
         test("assign does not silently pad a fixed-size view",()->invalid(regionWrite("A").build(),"I-46"));
         test("calculated slice without private certificate yields incomplete validation",()->{Fixtures f=new Fixtures();ObjectId x=f.object("x",known(Types.Builtin.TEXT)),i=f.object("i",known(Types.Builtin.INT));OperationId a=f.op("a");Expression slice=new Expressions.SliceText(f.operand(a,"slice",Operand.Role.VALUE_READ),f.text(a,"text","ABC"),f.read(a,"start",i,Operand.Role.VALUE_READ),f.integer(a,"count",1,Operand.Role.VALUE_READ));f.linear(f.assign("a",x,slice));eq(ValidationResult.Status.INCOMPLETE_VALIDATION,AirValidator.validate(f.build()).status());});
-        test("diagnostic limit is never a successful validation",()->{Fixtures f=minimal();f.origins.clear();ValidationResult result=AirValidator.validate(f.build(),new ValidationOptions(32,1000,1));check(!result.isStructurallyValid(),"limit masked errors");check(result.issues().stream().anyMatch(i->i.rule().equals("ANALYSIS_LIMIT")),"limit omitted");});
+        test("diagnostic limit is never a successful validation",()->{Fixtures f=minimal();f.origins.clear();ValidationResult result=AirValidator.validate(f.build(),new ValidationOptions(32,1000,1));check(!result.isStructurallyValid(),"limit masked errors");check(result.diagnostics().traversalCompleted(),"retention must complete traversal");check(result.diagnostics().count(ValidationIssue.Kind.INVALID_IR)>result.issues().size(),"omitted issues not counted");});
         test("large number of unit-scoped domain premises is reusable",()->{Fixtures f=new Fixtures();Types.TypeRef t=new Types.UnknownType(f.uncertainty("type","TYPE_UNKNOWN"));ObjectId x=f.object("x",t),y=f.object("y",t);copyProof(f,new UnitDomain(f.unit));List<Instruction> list=new ArrayList<>();for(int i=0;i<1000;i++){OperationId op=f.op("a"+i);list.add(new Operations.Assign(f.header(op),f.place(op,"dst",y,Operand.Role.VALUE_WRITE),f.read(op,"src",x,Operand.Role.VALUE_READ)));}f.sequence("start",list,f.halt("h"));ValidationResult result=AirValidator.validate(f.build());check(result.isStructurallyValid(),result.toString());eq(1000L,result.statistics().domainQueries());});
         test("two independent constructions validate identically",()->eq(AirValidator.validate(transmission(true).build()),AirValidator.validate(transmission(true).build())));
     }

@@ -18,10 +18,10 @@ public final class AirJson {
     /** Operational bounds, not AIR cardinality or integer validity rules. */
     public record Limits(int maximumDocumentBytes, int maximumDepth) {
         public Limits {
-            if (maximumDocumentBytes < 1 || maximumDepth < 1 || maximumDepth > 256)
-                throw new IllegalArgumentException("Positive limits required; maximumDepth <= 256");
+            if (maximumDocumentBytes < 1 || maximumDepth < 1)
+                throw new IllegalArgumentException("Positive operational limits required");
         }
-        public static Limits defaults() { return new Limits(16 * 1024 * 1024, 128); }
+        public static Limits defaults() { return new Limits(Integer.MAX_VALUE, Integer.MAX_VALUE); }
     }
     private final Limits limits;
     private final ValidationOptions validationOptions;
@@ -50,12 +50,14 @@ public final class AirJson {
     }
     private void validate(Publication publication) {
         ValidationResult result = AirValidator.validate(publication, validationOptions);
+        if (result.hasIssues(ValidationIssue.Kind.RESOURCE_LIMIT))
+            throw new AirJsonException(RESOURCE_LIMIT, "$", "AIR validation operational budget exhausted", result);
         if (result.status() == ValidationResult.Status.INVALID_IR)
-            throw new AirJsonException(INVALID_IR, "$", "AIR structural validation failed", result.issues());
-        if (result.issues().stream().anyMatch(i -> i.kind() == ValidationIssue.Kind.UNSUPPORTED_CAPABILITY))
-            throw new AirJsonException(UNSUPPORTED_CAPABILITY, "$", "AIR capability not supported", result.issues());
+            throw new AirJsonException(INVALID_IR, "$", "AIR structural validation failed", result);
+        if (result.hasIssues(ValidationIssue.Kind.UNSUPPORTED_CAPABILITY))
+            throw new AirJsonException(UNSUPPORTED_CAPABILITY, "$", "AIR capability not supported", result);
         if (result.status() == ValidationResult.Status.INCOMPLETE_VALIDATION
-                || result.issues().stream().anyMatch(i -> i.kind() == ValidationIssue.Kind.SEMANTIC_OBLIGATION))
-            throw new AirJsonException(INCOMPLETE_VALIDATION, "$", "AIR validation not complete", result.issues());
+                || result.hasIssues(ValidationIssue.Kind.SEMANTIC_OBLIGATION))
+            throw new AirJsonException(INCOMPLETE_VALIDATION, "$", "AIR validation not complete", result);
     }
 }

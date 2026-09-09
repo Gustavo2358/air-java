@@ -6,6 +6,10 @@
   "analysis_ir_pin": "122ce54e1b9ef9b00646f93ece409ca8b63bc933",
   "external_dependencies": [],
   "checks": [
+    "CORE-SIZE physical JSON stack and malformed distinction",
+    "CORE-SIZE exact UTF-8 byte budgets",
+    "CORE-SIZE JSON independent cardinality series",
+    "CORE-SIZE codec operational result remains explicit",
     "manual AIR oracle valid and complete",
     "zero known publication remains explicitly complete",
     "encode equals independent canonical golden",
@@ -79,7 +83,7 @@
     "4B recognized unsupported forms remain IMPLEMENTATION_LIMIT",
     "4B every Lifetime Visibility and OperandRole token has a literal oracle",
     "4B ordered Assigns preserve independent wire and model arrays",
-    "4B default and configured transport and Validator limits unchanged",
+    "4B default representability and opt-in operational budgets",
     "4B scale N and 2N and repeated references preserve linear structure"
   ]
 }

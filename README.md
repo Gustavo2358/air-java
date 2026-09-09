@@ -145,12 +145,21 @@ ownership, posições e precondições decidíveis exigem
 `AirValidator.validate(publication)`. O Validator nunca repara nem modifica a
 publicação.
 
-- `STRUCTURALLY_VALID`: nenhum erro estrutural ou limite do Validator foi detectado;
+- `STRUCTURALLY_VALID`: traversal completo, sem erro estrutural ou limite computado;
 - `INVALID_IR`: contradição estrutural detectada;
 - `INCOMPLETE_VALIDATION`: capacidade/versão não interpretada, limite operacional
   ou precondição que esta implementação não conseguiu decidir;
+- `RESOURCE_LIMIT`: kind operacional de exhaustion, com traversal incompleto;
 - `SEMANTIC_OBLIGATION`: `ValidationIssue.Kind` que preserva uma obrigação da
   autoridade/produtor sem transformá-la em fato ou certificado Java.
+
+`issues()` contém apenas mensagens retidas. Use `hasIssues(kind)` e
+`diagnostics().counts()` para categorias/totais, e `diagnostics().traversalCompleted()`
+para distinguir trabalho completo de interrupção operacional. Options e Limits
+mantêm construtores int positivos; defaults de entidades/bytes/profundidade usam
+Integer.MAX_VALUE (representabilidade desta API em memória). O default retém até
+10.000 mensagens, sem interromper checks; exhaustion acrescenta um marcador
+operacional. Budgets menores são opt-in. [Desenho e migração](docs/quality/air-capacity.md).
 
 `STRUCTURALLY_VALID` não certifica automaticamente um perfil AIR. A verdade de
 premissas, a correspondência com a entrada do produtor, a cobertura de effects e
