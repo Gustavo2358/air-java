@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "base_air_java": "17029898fd0ee8fabcaaae89f7260148633d4b12",
+  "old_normative_pin": "122ce54e1b9ef9b00646f93ece409ca8b63bc933",
+  "candidate_normative_pin": "51b4d9a8ae0364232bd97103cd73a77e1a34996c",
+  "descendant": true,
+  "commits_between": [
+    "51b4d9a8ae0364232bd97103cd73a77e1a34996c Merge pull request #3 from Gustavo2358/docs/air-json-mvp-baseline",
+    "579f95232a93cef2502fd18a64be545cf20f2da1 docs: esclarecer m\u00f3dulo provis\u00f3rio e resolu\u00e7\u00e3o do baseline 0B",
+    "bba779613f27416addcaeb0f879f284abb409e44 docs: fixar baseline AIR JSON e matriz MVP do checkpoint 0B"
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "old_sha256": "98b03d94bb040d6b07f48054fc1c0a50e0d957191fc659b7d4c5a7aeb2029059",
+      "new_sha256": "2165231e26c059267409bdda5ae58548445df0534db8cb6fbdc168681a77bf9f",
+      "bytes_equal": false
+    },
+    {
+      "path": "especificacao/01-modelo-e-identidades.md",
+      "old_sha256": "414184c62626b71bf3852455ff3427383f0c2412061c29e9f56002aa7b50a91e",
+      "new_sha256": "414184c62626b71bf3852455ff3427383f0c2412061c29e9f56002aa7b50a91e",
+      "bytes_equal": true
+    },
+    {
+      "path": "especificacao/02-tipos-valores-e-operandos.md",
+      "old_sha256": "dd61c084bb2abd833320abbc349de1f2f82190d3c12dbca0baba8be3df98d8e4",
+      "new_sha256": "dd61c084bb2abd833320abbc349de1f2f82190d3c12dbca0baba8be3df98d8e4",
+      "bytes_equal": true
+    },
+    {
+      "path": "especificacao/03-memoria-e-aliases.md",
+      "old_sha256": "81fa9bad45151c07c5742c842a7eb34a2d8e6d3d707615e572c3226f87cb5a52",
+      "new_sha256": "81fa9bad45151c07c5742c842a7eb34a2d8e6d3d707615e572c3226f87cb5a52",
+      "bytes_equal": true
+    },
+    {
+      "path": "especificacao/04-operacoes.md",
+      "old_sha256": "7c0f71f657490e6fe110fc5c43e297e9a34e6b645ec1b2d923fc3e92b70ad16a",
+      "new_sha256": "7c0f71f657490e6fe110fc5c43e297e9a34e6b645ec1b2d923fc3e92b70ad16a",
+      "bytes_equal": true
+    },
+    {
+      "path": "especificacao/05-controle-e-invocacoes.md",
+      "old_sha256": "cf072a83d8237a65e9d97cf0775bfcabbab41e22d106cf95c320b170e41a125d",
+      "new_sha256": "cf072a83d8237a65e9d97cf0775bfcabbab41e22d106cf95c320b170e41a125d",
+      "bytes_equal": true
+    },
+    {
+      "path": "especificacao/06-incompletude-e-proveniencia.md",
+      "old_sha256": "a3df98392065a2a052de6240dd5b41bc296342ade091aafe0772255a90e2b1e1",
+      "new_sha256": "a3df98392065a2a052de6240dd5b41bc296342ade091aafe0772255a90e2b1e1",
+      "bytes_equal": true
+    },
+    {
+      "path": "especificacao/07-contrato-de-produtores.md",
+      "old_sha256": "a0e622477bde6c6f4f624b6c164e355675ad15a9d2c3af14ef27b0d897b4421d",
+      "new_sha256": "a0e622477bde6c6f4f624b6c164e355675ad15a9d2c3af14ef27b0d897b4421d",
+      "bytes_equal": true
+    },
+    {
+      "path": "especificacao/09-extensibilidade-e-compatibilidade.md",
+      "old_sha256": "1a575593a56777bc448ce7c814edc4e840353ae0faf44f50cbac088871458468",
+      "new_sha256": "1a575593a56777bc448ce7c814edc4e840353ae0faf44f50cbac088871458468",
+      "bytes_equal": true
+    },
+    {
+      "path": "especificacao/10-perfis-de-conformidade.md",
+      "old_sha256": "a39214bfa311738b72cd9f7599906ca6f0dd6eae8410eca46aa8240ce24ce5c5",
+      "new_sha256": "a39214bfa311738b72cd9f7599906ca6f0dd6eae8410eca46aa8240ce24ce5c5",
+      "bytes_equal": true
+    },
+    {
+      "path": "especificacao/11-rastreabilidade-bilateral.md",
+      "old_sha256": "a89404d07dfef260efa7a4501234605bd46abfd525558a01ee3a88d40f384fad",
+      "new_sha256": "a89404d07dfef260efa7a4501234605bd46abfd525558a01ee3a88d40f384fad",
+      "bytes_equal": true
+    },
+    {
+      "path": "conformidade/01-invariantes.md",
+      "old_sha256": "d3881c9504d2f3ded32235e578f6b826da1a32df7e2866161979be75f6e56ca1",
+      "new_sha256": "d3881c9504d2f3ded32235e578f6b826da1a32df7e2866161979be75f6e56ca1",
+      "bytes_equal": true
+    },
+    {
+      "path": "conformidade/02-oraculos.md",
+      "old_sha256": "b0821dc59d022665fc93acca151a0942bd5ba128c3ae2bafcb0544c7e340e5b7",
+      "new_sha256": "b0821dc59d022665fc93acca151a0942bd5ba128c3ae2bafcb0544c7e340e5b7",
+      "bytes_equal": true
+    },
+    {
+      "path": "bindings/json-v1.md",
+      "old_sha256": "ff9c3430c4ac9b102ec675d00b7b091d2cd999724624972b1779625329d47104",
+      "new_sha256": "ff9c3430c4ac9b102ec675d00b7b091d2cd999724624972b1779625329d47104",
+      "bytes_equal": true
+    },
+    {
+      "path": "bindings/revisao-json-v1.md",
+      "old_sha256": "f51b4c3bdb048fb0f85bdef2d72e7716566b959dc67174bbdbe95cded2fa0f54",
+      "new_sha256": "f51b4c3bdb048fb0f85bdef2d72e7716566b959dc67174bbdbe95cded2fa0f54",
+      "bytes_equal": true
+    }
+  ],
+  "classification": "COMPATIBLE: README and informative checkpoint only; specification, conformance and binding byte-identical",
+  "production_semantic_changes": false,
+  "gates": {
+    "fast": "PASS",
+    "architecture": "PASS",
+    "semantic": "PASS",
+    "transport": "PASS",
+    "maven_clean_verify": "PASS",
+    "full": "PASS",
+    "git": "PASS",
+    "scope": "PASS",
+    "diff_check": "PASS"
+  },
+  "validation": {
+    "model_checks": 179,
+    "transport_checks": 79,
+    "harness_tests": 86,
+    "full_report": {
+      "gate": "full",
+      "head": "17029898fd0ee8fabcaaae89f7260148633d4b12",
+      "observed_at": "2026-09-10T17:52:50.470152+00:00",
+      "results": [
+        {
+          "gate": "docs",
+          "status": "PASS",
+          "detail": "knowledge links, 7 invariants, 9 evals and work lifecycle checked offline; 160 Git-visible paths; MANIFEST hashes and coverage verified"
+        },
+        {
+          "gate": "harness",
+          "status": "PASS",
+          "detail": "test_empty_or_unparseable_output_fails_closed (test_architecture.BytecodeTests.test_empty_or_unparseable_output_fails_closed) ... ok\ntest_foreign_class_is_rejected (test_architecture.BytecodeTests.test_foreign_class_is_rejected) ... ok\ntest_inverse_dependency_is_rejected_from_compiled_descriptor (test_architecture.BytecodeTests.test_inverse_dependency_is_rejected_from_compiled_descriptor) ... ok\ntest_io_network_reflection_process_and_json_are_rejected (test_architecture.BytecodeTests.test_io_network_reflection_process_and_json_are_rejected) ... ok\ntest_json_dependency_is_rejected_even_if_missing_at_inspection (test_architecture.BytecodeTests.test_json_dependency_is_rejected_even_if_missing_at_inspection) ... ok\ntest_model_cannot_depend_on_json_module_or_gson (test_architecture.BytecodeTests.test_model_cannot_depend_on_json_module_or_gson) ... ok\ntest_nested_model_dependency_on_validation_is_rejected (test_architecture.BytecodeTests.test_nested_model_dependency_on_validation_is_rejected) ... ok\ntest_values_records_lambdas_and_validation_to_model_are_allowed (test_architecture.BytecodeTests.test_values_records_lambdas_and_validation_to_model_are_allowed) ... ok\ntest_wrong_major_or_preview_is_rejected (test_architecture.BytecodeTests.test_wrong_major_or_preview_is_rejected) ... ok\ntest_actual_repository_documentation (test_docs.DocumentationTests.test_actual_repository_documentation) ... ok\ntest_blank_authorization_evidence (test_docs.DocumentationTests.test_blank_authorization_evidence) ... ok\ntest_broken_link (test_docs.DocumentationTests.test_broken_link) ... ok\ntest_completed_cannot_remain_active (test_docs.DocumentationTests.test_completed_cannot_remain_active) ... ok\ntest_completed_item_can_be_archived_without_active_directory (test_docs.DocumentationTests.test_completed_item_can_be_archived_without_active_directory) ... ok\ntest_discovery_cannot_authorize_new_module_paths (test_docs.DocumentationTests.test_discovery_cannot_authorize_new_module_paths) ... ok\ntest_duplicate_catalog_id (test_docs.DocumentationTests.test_duplicate_catalog_id) ... ok\ntest_duplicate_json_key (test_docs.DocumentationTests.test_duplicate_json_key) ... ok\ntest_harness_cannot_authorize_product (test_docs.DocumentationTests.test_harness_cannot_authorize_product) ... ok\ntest_index_must_route_current_work (test_docs.DocumentationTests.test_index_must_route_current_work) ... ok\ntest_index_status_cannot_be_stale (test_docs.DocumentationTests.test_index_status_cannot_be_stale) ... ok\ntest_missing_anchor (test_docs.DocumentationTests.test_missing_anchor) ... ok\ntest_missing_must_read (test_docs.DocumentationTests.test_missing_must_read) ... ok\ntest_new_scope_is_allowed_but_absolute_and_parent_paths_are_rejected (test_docs.DocumentationTests.test_new_scope_is_allowed_but_absolute_and_parent_paths_are_rejected) ... ok\ntest_orphan_active_directory (test_docs.DocumentationTests.test_orphan_active_directory) ... ok\ntest_orphan_history (test_docs.DocumentationTests.test_orphan_history) ... ok\ntest_registry_status_must_match (test_docs.DocumentationTests.test_registry_status_must_match) ... ok\ntest_same_work_id_cannot_be_active_and_historical (test_docs.DocumentationTests.test_same_work_id_cannot_be_active_and_historical) ... ok\ntest_source_lock_requires_immutable_ref (test_docs.DocumentationTests.test_source_lock_requires_immutable_ref) ... ok\ntest_symlink_escape (test_docs.DocumentationTests.test_symlink_escape) ... ok\ntest_template_is_not_valid_authorization (test_docs.DocumentationTests.test_template_is_not_valid_authorization) ... ok\ntest_unavailable_gate_cannot_claim_implementation (test_docs.DocumentationTests.test_unavailable_gate_cannot_claim_implementation) ... ok\ntest_unexpected_work_field (test_docs.DocumentationTests.test_unexpected_work_field) ... ok\ntest_unknown_invariant_in_eval (test_docs.DocumentationTests.test_unknown_invariant_in_eval) ... ok\ntest_unknown_work_gate (test_docs.DocumentationTests.test_unknown_work_gate) ... ok\ntest_valid_anchor_and_fenced_example (test_docs.DocumentationTests.test_valid_anchor_and_fenced_example) ... ok\ntest_valid_documentation (test_docs.DocumentationTests.test_valid_documentation) ... ok\ntest_child_failure_is_not_success (test_execution.ContractOutputTests.test_child_failure_is_not_success) ... ok\ntest_empty_expected_inventory_fails (test_execution.ContractOutputTests.test_empty_expected_inventory_fails) ... ok\ntest_missing_duplicate_reordered_or_unexecuted_checks_fail (test_execution.ContractOutputTests.test_missing_duplicate_reordered_or_unexecuted_checks_fail) ... ok\ntest_reactor_cannot_pass_with_missing_duplicated_or_reordered_modules (test_execution.ContractOutputTests.test_reactor_cannot_pass_with_missing_duplicated_or_reordered_modules) ... ok\ntest_real_output_shape (test_execution.ContractOutputTests.test_real_output_shape) ... ok\ntest_empty_or_skipped_harness_cannot_pass (test_execution.RunnerTests.test_empty_or_skipped_harness_cannot_pass) ... ok\ntest_full_runs_each_required_gate_once (test_execution.RunnerTests.test_full_runs_each_required_gate_once) ... ok\ntest_full_stops_and_records_unexecuted_after_failure (test_execution.RunnerTests.test_full_stops_and_records_unexecuted_after_failure) ... ok\ntest_future_gates_are_unavailable (test_execution.RunnerTests.test_future_gates_are_unavailable) ... ok\ntest_missing_harness_test_file_cannot_pass (test_execution.RunnerTests.test_missing_harness_test_file_cannot_pass) ... ok\ntest_missing_tool_reports_error (test_execution.RunnerTests.test_missing_tool_reports_error) ... ok\ntest_json_suite_output_must_execute_exactly_once_in_order (test_execution.TransportOutputTests.test_json_suite_output_must_execute_exactly_once_in_order) ... ok\ntest_transport_has_an_executor_and_is_available (test_execution.TransportOutputTests.test_transport_has_an_executor_and_is_available) ... ok\ntest_ci_authorizes_scope_before_full (test_execution.WorkflowOrderTests.test_ci_authorizes_scope_before_full) ... ok\ntest_reversed_missing_or_optional_gate_is_rejected (test_execution.WorkflowOrderTests.test_reversed_missing_or_optional_gate_is_rejected) ... ok\ntest_ci_allows_documentary_closure_without_permanent_active_item (test_git.GitScopeTests.test_ci_allows_documentary_closure_without_permanent_active_item) ... ok\ntest_ci_closure_cannot_hide_product_or_source_lock_changes (test_git.GitScopeTests.test_ci_closure_cannot_hide_product_or_source_lock_changes) ... ok\ntest_ci_event_diff_prevents_moving_base_to_hide_changes (test_git.GitScopeTests.test_ci_event_diff_prevents_moving_base_to_hide_changes) ... ok\ntest_ci_missing_work_is_not_blanket_authorization (test_git.GitScopeTests.test_ci_missing_work_is_not_blanket_authorization) ... ok\ntest_clean_scope_and_expected_branch (test_git.GitScopeTests.test_clean_scope_and_expected_branch) ... ok\ntest_main_and_detached_are_not_work_branches (test_git.GitScopeTests.test_main_and_detached_are_not_work_branches) ... ok\ntest_new_origin_main_must_be_integrated_before_local_handoff (test_git.GitScopeTests.test_new_origin_main_must_be_integrated_before_local_handoff) ... ok\ntest_product_change_unstaged_staged_and_committed (test_git.GitScopeTests.test_product_change_unstaged_staged_and_committed) ... ok\ntest_rename_cannot_hide_protected_source (test_git.GitScopeTests.test_rename_cannot_hide_protected_source) ... ok\ntest_similar_directory_name_is_outside_scope (test_git.GitScopeTests.test_similar_directory_name_is_outside_scope) ... ok\ntest_untracked_outside_scope (test_git.GitScopeTests.test_untracked_outside_scope) ... ok\ntest_hash_coverage_and_generated_paths (test_manifest.ManifestTests.test_hash_coverage_and_generated_paths) ... ok\ntest_jar_cannot_contain_stale_classfile (test_modules.CompiledOwnershipTests.test_jar_cannot_contain_stale_classfile) ... ok\ntest_json_cannot_contain_model_classes_or_unowned_codec (test_modules.CompiledOwnershipTests.test_json_cannot_contain_model_classes_or_unowned_codec) ... ok\ntest_model_output_cannot_be_missing (test_modules.CompiledOwnershipTests.test_model_output_cannot_be_missing) ... ok\ntest_relocated_model_class_with_source_owner_is_rejected (test_modules.CompiledOwnershipTests.test_relocated_model_class_with_source_owner_is_rejected) ... ok\ntest_unexpected_classfile_inside_known_package_is_rejected (test_modules.CompiledOwnershipTests.test_unexpected_classfile_inside_known_package_is_rejected) ... ok\ntest_authorized_json_requires_implementation_suite_policy_modules_and_edge (test_modules.ModuleTests.test_authorized_json_requires_implementation_suite_policy_modules_and_edge) ... ok\ntest_inverse_runtime_optional_parent_and_cycle_dependencies (test_modules.ModuleTests.test_inverse_runtime_optional_parent_and_cycle_dependencies) ... ok\ntest_json_code_without_ownership_or_suite_policy_is_rejected (test_modules.ModuleTests.test_json_code_without_ownership_or_suite_policy_is_rejected) ... ok\ntest_json_implementation_without_suite_policy_or_golden_is_red (test_modules.ModuleTests.test_json_implementation_without_suite_policy_or_golden_is_red) ... ok\ntest_json_suite_launch_cannot_be_omitted_or_skipped (test_modules.ModuleTests.test_json_suite_launch_cannot_be_omitted_or_skipped) ... ok\ntest_json_without_model_edge_is_not_accepted (test_modules.ModuleTests.test_json_without_model_edge_is_not_accepted) ... ok\ntest_missing_module (test_modules.ModuleTests.test_missing_module) ... ok\ntest_profile_cannot_hide_runtime_dependency (test_modules.ModuleTests.test_profile_cannot_hide_runtime_dependency) ... ok\ntest_suite_missing_duplicated_wrong_cwd_or_assertions_is_rejected (test_modules.ModuleTests.test_suite_missing_duplicated_wrong_cwd_or_assertions_is_rejected) ... ok\ntest_third_or_ignored_module (test_modules.ModuleTests.test_third_or_ignored_module) ... ok\ntest_unapproved_external_json_dependency_is_red (test_modules.ModuleTests.test_unapproved_external_json_dependency_is_red) ... ok\ntest_unowned_source_root_or_root_classfile (test_modules.ModuleTests.test_unowned_source_root_or_root_classfile) ... ok\ntest_cli_skip_interpolation_overrides_declaration_in_launcher (test_modules.ResolvedGraphTests.test_cli_skip_interpolation_overrides_declaration_in_launcher) ... ok\ntest_cycle_transitive_and_wrong_scope_in_json_graph_are_rejected (test_modules.ResolvedGraphTests.test_cycle_transitive_and_wrong_scope_in_json_graph_are_rejected) ... ok\ntest_effective_runtime_dependency_is_rejected_without_bytecode_reference (test_modules.ResolvedGraphTests.test_effective_runtime_dependency_is_rejected_without_bytecode_reference) ... ok\ntest_real_directions_and_empty_compile_runtime_graph (test_modules.ResolvedGraphTests.test_real_directions_and_empty_compile_runtime_graph) ... ok\ntest_skip_or_wrong_effective_source_path_is_rejected (test_modules.ResolvedGraphTests.test_skip_or_wrong_effective_source_path_is_rejected) ... ok\ntest_unused_runtime_optional_and_test_dependencies_are_rejected (test_modules.ResolvedGraphTests.test_unused_runtime_optional_and_test_dependencies_are_rejected) ... ok\n\n----------------------------------------------------------------------\nRan 86 tests in 8.079s\n\nOK"
+        },
+        {
+          "gate": "architecture",
+          "status": "PASS",
+          "detail": "325 model + 19 JSON Java 21 classfiles; 5000 model + 500 JSON dependencies; boundaries preserved"
+        },
+        {
+          "gate": "semantic",
+          "status": "PASS",
+          "detail": "179 model + 79 transport deterministic checks executed via scripts/check.sh"
+        },
+        {
+          "gate": "maven",
+          "status": "PASS",
+          "detail": "179 model + 79 transport deterministic checks executed via Maven clean verify"
+        }
+      ],
+      "exit_code": 0,
+      "unexecuted": []
+    },
+    "self_review": "No blocker; product Java/tests/POMs/workflows and historical evidence unchanged; current lock and static policy ref agree; normative non-README files byte-identical.",
+    "remote_ci": "NOT_RUN until push; required Java contract checks and harness workflows, both push and pull_request exact-head source evidence."
+  }
+}

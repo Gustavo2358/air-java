@@ -49,3 +49,7 @@ Uma reconciliação futura deverá remover a restrição Java, formalizar regra 
 que venha a ser localizada ou propor nova regra em revisão normativa explícita.
 Não há mudança de air-model/analysis-ir neste PR, nem implementação autorizada
 deste backlog ou bloqueio do caminho GOBACK atual.
+
+## Sincronização pós-CP5
+
+[WORK-AIR-BASELINE-001](active/WORK-AIR-BASELINE-001/work-item.json) atualiza somente o pin normativo e proveniência. CP6 permanece não autorizado.

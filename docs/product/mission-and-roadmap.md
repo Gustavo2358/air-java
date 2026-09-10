@@ -26,6 +26,6 @@ O [item atual](../work/index.md) implementa 1A por autorização explícita:
 codec compartilhado apenas em air-json, com [cobertura e limites](../engineering/air-json.md).
 
 0B mergeado no analysis-ir foi reconfirmado em 51b4d9a8ae0364232bd97103cd73a77e1a34996c.
-Norma e binding permanecem no pin 122ce54e1b9ef9b00646f93ece409ca8b63bc933, DRAFT.
+Norma e binding permanecem no pin 51b4d9a8ae0364232bd97103cd73a77e1a34996c, DRAFT.
 O PR 1A não significa integração/2A/2B/E2E nem promoção normativa.
 O [backlog](../work/backlog.md) mantém essas fronteiras.

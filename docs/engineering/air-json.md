@@ -3,7 +3,7 @@
 O módulo `air-json` implementa o subset transitivo do GOBACK descrito por 0B e
 o transporte escalar Object/Cell/Assign text de 4B contra
 **analysis-ir-json / bindingVersion 1.0.0 / airVersion 2.0.0, DRAFT**, no SHA
-`122ce54e1b9ef9b00646f93ece409ca8b63bc933`. A autoridade é AIR → binding → codec.
+`51b4d9a8ae0364232bd97103cd73a77e1a34996c`. A autoridade é AIR → binding → codec.
 [Baseline e arquivos consultados](../sources/air-json-baseline.json).
 O [handoff 0B mergeado](https://github.com/Gustavo2358/analysis-ir/blob/51b4d9a8ae0364232bd97103cd73a77e1a34996c/bindings/checkpoint-0b-mvp.md)
 é orientação operacional; normas e binding foram extraídos somente do pin.
