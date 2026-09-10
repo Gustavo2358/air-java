@@ -3,7 +3,7 @@
   "bindingVersion": "1.0.0",
   "airVersion": "2.0.0",
   "status": "DRAFT",
-  "analysis_ir_pin": "122ce54e1b9ef9b00646f93ece409ca8b63bc933",
+  "analysis_ir_pin": "51b4d9a8ae0364232bd97103cd73a77e1a34996c",
   "external_dependencies": [],
   "checks": [
     "CORE-SIZE physical JSON stack and malformed distinction",
