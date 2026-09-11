@@ -84,6 +84,18 @@
     "4B every Lifetime Visibility and OperandRole token has a literal oracle",
     "4B ordered Assigns preserve independent wire and model arrays",
     "4B default representability and opt-in operational budgets",
-    "4B scale N and 2N and repeated references preserve linear structure"
+    "4B scale N and 2N and repeated references preserve linear structure",
+    "W1B literal Invoke preserves I-56 and canonical Publication",
+    "W1B computed Invoke preserves Read ObjectPlace and obligations",
+    "W1B independent wire oracle covers every invocation field",
+    "W1B names policies and text stay language neutral",
+    "W1B conservative effects finite outcomes and open bounds survive",
+    "W1B empty signature inventories preserve independent remainders",
+    "W1B invalid references roles owners and outcomes block transport",
+    "W1B resource and unsupported capability stay blocking",
+    "W1B non-obligation incomplete validation blocks with truncated issues",
+    "W1B strict shapes duplicates kinds and local constraints",
+    "W1B unimplemented invocation variants remain explicit",
+    "W1B Invoke N and 2N preserve linear structure"
   ]
 }

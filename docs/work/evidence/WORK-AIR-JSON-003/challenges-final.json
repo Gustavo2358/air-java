@@ -1,0 +1,185 @@
+{
+  "base": "3bafe3978f0f392e842038ad5628e85dfd91d00d",
+  "mutations": [
+    {
+      "name": "drop-literal-name",
+      "compile_exit": 0,
+      "test_exit": 1,
+      "log": "w1b-challenges-reviewed.logs/drop-literal-name/test.log",
+      "log_sha256": "54ffddfb06f8a4477c2bb4eb00cc74ef71c563bcb9e24320d910e54786c14558",
+      "restored_byte_exact": true
+    },
+    {
+      "name": "drop-computed-expression",
+      "compile_exit": 0,
+      "test_exit": 1,
+      "log": "w1b-challenges-reviewed.logs/drop-computed-expression/test.log",
+      "log_sha256": "1debd401024b05b5974b8e48f43a1417e6482daf200df13294c824c2e95ffeb2",
+      "restored_byte_exact": true
+    },
+    {
+      "name": "change-read-object",
+      "compile_exit": 0,
+      "test_exit": 1,
+      "log": "w1b-challenges-reviewed.logs/change-read-object/test.log",
+      "log_sha256": "9ab8aa3c0273c3cf16ad7a0c6c89e6c7177d06aacffbe35d1caf80bda578af32",
+      "restored_byte_exact": true
+    },
+    {
+      "name": "drop-normal-outcome",
+      "compile_exit": 0,
+      "test_exit": 1,
+      "log": "w1b-challenges-reviewed.logs/drop-normal-outcome/test.log",
+      "log_sha256": "84cd8f5abd0cc1c074c9ff312449d3659275d983a13106d5c9f16a2ee8c98e22",
+      "restored_byte_exact": true
+    },
+    {
+      "name": "erase-effects-scope",
+      "compile_exit": 0,
+      "test_exit": 1,
+      "log": "w1b-challenges-reviewed.logs/erase-effects-scope/test.log",
+      "log_sha256": "a8f7fb6b8767511128543768baff2e385d6b78525edc33fba48cf94d4c99f29f",
+      "restored_byte_exact": true
+    },
+    {
+      "name": "drop-must-overwrite",
+      "compile_exit": 0,
+      "test_exit": 1,
+      "log": "w1b-challenges-reviewed.logs/drop-must-overwrite/test.log",
+      "log_sha256": "671a2861bbf209e841589f855934c6b1f431c11d686afc0468ba4d2db54f9fe3",
+      "restored_byte_exact": true
+    },
+    {
+      "name": "drop-contract-evidence",
+      "compile_exit": 0,
+      "test_exit": 1,
+      "log": "w1b-challenges-reviewed.logs/drop-contract-evidence/test.log",
+      "log_sha256": "e981f78193b718ffc3950992eeb34ffa3b6196b42985a637571effb3b11d2165",
+      "restored_byte_exact": true
+    },
+    {
+      "name": "erase-contract-uncertainty",
+      "compile_exit": 0,
+      "test_exit": 1,
+      "log": "w1b-challenges-reviewed.logs/erase-contract-uncertainty/test.log",
+      "log_sha256": "9f8b4bff4e21097036f47eb0f3832a602d5787fd3bb16485228d88343a8498c5",
+      "restored_byte_exact": true
+    },
+    {
+      "name": "allow-invalid-ir",
+      "compile_exit": 0,
+      "test_exit": 1,
+      "log": "w1b-challenges-reviewed.logs/allow-invalid-ir/test.log",
+      "log_sha256": "12b2d1ad340112865a6f1552e46b0c1775861d6afc4c08ad638fffa588e41d5e",
+      "restored_byte_exact": true
+    },
+    {
+      "name": "allow-generic-incomplete",
+      "compile_exit": 0,
+      "test_exit": 1,
+      "log": "w1b-challenges-reviewed.logs/allow-generic-incomplete/test.log",
+      "log_sha256": "027aa90670fb298f0039afae460684bc4b2352f023741a1148c7da200f97f462",
+      "restored_byte_exact": true
+    },
+    {
+      "name": "suppress-i56",
+      "compile_exit": 0,
+      "test_exit": 1,
+      "log": "w1b-challenges-reviewed.logs/suppress-i56/test.log",
+      "log_sha256": "3f01ca3f8c92596e9e72bb2d64daa5cada0dcadcc4c8ca15b9e6819f09ed3463",
+      "restored_byte_exact": true
+    },
+    {
+      "name": "change-goback-bytes",
+      "compile_exit": 0,
+      "test_exit": 1,
+      "log": "w1b-challenges-reviewed.logs/change-goback-bytes/test.log",
+      "log_sha256": "58587c2049f52a0de7d79ca755e1474a8a608875f38c09738a784dd539ff633b",
+      "restored_byte_exact": true
+    },
+    {
+      "name": "enum-runtime-authority",
+      "compile_exit": 0,
+      "test_exit": 1,
+      "log": "w1b-challenges-reviewed.logs/enum-runtime-authority/test.log",
+      "log_sha256": "781d7a90dc81dc22bf7c3ba06fc36826d689c31979d38c5b4f7ce8d75dec667e",
+      "restored_byte_exact": true
+    }
+  ],
+  "policy": "Compilation failure is not detection; each mutant must reach an assertion oracle.",
+  "before_sha256": {
+    "air-json/src/main/java/io/github/gustavo2358/air/json/AirJson.java": "9e70b312a4173c6a658a225bf71c791ae9d7489a3faf403116ab104231616deb",
+    "air-json/src/main/java/io/github/gustavo2358/air/json/AirJsonException.java": "f9ba2410ba882f143aac619ef3b7d5f36fe0bdc5993a2892ca7c56a830896ba8",
+    "air-json/src/main/java/io/github/gustavo2358/air/json/BindingReader.java": "aace6acad5013b05a3059ba7e3cdc0d7c45e8e25090d01ed9a4974152871e9c9",
+    "air-json/src/main/java/io/github/gustavo2358/air/json/BindingWriter.java": "9bce65338c2290567d6de89c6f50c9aa0ffd622c8cc0e17ca5456b3b81e341b0",
+    "air-json/src/main/java/io/github/gustavo2358/air/json/Json.java": "765fef68997a8e34bb1b7bb93cfa41ea9658918a7246cba3c0d28d27bd9bb142",
+    "air-json/src/test/java/io/github/gustavo2358/air/json/CodecSuite.java": "5192e07ac8a5a26564b62e44a8f86bc2531373e410a44ae62b98c7a5453a0479",
+    "air-json/src/test/java/io/github/gustavo2358/air/json/GobackOracle.java": "0c6c14d5d173e08e51afcc5536c77886738eb8f676de65c4492d595a8c663f99",
+    "air-json/src/test/java/io/github/gustavo2358/air/json/InvokeChecks.java": "38b08cc31ac5939dede712d5f99c431051fb0aee92343195ffdb9e6b2ef54dd4",
+    "air-json/src/test/java/io/github/gustavo2358/air/json/InvokeOracle.java": "fd7f9ee54b77ff6aaf8ed65cc198a90162b3e30f30fc71f12307b9ccd3e8ecaf",
+    "air-json/src/test/java/io/github/gustavo2358/air/json/JsonCapacityChecks.java": "c647730698a27a358b8bd107a3663d0031bf5e99b1a402a1cf1e167d2517f4c6",
+    "air-json/src/test/java/io/github/gustavo2358/air/json/ScalarAssignChecks.java": "3a8b0520f844df108b3f35af2156227835536181314bb00eca571910947e7d09",
+    "air-json/src/test/java/io/github/gustavo2358/air/json/ScalarAssignOracle.java": "18fd3231001e63514c7047bfe85bc87f70c248e932699e0985c9edc5b8098165",
+    "air-json/src/test/resources/goback.canonical.json": "fa299c2e5f3fae75afe365363b9f16925f0cfea591f631768ace82f0fb9a1075",
+    "air-json/src/test/resources/scalar-assign.canonical.json": "40b9cec1bcc1c1e40cf3b9e3c48e834835e478e1d84bccafa575d63497ef3b60",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Artifacts.java": "5f34829215a832ed69f66c9d2fc549d08a92247fa93c01ef31c09f7cfe28d2b9",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Capabilities.java": "0d191dfa4bfb23dd3c822bc002b9671e773af1ae8862e5a769119ece7e47b8e7",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Control.java": "9142023adfb3cfbd89781fa128833157edaa69225651646bbd05c0695740baf2",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Entries.java": "a4b68ce44a3130f84a689d74233faaa783f7e135b9c11218e8c49067f67e1f71",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Envelopes.java": "e06a20a1fe2228d6397a73091116c15d210af039c358a934b8040ea668ee369a",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Evidence.java": "e095df7541e515a18903639284c34057ab11f277b583ebf4f30429a02460b043",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Expression.java": "ff5c5f7b8e9a6ced24c3be52067d2b4749a68e881366645cb7b8aef85206b3f4",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Expressions.java": "c06e5d16767150e31471d3b7c98eec8f5fc0a30d8d0bda071517b5497ec817f8",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Ids.java": "9130d89173c885dbe6552480ecbc5a4019e55f361613d3e46db352c8e29b68d5",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Instruction.java": "51507ae3f1a8ca0880fb918d8f5d4bde9a548e025b3f52b834a42f487ce17339",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Interactions.java": "01b110f75f35db8c06fb25e5a8c0d618bff7a06cacba489e3aece94d9a5c3536",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Memory.java": "7dd645eb1cb65adeb4f8c2c9a13f0e6981b1f9e6cd1da9d284756dc3a1cf49b2",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Operand.java": "07cde1d00d2435c1060af698b8299271d315dee8d0e259616b17a0ad55fb304d",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Operands.java": "04fceb616907ab2d7255d366c4041f23614d612a2651a3dc9525f15129b71226",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Operation.java": "b8bb702a759479f950a6e14ad90bdda4400c4fd17807c1bd69da69571db7f7f1",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Operations.java": "b6dc81c3bb12a4ec3492576180354a9d1247bae0f4689e2dade993a2c308756a",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Origins.java": "a2f42cec832def92760e33eb187333257361eb0ec447195b504ef706695cf719",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Place.java": "9b74df3b6428e55b965e3c9e48233724e19bf2cd8bd84b3fa34a7107096c878c",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Places.java": "ff4a76b83772fbe2cc108f20094e63a11f7defb5c64ed31c05504f5ab7fb1126",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Proofs.java": "8493bda69f66f799e9529f5afc68c27c31d49b0abbcde8c14672ab0db528f73c",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Publication.java": "1c6222a862c1251bb9f0fe14e9c0bc0ab3c06232c3c1b776b3fb2d0816512d03",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Require.java": "7576994234d33079792a3b4bd21f1ff18e753e56f06deec0a898c277639aaa0f",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Scopes.java": "9ac29460164bf9d21b2881b43dc640d76ad44e3c71741f494bf39017d292863e",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/SemanticVersion.java": "f43e820c593a3c788afb23df10d1702ba8098abd535ee976160c02a8678f0e54",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Sequence.java": "4880b0da9c44d78b275f9161097b7d0caab7b9dac22d844aac81dea683afb295",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Terminator.java": "c409da297e1553dc2bf7636ca83d6206b9c5854a1902100db9396616b0e9981d",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Types.java": "1672943d491bd89140acbaf6b716599436834b095d70e764493e5cf6150d0576",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Unit.java": "24e87f7e2fb2ee847d0a113649e357e34d576ac44ae528c77ef26475d65a16c5",
+    "air-model/src/main/java/io/github/gustavo2358/air/model/Values.java": "653d3c1dbf4e78eeae00212eb1eb9854c3dc28f2311a3ce37643d989f5ed6aca",
+    "air-model/src/main/java/io/github/gustavo2358/air/validation/AirValidator.java": "368aad32960f9e88e6c33e7574412ffe902b0f6bd4c940301659ccfd41600038",
+    "air-model/src/main/java/io/github/gustavo2358/air/validation/DomainProofEngine.java": "cdb563737acff5dc441887e913d3104c68ed0f78252b479c698335fd7248d924",
+    "air-model/src/main/java/io/github/gustavo2358/air/validation/OperationChecks.java": "68066cc1f6f64d0f95d52eadbc8c105e6f57a0de2e076f346d85f1913a480b9a",
+    "air-model/src/main/java/io/github/gustavo2358/air/validation/PublicationIndex.java": "0ef67fff762dfbab80908bed8e1a0a78ba4d1387e34c9db7b80ebb40661de5db",
+    "air-model/src/main/java/io/github/gustavo2358/air/validation/ReferenceChecks.java": "b2d860381e9ead198f1e23cdd93327f1bb78a2b08c3d375a8c593211d007b385",
+    "air-model/src/main/java/io/github/gustavo2358/air/validation/ScopeRules.java": "75816beaa5912b3e71d57b56eea7795c4cf10cba1c5ce1ed41d0a3413635f197",
+    "air-model/src/main/java/io/github/gustavo2358/air/validation/TypeResolver.java": "8183b3efec7e10807748dd18b3d35d25bd60c9afd3ef76fddb8a6424687635bc",
+    "air-model/src/main/java/io/github/gustavo2358/air/validation/ValidationContext.java": "4b72cd58df56e55e73ae10c06aaf0d74ac5547431f2e705fc4270cecaef85c0d",
+    "air-model/src/main/java/io/github/gustavo2358/air/validation/ValidationIssue.java": "50982a1107448b22e5fda1a5c637782257414f189950e823b9b5feef41579c79",
+    "air-model/src/main/java/io/github/gustavo2358/air/validation/ValidationOptions.java": "0c3cf12409f8f6ee215ad594061d6573b4f2cb0ea03dd15a57431e1e02871392",
+    "air-model/src/main/java/io/github/gustavo2358/air/validation/ValidationResult.java": "7083be06e9022ce7cdded474c26bb92f069e1fa73faca4a09e9c0b9c2c9d937e",
+    "air-model/src/main/java/io/github/gustavo2358/air/validation/Walk.java": "745d670607e6babecf45707395ac2856090bbdec6184862bc504c25fa8d88c9d",
+    "air-model/src/test/java/io/github/gustavo2358/air/validation/CapacityChecks.java": "d7b44bac9a182b1ab9f0c8db830194f4fa5e80bc65c8dfd119d07fb756433d7a",
+    "air-model/src/test/java/io/github/gustavo2358/air/validation/ContractSuite.java": "632a05af41ee0dc6d67da2c8a0d54f0f33009a64008587a01c0f35d29c9e95d5",
+    "air-model/src/test/java/io/github/gustavo2358/air/validation/Fixtures.java": "02c9b01dc7cd00730b36c311d1c769fd97817ef56a62f6ce82823ce7c3223068"
+  },
+  "first_green": {
+    "name": "first-green",
+    "compile_exit": 0,
+    "test_exit": 0,
+    "log": "w1b-challenges-reviewed.logs/first-green/test.log",
+    "log_sha256": "5738144562d303f409cf73ea1c988649a84ad6164d175b4e0e44dc8c662dcbf3"
+  },
+  "second_green": {
+    "name": "second-green",
+    "compile_exit": 0,
+    "test_exit": 0,
+    "log": "w1b-challenges-reviewed.logs/second-green/test.log",
+    "log_sha256": "5738144562d303f409cf73ea1c988649a84ad6164d175b4e0e44dc8c662dcbf3"
+  },
+  "restored_byte_exact": true
+}

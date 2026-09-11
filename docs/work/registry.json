@@ -1,7 +1,7 @@
 {
   "active": [
     {
-      "id": "WORK-AIR-BASELINE-001",
+      "id": "WORK-AIR-JSON-003",
       "status": "ready_for_review"
     }
   ],
@@ -35,6 +35,11 @@
       "id": "WORK-AIR-CAPACITY-001",
       "status": "completed",
       "merge_commit": "17029898fd0ee8fabcaaae89f7260148633d4b12"
+    },
+    {
+      "id": "WORK-AIR-BASELINE-001",
+      "status": "completed",
+      "merge_commit": "3bafe3978f0f392e842038ad5628e85dfd91d00d"
     }
   ]
 }

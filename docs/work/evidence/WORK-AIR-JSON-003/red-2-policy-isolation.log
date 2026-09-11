@@ -1,0 +1,8 @@
+Validator=STRUCTURALLY_VALID; traversalCompleted=true; SEMANTIC_OBLIGATION I-56 present
+Exception in thread "main" io.github.gustavo2358.air.json.AirJsonException: AIR validation not complete
+	at io.github.gustavo2358.air.json.AirJson.validate(AirJson.java:61)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at io.github.gustavo2358.air.json.InvokeChecks.main(InvokeChecks.java:36)
+
+exit=1

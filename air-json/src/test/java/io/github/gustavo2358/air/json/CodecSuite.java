@@ -350,6 +350,18 @@ public final class CodecSuite {
         check("4B ordered Assigns preserve independent wire and model arrays", ScalarAssignChecks::order);
         check("4B default representability and opt-in operational budgets", ScalarAssignChecks::limits);
         check("4B scale N and 2N and repeated references preserve linear structure", ScalarAssignChecks::scale);
+        check("W1B literal Invoke preserves I-56 and canonical Publication", InvokeChecks::literal);
+        check("W1B computed Invoke preserves Read ObjectPlace and obligations", InvokeChecks::computed);
+        check("W1B independent wire oracle covers every invocation field", InvokeChecks::wireOracle);
+        check("W1B names policies and text stay language neutral", InvokeChecks::namesAndPolicies);
+        check("W1B conservative effects finite outcomes and open bounds survive", InvokeChecks::boundsAndOutcomes);
+        check("W1B empty signature inventories preserve independent remainders", InvokeChecks::signatures);
+        check("W1B invalid references roles owners and outcomes block transport", InvokeChecks::invalidReferences);
+        check("W1B resource and unsupported capability stay blocking", InvokeChecks::limitsAndCapabilities);
+        check("W1B non-obligation incomplete validation blocks with truncated issues", InvokeChecks::incomplete);
+        check("W1B strict shapes duplicates kinds and local constraints", InvokeChecks::physical);
+        check("W1B unimplemented invocation variants remain explicit", InvokeChecks::unsupported);
+        check("W1B Invoke N and 2N preserve linear structure", InvokeChecks::scale);
         System.out.println("PASS: " + checks + " deterministic transport checks");
     }
     private static void check(String name, Runnable body) {
@@ -490,12 +502,17 @@ public final class CodecSuite {
                 if (tags[i] != 10 && tags[i] != 11 && tags[i] != 18) continue;
                 int[] ref = (int[])pool[i], nameType = (int[])pool[ref[1]];
                 String name = (String)pool[nameType[0]], descriptor = (String)pool[nameType[1]];
-                require(!name.equals("name") && !name.equals("toString"), "Runtime token authority: " + name);
+                require(!name.equals("toString"), "Runtime token authority: " + name);
                 if (tags[i] == 18) {
                     require(!(descriptor.contains("io/github/gustavo2358/air/model/") && descriptor.endsWith("Ljava/lang/String;")),
                             "Runtime model-to-string concatenation");
                 } else {
                     String owner = (String)pool[(Integer)pool[ref[0]]];
+                    // Actual target name fields are AIR data; Enum.name remains forbidden token authority.
+                    if (name.equals("name")) require(
+                            (owner.equals("io/github/gustavo2358/air/model/Interactions$LiteralTarget") && descriptor.equals("()Ljava/lang/String;"))
+                            || (owner.equals("io/github/gustavo2358/air/model/Interactions$ComputedTarget") && descriptor.equals("()Lio/github/gustavo2358/air/model/Expression;")),
+                            "Runtime token authority: " + owner + ".name");
                     require(!(owner.equals("java/lang/String") && name.equals("valueOf")), "Runtime String.valueOf token authority");
                 }
             }
@@ -605,7 +622,7 @@ public final class CodecSuite {
     private static void unsupported() {
         fails(IMPLEMENTATION_LIMIT,changed("publication.origins.0.location",Json.object("kind","offsets","start","0","end","9","unit","octet","endExclusive",true)));
         fails(IMPLEMENTATION_LIMIT,changed("publication.origins.0",Json.object("kind","contractual","id",at("publication.origins.0.id"),"authority","test","version","1")));
-        fails(IMPLEMENTATION_LIMIT,changed("publication.units.0.entries.0.signature.parameters.remainder",Json.object("kind","unknown","uncertainty",at("publication.uncertainties.0.id"))));
+        // W1B maps UnknownBound.unknown; its independent preservation and limit tests live in InvokeChecks.
         // Nonempty containers never become empty successful Publications, regardless of deferred element form.
         for(String path:List.of("publication.resources","publication.artifactRelations","publication.premises",
                 "publication.units.0.visibleObjects","publication.units.0.completionPorts",

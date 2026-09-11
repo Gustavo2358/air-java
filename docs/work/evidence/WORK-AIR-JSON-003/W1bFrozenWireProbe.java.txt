@@ -1,0 +1,15 @@
+import io.github.gustavo2358.air.json.AirJson;
+import java.nio.file.*;
+import java.security.MessageDigest;
+import java.util.*;
+public class W1bFrozenWireProbe {
+ public static void main(String[] args) throws Exception {
+  for(String file: args) {
+   byte[] original=Files.readAllBytes(Path.of(file));
+   var publication=new AirJson().decode(original);
+   byte[] rewritten=new AirJson().encode(publication);
+   if(!Arrays.equals(original,rewritten)) throw new AssertionError("frozen wire changed: "+file);
+   System.out.println("PASS bytes="+original.length+" sha256="+HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(original))+" path="+file);
+  }
+ }
+}

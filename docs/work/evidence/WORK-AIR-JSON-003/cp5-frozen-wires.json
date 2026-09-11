@@ -1,0 +1,62 @@
+{
+  "authority_receipt_sha256": "4f61539c7bc09120ef05abf9efb818e61870097b506e173eaed38735bba331e0",
+  "components": {
+    "proleap-poc": {
+      "repository_path": "/home/gustavo/workspace/teste-e2e/proleap-poc",
+      "source_sha": "8722945cc4cd2052c6091533f6ee6989278aa2f8",
+      "source_tree": "63eba137162aa47e38d4858ff522058a8678a8dd"
+    },
+    "cobol-lower": {
+      "repository_path": "/home/gustavo/workspace/teste-e2e/cobol-lower",
+      "source_sha": "18016f16b4f63149eb1bb4ca13db7e12593d8909",
+      "source_tree": "0139edc52e34c703b643ff484a33e70871ef091d"
+    },
+    "analysis-ir": {
+      "repository_path": "/home/gustavo/workspace/teste-e2e/analysis-ir",
+      "source_sha": "51b4d9a8ae0364232bd97103cd73a77e1a34996c",
+      "source_tree": "11b2361a40cb5ae9b6c201f0157f30ef2387d1b8"
+    },
+    "air-java": {
+      "repository_path": "/home/gustavo/workspace/teste-e2e/air-java",
+      "source_sha": "3bafe3978f0f392e842038ad5628e85dfd91d00d",
+      "source_tree": "201096ee137a897fb43b22e4c831d82e948d6f81"
+    },
+    "analysis-cfg": {
+      "repository_path": "/home/gustavo/workspace/teste-e2e/analysis-cfg",
+      "source_sha": "89ee2ca3f922f021f149d4ad7273056d0c402b9f",
+      "source_tree": "696b3a196d20f8ac7eafb66a924a37722149aa54"
+    }
+  },
+  "fixture_checks": [
+    {
+      "fixture": "cp4e-a",
+      "path": "../.pre-cp6/final/.harness-results/w5-s10-iqglu28b/cp4e-a/air.json",
+      "bytes": 32138,
+      "expected_sha256": "dd3bb4819282e609a97937ea01b7e202786e2c2d9ba9c8a1821a8b982eeb8788",
+      "actual_sha256": "dd3bb4819282e609a97937ea01b7e202786e2c2d9ba9c8a1821a8b982eeb8788"
+    },
+    {
+      "fixture": "cp4e-b",
+      "path": "../.pre-cp6/final/.harness-results/w5-s10-iqglu28b/cp4e-b/air.json",
+      "bytes": 32138,
+      "expected_sha256": "dd3bb4819282e609a97937ea01b7e202786e2c2d9ba9c8a1821a8b982eeb8788",
+      "actual_sha256": "dd3bb4819282e609a97937ea01b7e202786e2c2d9ba9c8a1821a8b982eeb8788"
+    },
+    {
+      "fixture": "cp3",
+      "path": "../.pre-cp6/final/.harness-results/w5-s10-iqglu28b/cp3/air.json",
+      "bytes": 13827,
+      "expected_sha256": "46919c1429db4aa310e66fc9df9374eeba53fd98e50a287fdd005c17622f33ad",
+      "actual_sha256": "46919c1429db4aa310e66fc9df9374eeba53fd98e50a287fdd005c17622f33ad"
+    },
+    {
+      "fixture": "generic-overwrite",
+      "path": "../.pre-cp6/final/.harness-results/w5-s10-iqglu28b/generic-overwrite/air.json",
+      "bytes": 43305,
+      "expected_sha256": "14f5e554d5259a29265897b68f84abd3606d2ee627e09266bf86c36e57e4d7de",
+      "actual_sha256": "14f5e554d5259a29265897b68f84abd3606d2ee627e09266bf86c36e57e4d7de"
+    }
+  ],
+  "decode_encode_byte_identical": true,
+  "reran_producers_or_consumers": false
+}

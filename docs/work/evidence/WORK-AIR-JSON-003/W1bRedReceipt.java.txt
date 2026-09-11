@@ -1,0 +1,11 @@
+package io.github.gustavo2358.air.json;
+public class W1bRedReceipt {
+ public static void main(String[] args) throws Exception {
+  try { InvokeChecks.main(args); }
+  catch (AirJsonException error) {
+   System.out.println("AirJson.code="+error.code()+"; path="+error.path());
+   System.out.println("AirJson.validationResult="+error.validationResult());
+   throw error;
+  }
+ }
+}

@@ -1,0 +1,4 @@
+Exception in thread "main" java.lang.AssertionError: I-56 must remain visible
+	at io.github.gustavo2358.air.json.InvokeChecks.require(InvokeChecks.java:382)
+	at io.github.gustavo2358.air.json.InvokeChecks.obligation(InvokeChecks.java:26)
+	at io.github.gustavo2358.air.json.InvokeChecks.main(InvokeChecks.java:368)

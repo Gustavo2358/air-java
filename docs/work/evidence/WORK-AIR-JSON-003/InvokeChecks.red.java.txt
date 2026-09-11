@@ -1,0 +1,45 @@
+package io.github.gustavo2358.air.json;
+
+import io.github.gustavo2358.air.model.*;
+import io.github.gustavo2358.air.validation.*;
+import java.util.Arrays;
+import static io.github.gustavo2358.air.json.InvokeOracle.*;
+
+/** W1B independent preservation/admission oracles; also runnable for staged RED evidence. */
+final class InvokeChecks {
+    private InvokeChecks() {}
+    static void obligation(Publication p) {
+        var result = AirValidator.validate(p);
+        equal(ValidationResult.Status.STRUCTURALLY_VALID, result.status());
+        require(result.diagnostics().traversalCompleted(), "complete structural traversal");
+        require(result.issues().stream().anyMatch(i -> i.kind() == ValidationIssue.Kind.SEMANTIC_OBLIGATION && i.rule().equals("I-56")), "I-56 must remain visible");
+        require(result.diagnostics().counts().keySet().stream().allMatch(k -> k == ValidationIssue.Kind.SEMANTIC_OBLIGATION), "obligations only");
+    }
+    static void literal() { roundTrip(publication(false, true)); }
+    static void computed() { roundTrip(publication(true, false)); }
+    static void roundTrip(Publication p) {
+        obligation(p);
+        byte[] bytes = new AirJson().encode(p);
+        var decoded = new AirJson().decode(bytes);
+        equal(p, decoded); obligation(decoded);
+        equal(AirValidator.validate(p), AirValidator.validate(decoded));
+        require(Arrays.equals(bytes, new AirJson().encode(decoded)), "canonical re-encode bytes");
+        require(Arrays.equals(bytes, new AirJson().encode(p)), "independent codec bytes");
+    }
+    public static void main(String[] args) throws Exception {
+        var p = publication(false, true); obligation(p);
+        System.out.println("Validator=STRUCTURALLY_VALID; traversalCompleted=true; SEMANTIC_OBLIGATION I-56 present");
+        if (args.length > 0 && args[0].equals("policy-red")) {
+            // Test-only isolation: invoke actual baseline admission after mimicking successful mappings.
+            var validate = AirJson.class.getDeclaredMethod("validate", Publication.class);
+            validate.setAccessible(true);
+            try { validate.invoke(new AirJson(), p); }
+            catch (java.lang.reflect.InvocationTargetException error) { throw (RuntimeException) error.getCause(); }
+        } else { literal(); computed(); }
+        System.out.println("W1B invoke checks PASS");
+    }
+    static void equal(Object expected, Object actual) {
+        if (!expected.equals(actual)) throw new AssertionError("expected " + expected + ", got " + actual);
+    }
+    static void require(boolean ok, String detail) { if (!ok) throw new AssertionError(detail); }
+}

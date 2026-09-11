@@ -1,0 +1,68 @@
+json-ok 1 - CORE-SIZE physical JSON stack and malformed distinction
+json-ok 2 - CORE-SIZE exact UTF-8 byte budgets
+CAPACITY dimension=json-objects n=16 bytes=42877 entities=54 operations=2 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-operations n=16 bytes=51508 entities=69 operations=17 operands=32 queries=16 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-bytes n=16 bytes=16972 entities=2 operations=0 operands=0 queries=0 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-sequences n=16 bytes=43726 entities=54 operations=17 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-references n=16 bytes=14040 entities=24 operations=2 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-objects n=32 bytes=73117 entities=86 operations=2 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-operations n=32 bytes=90964 entities=117 operations=33 operands=64 queries=32 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-bytes n=32 bytes=33356 entities=2 operations=0 operands=0 queries=0 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-sequences n=32 bytes=74862 entities=86 operations=33 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-references n=32 bytes=14936 entities=24 operations=2 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-objects n=64 bytes=133597 entities=150 operations=2 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-operations n=64 bytes=169876 entities=213 operations=65 operands=128 queries=64 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-bytes n=64 bytes=66124 entities=2 operations=0 operands=0 queries=0 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-sequences n=64 bytes=137134 entities=150 operations=65 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-references n=64 bytes=16728 entities=24 operations=2 operands=2 queries=1 status=STRUCTURALLY_VALID
+json-ok 3 - CORE-SIZE JSON independent cardinality series
+json-ok 4 - CORE-SIZE codec operational result remains explicit
+json-ok 5 - manual AIR oracle valid and complete
+json-ok 6 - zero known publication remains explicitly complete
+json-ok 7 - encode equals independent canonical golden
+json-ok 8 - decode equals independent complete Publication
+json-ok 9 - AIR round trip preserves every record and array
+json-ok 10 - JSON round trip canonical and deterministic
+json-ok 11 - property order whitespace and equivalent escapes recanonicalize
+json-ok 12 - PARTIAL and dimensional claims remain independent
+json-ok 13 - empty containers and closed signatures remain present
+json-ok 14 - provenance null approximate and include chains round trip
+json-ok 15 - arbitrary natural coordinates beyond primitive ranges
+json-ok 16 - Unicode scalar text and canonical escaping
+json-ok 17 - canonical property ordering uses Unicode scalars
+json-ok 18 - producer codes reason text and source names are opaque
+json-ok 19 - array permutations preserve physical inventory order
+json-ok 20 - BOM rejected
+json-ok 21 - invalid UTF-8 rejected without replacement
+json-ok 22 - trailing garbage second document and non-JSON whitespace rejected
+json-ok 23 - array string null boolean and empty document roots rejected
+json-ok 24 - duplicate property rejected at every object depth
+json-ok 25 - escaped duplicate key rejected at every object depth
+json-ok 26 - isolated surrogates raw and escaped rejected
+json-ok 27 - invalid string escapes controls commas and truncation rejected
+json-ok 28 - every catalogued field required including nullable fields
+json-ok 29 - unknown fields rejected throughout supported tree
+json-ok 30 - kind absent unknown or null never inferred
+json-ok 31 - null rejected wherever field is not nullable
+json-ok 32 - integer JSON numbers forbidden
+json-ok 33 - canonical Natural lexemes enforced
+json-ok 34 - all envelope versions require exact identity
+json-ok 35 - incomplete ID and foreign or wrong domain IDs rejected
+json-ok 36 - duplicate definitions dangling references and missing evidence rejected
+json-ok 37 - PARTIAL without reason is INVALID_IR with AIR rule
+json-ok 38 - local AIR constraints and Java representability limits stay distinct
+json-ok 39 - closed tokens are checked explicitly
+json-ok 40 - process timestamp and private model fields forbidden
+json-ok 41 - valid Halt unsupported and Return never silently changed
+json-ok 42 - ordinary operation as terminator and Return as instruction invalid
+json-ok 43 - deferred forms fail explicitly without partial materialization
+json-ok 44 - capability nonempty manifest distinguished from invalid AIR
+json-ok 45 - document and depth limits explicit in both directions
+json-ok 46 - Validator limits remain INCOMPLETE_VALIDATION
+json-ok 47 - all complete ID wire shapes including future operand references
+json-ok 48 - all supported wire tokens have independent binding oracles
+Exception in thread "main" java.lang.AssertionError: Runtime token authority: io/github/gustavo2358/air/model/Evidence$Dimension.name
+	at io.github.gustavo2358.air.json.CodecSuite.require(CodecSuite.java:370)
+	at io.github.gustavo2358.air.json.CodecSuite.noRuntimeTokens(CodecSuite.java:512)
+	at io.github.gustavo2358.air.json.CodecSuite.check(CodecSuite.java:368)
+	at io.github.gustavo2358.air.json.CodecSuite.main(CodecSuite.java:229)

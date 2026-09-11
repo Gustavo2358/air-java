@@ -1,0 +1,4 @@
+Exception in thread "main" java.lang.AssertionError: existing GOBACK bytes changed
+	at io.github.gustavo2358.air.json.InvokeChecks.require(InvokeChecks.java:382)
+	at io.github.gustavo2358.air.json.InvokeChecks.existingBytes(InvokeChecks.java:150)
+	at io.github.gustavo2358.air.json.InvokeChecks.main(InvokeChecks.java:367)

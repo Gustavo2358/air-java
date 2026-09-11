@@ -1,0 +1,20 @@
+CHALLENGE drop-literal-name: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE drop-computed-expression: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE change-read-object: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE drop-normal-outcome: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE erase-effects-scope: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE drop-must-overwrite: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE drop-contract-evidence: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE erase-contract-uncertainty: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE allow-invalid-ir: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE allow-generic-incomplete: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE suppress-i56: DETECTED; compile=0; restored_byte_exact=true
+Traceback (most recent call last):
+  File "/home/gustavo/workspace/teste-e2e/air-java/scripts/challenge_invoke.py", line 98, in <module>
+    main()
+    ~~~~^^
+  File "/home/gustavo/workspace/teste-e2e/air-java/scripts/challenge_invoke.py", line 82, in main
+    entry = execute(name, suite, False)
+  File "/home/gustavo/workspace/teste-e2e/air-java/scripts/challenge_invoke.py", line 73, in execute
+    raise RuntimeError(f'{name}: no semantic assertion detection; see {log}')
+RuntimeError: change-goback-bytes: no semantic assertion detection; see /home/gustavo/workspace/teste-e2e/air-java/docs/work/evidence/WORK-AIR-JSON-003/challenges.logs/change-goback-bytes/test.log
