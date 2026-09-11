@@ -1,0 +1,8 @@
+Validator=STRUCTURALLY_VALID; traversalCompleted=true; SEMANTIC_OBLIGATION I-56 present
+Exception in thread "main" java.lang.AssertionError: invalid rule I-31
+	at io.github.gustavo2358.air.json.InvokeChecks.require(InvokeChecks.java:346)
+	at io.github.gustavo2358.air.json.InvokeChecks.invalid(InvokeChecks.java:155)
+	at io.github.gustavo2358.air.json.InvokeChecks.invalidReferences(InvokeChecks.java:148)
+	at io.github.gustavo2358.air.json.InvokeChecks.main(InvokeChecks.java:335)
+
+exit=1

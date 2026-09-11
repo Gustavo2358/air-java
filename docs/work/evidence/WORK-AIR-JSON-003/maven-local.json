@@ -1,0 +1,14 @@
+{
+  "gate": "maven",
+  "head": "3bafe3978f0f392e842038ad5628e85dfd91d00d",
+  "observed_at": "2026-09-11T15:09:27.062443+00:00",
+  "results": [
+    {
+      "gate": "maven",
+      "status": "PASS",
+      "detail": "179 model + 91 transport deterministic checks executed via Maven clean verify"
+    }
+  ],
+  "exit_code": 0,
+  "unexecuted": []
+}

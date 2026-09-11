@@ -174,7 +174,9 @@ final class ScalarAssignChecks {
             failsAt(IMPLEMENTATION_LIMIT, OBJECT_PATH + ".storage", changed(OBJECT_PATH + ".storage.kind", Json.value(kind)));
         failsAt(IMPLEMENTATION_LIMIT, CELL_PATH, changed(CELL_PATH + ".kind", Json.value("region")));
         for (String kind : List.of("choice", "region_slice")) failsAt(IMPLEMENTATION_LIMIT, DEST, changed(DEST + ".kind", Json.value(kind)));
-        for (String kind : List.of("read", "unknown", "unary", "binary", "quantize", "fit_text", "slice_text", "trim_right"))
+        // Read is now mapped: the former Literal shape must be rejected for its unexpected value field.
+        failsAt(INPUT_ERROR, VALUE + ".value", changed(VALUE + ".kind", Json.value("read")));
+        for (String kind : List.of("unknown", "unary", "binary", "quantize", "fit_text", "slice_text", "trim_right"))
             failsAt(IMPLEMENTATION_LIMIT, VALUE, changed(VALUE + ".kind", Json.value(kind)));
         for (String kind : List.of("bool", "int", "decimal", "bytes", "label"))
             failsAt(IMPLEMENTATION_LIMIT, VALUE + ".value", changed(VALUE + ".value.kind", Json.value(kind)));

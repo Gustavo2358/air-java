@@ -1,0 +1,12 @@
+Validator=STRUCTURALLY_VALID; traversalCompleted=true; SEMANTIC_OBLIGATION I-56 present
+AirJson.code=INCOMPLETE_VALIDATION; path=$
+AirJson.validationResult=Optional[ValidationResult[issues=[ValidationIssue[kind=SEMANTIC_OBLIGATION, rule=I-56, subject=Optional[OperationId[unit=UnitId[publication=PublicationId[localId=cp6-w1b-manual], localId=caller], localId=interaction]], detail=producer/authority must substantiate materialized signature, effects and outcomes; structural validation does not compare them with external semantics or a body]], statistics=Statistics[entities=29, operands=1, operations=2, domainQueries=0], diagnostics=Diagnostics[counts={SEMANTIC_OBLIGATION=1}, traversalCompleted=true]]]
+Exception in thread "main" io.github.gustavo2358.air.json.AirJsonException: AIR validation not complete
+	at io.github.gustavo2358.air.json.AirJson.validate(AirJson.java:61)
+	at io.github.gustavo2358.air.json.AirJson.encode(AirJson.java:40)
+	at io.github.gustavo2358.air.json.InvokeChecks.roundTrip(InvokeChecks.java:22)
+	at io.github.gustavo2358.air.json.InvokeChecks.literal(InvokeChecks.java:18)
+	at io.github.gustavo2358.air.json.InvokeChecks.main(InvokeChecks.java:38)
+	at io.github.gustavo2358.air.json.W1bRedReceipt.main(W1bRedReceipt.java:4)
+
+exit=1

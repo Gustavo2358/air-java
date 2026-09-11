@@ -1,0 +1,6 @@
+Validator=STRUCTURALLY_VALID; traversalCompleted=true; SEMANTIC_OBLIGATION I-56 present
+W1B SCALE invokes=500 bytes=1673561 entities=1026 obligations=1000
+W1B SCALE invokes=1000 bytes=3336061 entities=2026 obligations=2000
+W1B invoke checks PASS
+
+exit=0

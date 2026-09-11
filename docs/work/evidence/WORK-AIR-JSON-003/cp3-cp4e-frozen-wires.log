@@ -1,0 +1,3 @@
+PASS bytes=13827 sha256=46919c1429db4aa310e66fc9df9374eeba53fd98e50a287fdd005c17622f33ad path=../artefatos-e2e/checkpoint-3-e2e/output/air.json
+PASS bytes=32138 sha256=dd3bb4819282e609a97937ea01b7e202786e2c2d9ba9c8a1821a8b982eeb8788 path=../artefatos-e2e/checkpoint-4e/run-1/air.json
+PASS bytes=32138 sha256=dd3bb4819282e609a97937ea01b7e202786e2c2d9ba9c8a1821a8b982eeb8788 path=../artefatos-e2e/checkpoint-4e/run-2/air.json

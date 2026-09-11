@@ -23,3 +23,7 @@ Mudança de gate/expected/allowlist é mudança de contrato de engenharia: expli
 motivo e apresentar positivo/negativo. Fonte lock, assertions ou inventário não são
 atualizados automaticamente para apagar falhas. Não editar outros repositórios
 sem escopo autorizado; handoff documenta a migração necessária.
+
+## INTERNAL-CONTRACT-DEV-001
+
+Contratos internos controlados podem evoluir producer-first; consumers migram em waves posteriores. Incompatibilidade temporária de pins downstream não é blocker por si só. Não criar compatibility layer, dual codec, legacy writer, version negotiation, downgrade adapter ou APIs paralelas sem necessidade concreta. Registrar impacto e handoff, preservando evidência e os limites da wave autorizada.

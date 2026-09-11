@@ -55,16 +55,100 @@ final class BindingWriter {
                         "remainder", remainder(s.results().remainder())), "origin", id(s.origin()));
     }
     private Value remainder(Interactions.UnknownBound r) {
-        if (!(r instanceof Interactions.NoRemainder)) throw limit("$.signature.remainder", "UnknownBound.unknown not implemented");
-        return object("kind", "none");
+        return switch (r) {
+            case Interactions.NoRemainder ignored -> object("kind", "none");
+            case Interactions.UnknownRemainder u -> object("kind", "unknown", "uncertainty", id(u.uncertainty()));
+        };
     }
     private Value sequence(Sequence s) {
         return object("label", id(s.label()), "instructions", array(s.instructions(), this::instruction),
                 "terminator", operation(s.terminator()), "origin", id(s.origin()));
     }
     private Value operation(Terminator t) {
+        if (t instanceof Operations.Invoke i)
+            return object("kind", "invoke", "header", header(i.header()), "action", i.action(), "target", target(i.target()),
+                    "arguments", empty(i.arguments(), "$.invoke.arguments"), "results", empty(i.results(), "$.invoke.results"),
+                    "signature", invocationSignature(i.signature()), "effectOperands", array(i.effectOperands(), this::place),
+                    "effectBound", effects(i.effectBound()), "outcomes", outcomes(i.outcomes()), "contract", contract(i.contract()));
         if (!(t instanceof Operations.Return r)) throw limit("$.sequence.terminator", "Operation " + t.kind() + " not implemented");
         return object("kind", "return", "header", header(r.header()), "values", empty(r.values(), "$.return.values"));
+    }
+    private Value target(Interactions.Target t) {
+        return switch (t) {
+            case Interactions.LiteralTarget l -> object("kind", "literal", "category", l.category(), "namespace", l.namespace(),
+                    "name", l.name(), "namePolicy", namePolicy(l.namePolicy()), "origin", id(l.origin()));
+            case Interactions.ComputedTarget c -> object("kind", "computed", "category", c.category(), "namespace", c.namespace(),
+                    "name", expression(c.name()), "namePolicy", namePolicy(c.namePolicy()), "origin", id(c.origin()));
+            case Interactions.InternalTarget ignored -> throw limit("$.invoke.target", "Target.internal not implemented");
+        };
+    }
+    private Value namePolicy(Interactions.NamePolicy p) {
+        return switch (p) {
+            case Interactions.ExactName ignored -> object("kind", "exact");
+            case Interactions.UnknownName u -> object("kind", "unknown", "uncertainty", id(u.uncertainty()));
+            case Interactions.ExtensionName ignored -> throw limit("$.target.namePolicy", "NamePolicy.extension not implemented");
+        };
+    }
+    private Value invocationSignature(Interactions.InvocationSignature s) {
+        if (!(s instanceof Interactions.ExternalSignature e)) throw limit("$.invoke.signature", "InvocationSignature.entry not implemented");
+        return object("kind", "external", "signature", signature(e.signature()));
+    }
+    private Value effects(Interactions.EffectBound e) {
+        var f = e.otherwise();
+        return object("otherwise", object("reads", memoryBound(f.reads()), "writes", memoryBound(f.writes()),
+                "mustOverwrite", array(f.mustOverwrite(), this::id)), "perOutcome", empty(e.perOutcome(), "$.effectBound.perOutcome"));
+    }
+    private Value memoryBound(Scopes.MemoryBound b) {
+        return switch (b) {
+            case Scopes.NoMemory ignored -> object("kind", "none");
+            case Scopes.WithinMemory w -> object("kind", "within", "scope", memoryScope(w.scope()));
+        };
+    }
+    private Value memoryScope(Scopes.MemoryScope s) {
+        return switch (s) {
+            case Scopes.VisibleMemory v -> object("kind", "visible", "unit", id(v.unit()), "includingExternal", v.includingExternal());
+            case Scopes.AllMemory a -> object("kind", "all", "publication", id(a.publication()), "includingEnvironment", a.includingEnvironment());
+            default -> throw limit("$.memory.scope", "Only visible/all MemoryScope implemented");
+        };
+    }
+    private Value outcomes(Control.InvocationOutcomes o) {
+        return object("known", array(o.known(), this::alternative), "remainder", controlBound(o.remainder()));
+    }
+    private Value alternative(Control.InvocationAlternative a) {
+        return switch (a) {
+            case Control.Normal n -> object("kind", "normal", "label", id(n.label()));
+            case Control.Exceptional e -> object("kind", "exception", "tag", e.tag(), "destination", exceptionDestination(e.destination()));
+            case Control.AnyException e -> object("kind", "any_exception", "destination", exceptionDestination(e.destination()));
+            case Control.HaltAlternative ignored -> object("kind", "halt");
+            case Control.Diverge ignored -> object("kind", "diverge");
+        };
+    }
+    private Value exceptionDestination(Control.ExceptionDestination d) {
+        return switch (d) {
+            case Control.Handler h -> object("kind", "handler", "label", id(h.label()));
+            case Control.Propagate ignored -> object("kind", "propagate");
+        };
+    }
+    private Value controlBound(Scopes.ControlBound b) {
+        return switch (b) {
+            case Scopes.NoControl ignored -> object("kind", "none");
+            case Scopes.WithinControl w -> object("kind", "within", "scope", controlScope(w.scope()));
+        };
+    }
+    private Value controlScope(Scopes.ControlScope s) {
+        return switch (s) {
+            case Scopes.UnitControl u -> object("kind", "unit", "unit", id(u.unit()), "labels", u.labels(), "normalExit", u.normalExit(),
+                    "exceptionalExit", u.exceptionalExit(), "halt", u.halt(), "diverge", u.diverge(), "externalControl", u.externalControl());
+            case Scopes.AllControl a -> object("kind", "all", "publication", id(a.publication()));
+            default -> throw limit("$.control.scope", "Only unit/all ControlScope implemented");
+        };
+    }
+    private Value contract(Interactions.ContractKnowledge k) {
+        return switch (k) {
+            case Interactions.KnownContract c -> object("kind", "known", "reference", object("authority", c.reference().authority(),
+                    "version", c.reference().version(), "evidence", array(c.reference().evidence(), this::id)));
+            case Interactions.UnknownContract u -> object("kind", "unknown", "uncertainty", id(u.uncertainty()));
+        };
     }
     private Value header(Operations.Header h) {
         return object("id", id(h.id()), "origin", id(h.origin()), "coverage", coverageStatus(h.coverage()),
@@ -104,7 +188,9 @@ final class BindingWriter {
         return object("kind", "text", "value", t.value());
     }
     private Value expression(Expression e) {
-        if (!(e instanceof Expressions.Literal l)) throw limit("$.expression", "Only Expression.literal implemented");
+        if (e instanceof Expressions.Read r)
+            return object("kind", "read", "header", operandHeader(r.header()), "place", place(r.place()));
+        if (!(e instanceof Expressions.Literal l)) throw limit("$.expression", "Only Expression.literal/read implemented");
         return object("kind", "literal", "header", operandHeader(l.header()), "value", literalValue(l.value()));
     }
     private Value instruction(Instruction i) {

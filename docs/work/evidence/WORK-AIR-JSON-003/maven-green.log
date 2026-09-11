@@ -1,0 +1,2 @@
+RUN: maven
+PASS: maven: 179 model + 91 transport deterministic checks executed via Maven clean verify

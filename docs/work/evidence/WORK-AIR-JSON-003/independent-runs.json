@@ -1,0 +1,14 @@
+{
+  "literal": {
+    "bytes": 15252,
+    "sha256": "f8a9bfc24e94fb9f4d60120419bc444072780458c08366587f8d95fd745bc378",
+    "independent_processes_byte_identical": true,
+    "roundtrip_and_i56": "PASS"
+  },
+  "computed": {
+    "bytes": 15256,
+    "sha256": "f694780ce0a928663f8c1b679a282c79a3afdb0f51ca38e87ef13b275a595c98",
+    "independent_processes_byte_identical": true,
+    "roundtrip_and_i56": "PASS"
+  }
+}

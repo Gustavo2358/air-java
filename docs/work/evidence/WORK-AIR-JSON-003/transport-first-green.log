@@ -1,0 +1,113 @@
+RUN: transport
+PASS: transport: json-ok 1 - CORE-SIZE physical JSON stack and malformed distinction
+json-ok 2 - CORE-SIZE exact UTF-8 byte budgets
+CAPACITY dimension=json-objects n=16 bytes=42877 entities=54 operations=2 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-operations n=16 bytes=51508 entities=69 operations=17 operands=32 queries=16 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-bytes n=16 bytes=16972 entities=2 operations=0 operands=0 queries=0 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-sequences n=16 bytes=43726 entities=54 operations=17 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-references n=16 bytes=14040 entities=24 operations=2 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-objects n=32 bytes=73117 entities=86 operations=2 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-operations n=32 bytes=90964 entities=117 operations=33 operands=64 queries=32 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-bytes n=32 bytes=33356 entities=2 operations=0 operands=0 queries=0 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-sequences n=32 bytes=74862 entities=86 operations=33 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-references n=32 bytes=14936 entities=24 operations=2 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-objects n=64 bytes=133597 entities=150 operations=2 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-operations n=64 bytes=169876 entities=213 operations=65 operands=128 queries=64 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-bytes n=64 bytes=66124 entities=2 operations=0 operands=0 queries=0 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-sequences n=64 bytes=137134 entities=150 operations=65 operands=2 queries=1 status=STRUCTURALLY_VALID
+CAPACITY dimension=json-references n=64 bytes=16728 entities=24 operations=2 operands=2 queries=1 status=STRUCTURALLY_VALID
+json-ok 3 - CORE-SIZE JSON independent cardinality series
+json-ok 4 - CORE-SIZE codec operational result remains explicit
+json-ok 5 - manual AIR oracle valid and complete
+json-ok 6 - zero known publication remains explicitly complete
+json-ok 7 - encode equals independent canonical golden
+json-ok 8 - decode equals independent complete Publication
+json-ok 9 - AIR round trip preserves every record and array
+json-ok 10 - JSON round trip canonical and deterministic
+json-ok 11 - property order whitespace and equivalent escapes recanonicalize
+json-ok 12 - PARTIAL and dimensional claims remain independent
+json-ok 13 - empty containers and closed signatures remain present
+json-ok 14 - provenance null approximate and include chains round trip
+json-ok 15 - arbitrary natural coordinates beyond primitive ranges
+json-ok 16 - Unicode scalar text and canonical escaping
+json-ok 17 - canonical property ordering uses Unicode scalars
+json-ok 18 - producer codes reason text and source names are opaque
+json-ok 19 - array permutations preserve physical inventory order
+json-ok 20 - BOM rejected
+json-ok 21 - invalid UTF-8 rejected without replacement
+json-ok 22 - trailing garbage second document and non-JSON whitespace rejected
+json-ok 23 - array string null boolean and empty document roots rejected
+json-ok 24 - duplicate property rejected at every object depth
+json-ok 25 - escaped duplicate key rejected at every object depth
+json-ok 26 - isolated surrogates raw and escaped rejected
+json-ok 27 - invalid string escapes controls commas and truncation rejected
+json-ok 28 - every catalogued field required including nullable fields
+json-ok 29 - unknown fields rejected throughout supported tree
+json-ok 30 - kind absent unknown or null never inferred
+json-ok 31 - null rejected wherever field is not nullable
+json-ok 32 - integer JSON numbers forbidden
+json-ok 33 - canonical Natural lexemes enforced
+json-ok 34 - all envelope versions require exact identity
+json-ok 35 - incomplete ID and foreign or wrong domain IDs rejected
+json-ok 36 - duplicate definitions dangling references and missing evidence rejected
+json-ok 37 - PARTIAL without reason is INVALID_IR with AIR rule
+json-ok 38 - local AIR constraints and Java representability limits stay distinct
+json-ok 39 - closed tokens are checked explicitly
+json-ok 40 - process timestamp and private model fields forbidden
+json-ok 41 - valid Halt unsupported and Return never silently changed
+json-ok 42 - ordinary operation as terminator and Return as instruction invalid
+json-ok 43 - deferred forms fail explicitly without partial materialization
+json-ok 44 - capability nonempty manifest distinguished from invalid AIR
+json-ok 45 - document and depth limits explicit in both directions
+json-ok 46 - Validator limits remain INCOMPLETE_VALIDATION
+json-ok 47 - all complete ID wire shapes including future operand references
+json-ok 48 - all supported wire tokens have independent binding oracles
+json-ok 49 - writer never derives wire tokens from runtime enum
+json-ok 50 - local AIR failures carry pinned rule and site
+json-ok 51 - Validator issues preserve exact rule subject detail and site
+json-ok 52 - Natural span bases beyond Java range are representability limits
+json-ok 53 - empty FactScope entities is a Java representability limit
+json-ok 54 - admitted blank Text is a field-specific representability limit
+json-ok 55 - unexpected constructor exceptions are never classified generically
+json-ok 56 - Span coordinates below declared bases are representability limits
+json-ok 57 - Span inverted lines are representability limits
+json-ok 58 - Span inverted columns on same line are representability limits
+json-ok 59 - coherent spans preserve equality bases and lexicographic order
+json-ok 60 - coherent arbitrary bases reach only their Java representation limit
+json-ok 61 - invalid Span Natural lexemes remain physical errors at both sites
+json-ok 62 - 4B manual scalar AIR oracle validates independently
+json-ok 63 - 4B Java oracle has no transport or golden dependency
+json-ok 64 - 4B independent golden and model satisfy all four equalities
+json-ok 65 - 4B PARTIAL inventories origins precision and uncertainties preserved
+json-ok 66 - 4B text and nullable fields preserve exact values
+json-ok 67 - 4B object and cell references must close
+json-ok 68 - 4B storage kind domain and owner remain validated
+json-ok 69 - 4B operand operation and entry owners cannot be repaired
+json-ok 70 - 4B Assign destination and source roles remain validated
+json-ok 71 - 4B conflicting literal domain remains a Validator rule
+json-ok 72 - 4B Assign terminator and Return instruction fail I-04
+json-ok 73 - 4B all supported fields required and unknown fields rejected
+json-ok 74 - 4B null tokens kinds and ID shapes preserve physical taxonomy
+json-ok 75 - 4B recognized unsupported forms remain IMPLEMENTATION_LIMIT
+json-ok 76 - 4B every Lifetime Visibility and OperandRole token has a literal oracle
+json-ok 77 - 4B ordered Assigns preserve independent wire and model arrays
+json-ok 78 - 4B default representability and opt-in operational budgets
+SCALE objects=1000 storage=1000 operations=1001 operands=2000 inputBytes=4371328 outputBytes=4371328 nodes=238546 entities=5019 domainQueries=1000 observedMs=753
+SCALE objects=2000 storage=2000 operations=2001 operands=4000 inputBytes=8741328 outputBytes=8741328 nodes=476546 entities=10019 domainQueries=2000 observedMs=1444
+SCALE objects=1 storage=1 operations=10001 operands=20000 inputBytes=24747652 outputBytes=24747652 nodes=1320652 entities=30021 domainQueries=10000 observedMs=3786
+json-ok 79 - 4B scale N and 2N and repeated references preserve linear structure
+json-ok 80 - W1B literal Invoke preserves I-56 and canonical Publication
+json-ok 81 - W1B computed Invoke preserves Read ObjectPlace and obligations
+json-ok 82 - W1B independent wire oracle covers every invocation field
+json-ok 83 - W1B names policies and text stay language neutral
+json-ok 84 - W1B conservative effects finite outcomes and open bounds survive
+json-ok 85 - W1B empty signature inventories preserve independent remainders
+json-ok 86 - W1B invalid references roles owners and outcomes block transport
+json-ok 87 - W1B resource and unsupported capability stay blocking
+json-ok 88 - W1B non-obligation incomplete validation blocks with truncated issues
+json-ok 89 - W1B strict shapes duplicates kinds and local constraints
+json-ok 90 - W1B unimplemented invocation variants remain explicit
+W1B SCALE invokes=500 bytes=1673561 entities=1026 obligations=1000
+W1B SCALE invokes=1000 bytes=3336061 entities=2026 obligations=2000
+json-ok 91 - W1B Invoke N and 2N preserve linear structure
+PASS: 91 deterministic transport checks

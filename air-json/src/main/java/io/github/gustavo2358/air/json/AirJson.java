@@ -30,7 +30,7 @@ public final class AirJson {
         this.limits = Objects.requireNonNull(limits);
         this.validationOptions = Objects.requireNonNull(validationOptions);
     }
-    /** Canonical UTF-8 bytes, without BOM or final newline, after structural AIR validation. */
+    /** Canonical UTF-8 bytes after structural validation. Outstanding semantic obligations are not discharged. */
     public byte[] encode(Publication publication) {
         Objects.requireNonNull(publication, "publication");
         if (!publication.airVersion().equals(SemanticVersion.AIR_2_0_0))
@@ -56,8 +56,9 @@ public final class AirJson {
             throw new AirJsonException(INVALID_IR, "$", "AIR structural validation failed", result);
         if (result.hasIssues(ValidationIssue.Kind.UNSUPPORTED_CAPABILITY))
             throw new AirJsonException(UNSUPPORTED_CAPABILITY, "$", "AIR capability not supported", result);
-        if (result.status() == ValidationResult.Status.INCOMPLETE_VALIDATION
-                || result.hasIssues(ValidationIssue.Kind.SEMANTIC_OBLIGATION))
+        // SEMANTIC_OBLIGATION alone does not block transport. Totals include unretained diagnostics;
+        // VALIDATION_LIMIT and incomplete traversal still block, independently of obligations.
+        if (result.status() == ValidationResult.Status.INCOMPLETE_VALIDATION)
             throw new AirJsonException(INCOMPLETE_VALIDATION, "$", "AIR validation not complete", result);
     }
 }

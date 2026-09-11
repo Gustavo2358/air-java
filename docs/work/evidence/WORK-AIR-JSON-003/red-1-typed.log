@@ -1,0 +1,37 @@
+Validator=STRUCTURALLY_VALID; traversalCompleted=true; SEMANTIC_OBLIGATION I-56 present
+AirJson.code=IMPLEMENTATION_LIMIT; path=$.sequence.terminator
+AirJson.validationResult=Optional.empty
+Exception in thread "main" io.github.gustavo2358.air.json.AirJsonException: Operation invoke not implemented
+	at io.github.gustavo2358.air.json.Json.limit(Json.java:28)
+	at io.github.gustavo2358.air.json.BindingWriter.operation(BindingWriter.java:66)
+	at io.github.gustavo2358.air.json.BindingWriter.sequence(BindingWriter.java:63)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:214)
+	at java.base/java.util.AbstractList$RandomAccessSpliterator.forEachRemaining(AbstractList.java:722)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:570)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:560)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:635)
+	at java.base/java.util.stream.AbstractPipeline.evaluateToArrayNode(AbstractPipeline.java:291)
+	at java.base/java.util.stream.ReferencePipeline.toArray(ReferencePipeline.java:652)
+	at java.base/java.util.stream.ReferencePipeline.toArray(ReferencePipeline.java:658)
+	at java.base/java.util.stream.ReferencePipeline.toList(ReferencePipeline.java:663)
+	at io.github.gustavo2358.air.json.Json.array(Json.java:183)
+	at io.github.gustavo2358.air.json.BindingWriter.unit(BindingWriter.java:41)
+	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:214)
+	at java.base/java.util.Collections$2.tryAdvance(Collections.java:5182)
+	at java.base/java.util.Collections$2.forEachRemaining(Collections.java:5190)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:570)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:560)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:635)
+	at java.base/java.util.stream.AbstractPipeline.evaluateToArrayNode(AbstractPipeline.java:291)
+	at java.base/java.util.stream.ReferencePipeline.toArray(ReferencePipeline.java:652)
+	at java.base/java.util.stream.ReferencePipeline.toArray(ReferencePipeline.java:658)
+	at java.base/java.util.stream.ReferencePipeline.toList(ReferencePipeline.java:663)
+	at io.github.gustavo2358.air.json.Json.array(Json.java:183)
+	at io.github.gustavo2358.air.json.BindingWriter.envelope(BindingWriter.java:18)
+	at io.github.gustavo2358.air.json.AirJson.encode(AirJson.java:39)
+	at io.github.gustavo2358.air.json.InvokeChecks.roundTrip(InvokeChecks.java:22)
+	at io.github.gustavo2358.air.json.InvokeChecks.literal(InvokeChecks.java:18)
+	at io.github.gustavo2358.air.json.InvokeChecks.main(InvokeChecks.java:38)
+	at io.github.gustavo2358.air.json.W1bRedReceipt.main(W1bRedReceipt.java:4)
+
+exit=1

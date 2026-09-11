@@ -1,0 +1,14 @@
+CHALLENGE drop-literal-name: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE drop-computed-expression: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE change-read-object: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE drop-normal-outcome: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE erase-effects-scope: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE drop-must-overwrite: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE drop-contract-evidence: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE erase-contract-uncertainty: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE allow-invalid-ir: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE allow-generic-incomplete: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE suppress-i56: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE change-goback-bytes: DETECTED; compile=0; restored_byte_exact=true
+CHALLENGE enum-runtime-authority: DETECTED; compile=0; restored_byte_exact=true
+W1B CHALLENGES PASS; second GREEN; byte-exact restoration

@@ -1,0 +1,8 @@
+{
+  "raw_path": "full-second-maven-dns-failure.log",
+  "stored_path": "full-second-maven-dns-failure.log.gz",
+  "raw_sha256": "74463bfce2ba911e17bf0333be1ea82d06a1937d97ca7880830c29f6520910bc",
+  "stored_sha256": "37576ff3032a20566597360ee0fed8e78813aed5f83df07da3d233eb02b3b7fd",
+  "lossless_decompression_verified": true,
+  "reason": "Preserve raw Maven whitespace without Git diff whitespace errors; no evidence content changed."
+}

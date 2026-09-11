@@ -135,15 +135,18 @@ final class BindingReader {
         a.fields("parameters", "results", "origin");
         for (String name : List.of("parameters", "results")) {
             var inventory = a.child(name).fields("known", "remainder"); inventory.child("known").empty();
-            var remainder = inventory.child("remainder");
-            switch (remainder.kind()) {
-                case "none" -> remainder.fields("kind");
-                case "unknown" -> { remainder.fields("kind", "uncertainty"); throw remainder.unsupported("UnknownBound.unknown"); }
-                default -> throw Json.input(remainder.path(), "Unknown UnknownBound kind");
-            }
         }
-        return new Interactions.Signature(new Interactions.ParameterInventory(List.of(), Interactions.NoRemainder.INSTANCE),
-                new Interactions.ResultInventory(List.of(), Interactions.NoRemainder.INSTANCE), originId(a.child("origin")));
+        return new Interactions.Signature(new Interactions.ParameterInventory(List.of(), remainder(a.child("parameters").child("remainder"))),
+                new Interactions.ResultInventory(List.of(), remainder(a.child("results").child("remainder"))), originId(a.child("origin")));
+    }
+    private Interactions.UnknownBound remainder(At a) {
+        return switch (a.kind()) {
+            case "none" -> { a.fields("kind"); yield Interactions.NoRemainder.INSTANCE; }
+            case "unknown" -> {
+                a.fields("kind", "uncertainty"); yield new Interactions.UnknownRemainder(uncertaintyId(a.child("uncertainty")));
+            }
+            default -> throw Json.input(a.path(), "Unknown UnknownBound kind");
+        };
     }
     private Sequence sequence(At a) {
         a.fields("label", "instructions", "terminator", "origin");
@@ -178,12 +181,132 @@ final class BindingReader {
         a.fields(("kind,header" + (extra.isEmpty() ? "" : "," + extra)).split(","));
         return kind;
     }
-    private Operations.Return operation(At a) {
+    private Terminator operation(At a) {
         String kind = operationFields(a);
         if (Set.of("assign", "havoc.must", "havoc.may", "nop", "copy_bytes").contains(kind))
             throw a.invalid("I-04", "AIR 01 §3: ordinary operation as terminator");
+        if (kind.equals("invoke")) {
+            a.child("arguments").empty(); a.child("results").empty();
+            return new Operations.Invoke(header(a.child("header")), a.child("action").modelText(), target(a.child("target")),
+                    List.of(), List.of(), invocationSignature(a.child("signature")), a.child("effectOperands").list(this::place),
+                    effects(a.child("effectBound")), outcomes(a.child("outcomes")), contract(a.child("contract")));
+        }
         if (!kind.equals("return")) throw a.unsupported("Operation " + kind);
         a.child("values").empty(); return new Operations.Return(header(a.child("header")), List.of());
+    }
+    private Interactions.Target target(At a) {
+        switch (a.kind()) {
+            case "literal", "computed" -> a.fields("kind", "category", "namespace", "name", "namePolicy", "origin");
+            case "internal" -> { a.fields("kind", "entry"); throw a.unsupported("Target.internal"); }
+            default -> throw Json.input(a.path(), "Unknown Target kind");
+        }
+        String category = a.child("category").modelText(), namespace = a.child("namespace").modelText();
+        var policy = namePolicy(a.child("namePolicy")); var origin = originId(a.child("origin"));
+        return a.kind().equals("literal")
+                ? new Interactions.LiteralTarget(category, namespace, a.child("name").text(), policy, origin)
+                : new Interactions.ComputedTarget(category, namespace, expression(a.child("name")), policy, origin);
+    }
+    private Interactions.NamePolicy namePolicy(At a) {
+        return switch (a.kind()) {
+            case "exact" -> { a.fields("kind"); yield Interactions.ExactName.INSTANCE; }
+            case "unknown" -> {
+                a.fields("kind", "uncertainty"); yield new Interactions.UnknownName(uncertaintyId(a.child("uncertainty")));
+            }
+            case "extension" -> { a.fields("kind", "name", "version"); throw a.unsupported("NamePolicy.extension"); }
+            default -> throw Json.input(a.path(), "Unknown NamePolicy kind");
+        };
+    }
+    private Interactions.InvocationSignature invocationSignature(At a) {
+        return switch (a.kind()) {
+            case "external" -> { a.fields("kind", "signature"); yield new Interactions.ExternalSignature(signature(a.child("signature"))); }
+            case "entry" -> { a.fields("kind", "entry"); throw a.unsupported("InvocationSignature.entry"); }
+            default -> throw Json.input(a.path(), "Unknown InvocationSignature kind");
+        };
+    }
+    private Interactions.EffectBound effects(At a) {
+        a.fields("otherwise", "perOutcome"); a.child("perOutcome").empty();
+        var f = a.child("otherwise").fields("reads", "writes", "mustOverwrite");
+        return new Interactions.EffectBound(new Interactions.ForeignEffects(memoryBound(f.child("reads")), memoryBound(f.child("writes")),
+                f.child("mustOverwrite").list(this::operandId)), List.of());
+    }
+    private Scopes.MemoryBound memoryBound(At a) {
+        return switch (a.kind()) {
+            case "none" -> { a.fields("kind"); yield Scopes.NoMemory.INSTANCE; }
+            case "within" -> { a.fields("kind", "scope"); yield new Scopes.WithinMemory(memoryScope(a.child("scope"))); }
+            default -> throw Json.input(a.path(), "Unknown MemoryBound kind");
+        };
+    }
+    private Scopes.MemoryScope memoryScope(At a) {
+        return switch (a.kind()) {
+            case "visible" -> {
+                a.fields("kind", "unit", "includingExternal");
+                yield new Scopes.VisibleMemory(unitId(a.child("unit")), a.child("includingExternal").bool());
+            }
+            case "all" -> {
+                a.fields("kind", "publication", "includingEnvironment");
+                yield new Scopes.AllMemory(publicationId(a.child("publication")), a.child("includingEnvironment").bool());
+            }
+            case "objects", "storage", "union" -> throw a.unsupported("MemoryScope " + a.kind());
+            default -> throw Json.input(a.path(), "Unknown MemoryScope kind");
+        };
+    }
+    private Control.InvocationOutcomes outcomes(At a) {
+        a.fields("known", "remainder");
+        var known = a.child("known").list(this::alternative); var remainder = controlBound(a.child("remainder"));
+        if (known.isEmpty() && remainder instanceof Scopes.NoControl)
+            throw a.invalid("I-60", "AIR 05 §4: empty closed outcomes are not implicit divergence");
+        return new Control.InvocationOutcomes(known, remainder);
+    }
+    private Control.InvocationAlternative alternative(At a) {
+        return switch (a.kind()) {
+            case "normal" -> { a.fields("kind", "label"); yield new Control.Normal(labelId(a.child("label"))); }
+            case "exception" -> {
+                a.fields("kind", "tag", "destination");
+                yield new Control.Exceptional(a.child("tag").modelText(), exceptionDestination(a.child("destination")));
+            }
+            case "any_exception" -> { a.fields("kind", "destination"); yield new Control.AnyException(exceptionDestination(a.child("destination"))); }
+            case "halt" -> { a.fields("kind"); yield Control.HaltAlternative.INSTANCE; }
+            case "diverge" -> { a.fields("kind"); yield Control.Diverge.INSTANCE; }
+            default -> throw Json.input(a.path(), "Unknown InvocationAlternative kind");
+        };
+    }
+    private Control.ExceptionDestination exceptionDestination(At a) {
+        return switch (a.kind()) {
+            case "handler" -> { a.fields("kind", "label"); yield new Control.Handler(labelId(a.child("label"))); }
+            case "propagate" -> { a.fields("kind"); yield Control.Propagate.INSTANCE; }
+            default -> throw Json.input(a.path(), "Unknown ExceptionDestination kind");
+        };
+    }
+    private Scopes.ControlBound controlBound(At a) {
+        return switch (a.kind()) {
+            case "none" -> { a.fields("kind"); yield Scopes.NoControl.INSTANCE; }
+            case "within" -> { a.fields("kind", "scope"); yield new Scopes.WithinControl(controlScope(a.child("scope"))); }
+            default -> throw Json.input(a.path(), "Unknown ControlBound kind");
+        };
+    }
+    private Scopes.ControlScope controlScope(At a) {
+        return switch (a.kind()) {
+            case "unit" -> {
+                a.fields("kind", "unit", "labels", "normalExit", "exceptionalExit", "halt", "diverge", "externalControl");
+                yield new Scopes.UnitControl(unitId(a.child("unit")), a.child("labels").bool(), a.child("normalExit").bool(),
+                        a.child("exceptionalExit").bool(), a.child("halt").bool(), a.child("diverge").bool(), a.child("externalControl").bool());
+            }
+            case "all" -> { a.fields("kind", "publication"); yield new Scopes.AllControl(publicationId(a.child("publication"))); }
+            case "labels", "union" -> throw a.unsupported("ControlScope " + a.kind());
+            default -> throw Json.input(a.path(), "Unknown ControlScope kind");
+        };
+    }
+    private Interactions.ContractKnowledge contract(At a) {
+        return switch (a.kind()) {
+            case "known" -> {
+                a.fields("kind", "reference"); var r = a.child("reference").fields("authority", "version", "evidence");
+                var evidence = r.child("evidence").list(this::originId);
+                if (evidence.isEmpty()) throw r.child("evidence").invalid("AIR-01 §9", "ContractRef requires nonempty evidence origins");
+                yield new Interactions.KnownContract(new Interactions.ContractRef(r.child("authority").modelText(), r.child("version").modelText(), evidence));
+            }
+            case "unknown" -> { a.fields("kind", "uncertainty"); yield new Interactions.UnknownContract(uncertaintyId(a.child("uncertainty"))); }
+            default -> throw Json.input(a.path(), "Unknown ContractKnowledge kind");
+        };
     }
     private Operations.Header header(At a) {
         a.fields("id", "origin", "coverage", "precision", "uncertainties");
@@ -259,7 +382,11 @@ final class BindingReader {
                 a.fields("kind", "header", "value");
                 yield new Expressions.Literal(operandHeader(a.child("header")), literalValue(a.child("value")));
             }
-            case "read", "unknown", "unary", "binary", "quantize", "fit_text", "slice_text", "trim_right" ->
+            case "read" -> {
+                a.fields("kind", "header", "place");
+                yield new Expressions.Read(operandHeader(a.child("header")), place(a.child("place")));
+            }
+            case "unknown", "unary", "binary", "quantize", "fit_text", "slice_text", "trim_right" ->
                     throw a.unsupported("Expression " + a.kind());
             default -> throw Json.input(a.path(), "Unknown Expression kind");
         };

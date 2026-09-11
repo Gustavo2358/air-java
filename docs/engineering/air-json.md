@@ -1,7 +1,7 @@
-# Codec compartilhado AIR JSON — cobertura 1A + 4B
+# Codec compartilhado AIR JSON — cobertura 1A + 4B + CP6 W1B
 
 O módulo `air-json` implementa o subset transitivo do GOBACK descrito por 0B e
-o transporte escalar Object/Cell/Assign text de 4B contra
+o transporte escalar Object/Cell/Assign text de 4B e o subset Invoke W1B contra
 **analysis-ir-json / bindingVersion 1.0.0 / airVersion 2.0.0, DRAFT**, no SHA
 `51b4d9a8ae0364232bd97103cd73a77e1a34996c`. A autoridade é AIR → binding → codec.
 [Baseline e arquivos consultados](../sources/air-json-baseline.json).
@@ -27,7 +27,7 @@ Validator pertencem a `air-model`, artefato Maven `air-java`.
 Ambos os métodos retornam somente após sucesso integral. `decode` valida bytes,
 campos/formas e versões, materializa os fatos exatos e chama `AirValidator`.
 `encode` verifica a versão, mapeia explicitamente os fatos, valida AIR e emite
-bytes canônicos. Nenhum percurso completa lacunas ou executa análise de CFG.
+bytes canônicos. Obrigações semânticas isoladas não bloqueiam transporte e não são satisfeitas por esse sucesso. Consumers que precisem de avaliação executam `AirValidator.validate(restored)`; I-56 é reconstruído dos fatos materializados. Nenhum percurso completa lacunas ou executa análise de CFG.
 Uma Publication com formas ainda não implementadas é rejeitada antes de alegar
 validação completa desse conteúdo. Não há materialização parcial disponível ao caller.
 
@@ -96,7 +96,7 @@ esta implementação aceita; GOBACK é testemunho, não perfil nem restrição n
 | Manifest | required/provided vazios | ambos presentes; conteúdo dá UNSUPPORTED_CAPABILITY |
 | Artifact | id/logicalName/contentDigest nullable | dois artifacts; nomes Unicode/digest vazio em variação |
 | Unit, BodyKnowledge | available; containingUnit nullable | Unit com Entry/Sequence; inventários múltiplos em variação |
-| Entry, Signature | initialLabel nullable; parameters/results known vazios, remainder none | assinatura fechada, origem própria; ausência de label em available é INVALID_IR |
+| Entry, Signature | initialLabel nullable; parameters/results known vazios, remainder none/unknown | assinatura fechada, origem própria; ausência de label em available é INVALID_IR |
 | EntryState | conditions vazio; uncertainties transportadas | vazio no golden |
 | Sequence, OperationHeader, Return | instructions ordenadas de Assign; Return com values vazio | GOBACK vazio byte-identical; Assign seguido de Return |
 | IDs | todas as formas da §4, inclusive OperandId com owner entry/operation | oito domínios exercitados no golden; demais IDs isolados, sem suporte a suas definições |
@@ -108,16 +108,16 @@ esta implementação aceita; GOBACK é testemunho, não perfil nem restrição n
 | ObjectDeclaration | oito campos do binding, displayName nullable, TypeRef e binding preservados | WS-PGM, nomes vazios/espaçados/Unicode/null sem joins textuais |
 | TypeRef, Type | known(text) | Object/Cell; demais formas reconhecidas dão IMPLEMENTATION_LIMIT |
 | Storage, StorageHeader, StorageBinding | Cell, header completo e cell(StorageId) | owner nullable; ACTIVATION requer owner por AIR 03 §2 |
-| OperandHeader, Place, Expression, LiteralValue | occurrence id/role/origin; ObjectPlace; Literal(TextValue) | duas ocorrências pertencentes ao Assign; sem TypeRef duplicado no Place |
-| Assign | header, destination, value | somente ObjectPlace ← Literal(TextValue); sameDomain pelo Validator |
+| OperandHeader, Place, Expression, LiteralValue | occurrence id/role/origin; ObjectPlace; Literal(TextValue) e Read(ObjectPlace) | duas ocorrências pertencentes ao Assign; sem TypeRef duplicado no Place |
+| Assign | header, destination, value | ObjectPlace ← Literal(TextValue) ou Read(ObjectPlace); sameDomain pelo Validator |
 | resources/artifactRelations/premises; visibleObjects/completionPorts | contêineres vazios obrigatórios | omissão/null recusados; conteúdo falha explicitamente |
 
 **Fora da cobertura:** BodyKnowledge.unavailable, origens contractual/unavailable,
 Location.offsets, Elimination com conteúdo, Capability com conteúdo, Parameter /
-ResultSlot / UnknownBound.unknown, TypeRef.unknown_type, tipos além de text,
-literais além de TextValue, expressões além de Literal, Places além de ObjectPlace,
+ResultSlot, TypeRef.unknown_type, tipos além de text,
+literais além de TextValue, expressões além de Literal/Read, Places além de ObjectPlace,
 storage/bindings além de Cell/CellBinding, condições iniciais, recursos/relações,
-premissas, demais operações core, invocações e extensões/envelopes conservadores.
+premissas, demais operações core e extensões/envelopes conservadores. Invoke tem somente o subset descrito abaixo.
 O envelope JSON top-level está implementado; `Envelopes.Envelope` de efeitos/controle
 é outra forma do binding e permanece fora da cobertura. Return não ganha tal envelope.
 
@@ -135,7 +135,7 @@ físico, espécie válida ainda sem implementação não vira INVALID_IR por ess
 | VERSION_MISMATCH | binding ou qualquer versão diferente do envelope exato |
 | INVALID_IR | constraint local AIR ou erro de fechamento/ownership/validação |
 | UNSUPPORTED_CAPABILITY | manifesto com conteúdo ainda não negociado/suportado ou issue do Validator |
-| INCOMPLETE_VALIDATION | check semântico indecidido ou obrigação do Validator; nunca sucesso silencioso |
+| INCOMPLETE_VALIDATION | VALIDATION_LIMIT ou traversal/validação incompleta por causa distinta de SEMANTIC_OBLIGATION; sempre bloqueante |
 | IMPLEMENTATION_LIMIT | forma fora da cobertura ou drift de representabilidade Java identificado |
 | RESOURCE_LIMIT | budget operacional de bytes/depth/Validator ou teto de representação do buffer/contadores |
 
@@ -288,3 +288,54 @@ o contracaso de remoção verifica a exigência. Não há allowlist genérica pa
 Qualquer forma reconhecida fora do subset interrompe em IMPLEMENTATION_LIMIT,
 sem certificação do restante do payload. TextValue e displayName não recebem trim,
 case folding ou normalização Unicode; somente a gramática física vigente se aplica.
+
+## CP6 W1B — perfil de transporte para W1C
+
+**Invoke parcialmente coberto pelo codec**, não suporte integral de invocações.
+O formato continua binding 1.0.0 DRAFT / AIR 2.0.0; model e Validator não mudaram.
+[Evidência, REDs e gates](../quality/cp6-w1b-invoke.md).
+
+| Forma que W1C pode emitir | Campos preservados / restrição |
+| --- | --- |
+| Operations.Invoke | action Text exato, Header completo; é terminador |
+| LiteralTarget | category, namespace, name Unicode inclusive vazio/espaços, namePolicy, origin |
+| ComputedTarget | mesmos campos; Expression Literal(TextValue) ou Read(ObjectPlace) |
+| NamePolicy | ExactName ou UnknownName(UncertaintyId); ExtensionName não coberto |
+| Operand e Place | Header com OperandId/owner/role/origin; ObjectPlace(ObjectId). Read não duplica TypeRef: conhecido text vem do Object/Cell |
+| arguments / results | listas vazias; modos de argumentos e resultados com conteúdo não cobertos |
+| ExternalSignature | Signature com parameters.known e results.known vazios; cada remainder NoRemainder ou UnknownRemainder, origem própria. Closed vazio significa zero aridade; unknown vazio não significa zero aridade |
+| effectOperands | lista ordenada de ObjectPlace; ocorrências identificadas usadas por mustOverwrite |
+| EffectBound | otherwise ForeignEffects; perOutcome vazio. reads/writes NoMemory ou WithinMemory; mustOverwrite OperandId[] preservado |
+| MemoryScope | VisibleMemory(unit, includingExternal) ou AllMemory(publication, includingEnvironment), inclusive flags false quando a Publication as declara |
+| InvocationOutcomes | known ordenado: Normal, Exceptional(tag, destination), AnyException(destination), HaltAlternative, Diverge. Destination Handler(label) ou Propagate |
+| ControlBound | NoControl ou WithinControl(UnitControl/AllControl); UnitControl conserva todas as seis flags. Restante aberto nunca é fechado pelo codec |
+| ContractKnowledge | KnownContract(ContractRef authority/version/evidence OriginId[]) ou UnknownContract(UncertaintyId) |
+| Evidência | Written/Derived origins, IDs completos, uncertainties, cobertura/PARTIAL e precisão já suportados; não substituir origens específicas pela origem da operação |
+
+**Não cobertos:** InternalTarget, EntrySignature, ExtensionName, qualquer Argument,
+results não vazios, Parameter/ResultSlot, efeitos perOutcome, ObjectsMemory,
+StorageMemory, MemoryUnion, LabelsControl, ControlUnion, TrimRight, FitText,
+expressões/places adicionais, origens Contractual/Unavailable e premissas com conteúdo.
+Essas formas continuam `IMPLEMENTATION_LIMIT`; manifestos com conteúdo continuam
+`UNSUPPORTED_CAPABILITY`. Demais limites de 1A/4B permanecem em vigor.
+
+A admissão normal de `new AirJson().encode/decode` mudou para todo transporte AIR:
+`SEMANTIC_OBLIGATION` isolado é não bloqueante. O Validator continua emitindo I-56,
+com o mesmo subject/detail antes e depois do round-trip. Sucesso de transporte,
+validade estrutural e satisfação da obrigação são fatos distintos. Não há wrapper,
+flag, segunda API, negociação de versões, certificação ou ValidationResult no wire.
+`INVALID_IR`, `RESOURCE_LIMIT`, `UNSUPPORTED_CAPABILITY`, `VALIDATION_LIMIT` e traversal
+incompleto continuam bloqueantes, usando categorias/contagens reais, inclusive
+issues omitidos pela retenção. Limite físico ou forma não implementada não é obrigação.
+
+Os mappings novos percorrem listas uma vez, sem resolver targets nem procurar
+Object/Storage por operação. As subárvores recursivas fora do subset continuam
+recusadas. Action/category/namespace/name são dados: nenhum trim, case folding,
+fitting, canonicalização runtime, semântica de linguagem ou análise derivada.
+
+Regressões antigas foram ajustadas apenas onde a coverage mudou: Read com shape
+Literal agora falha por INPUT_ERROR, e UnknownBound.unknown possui oráculos próprios.
+O guard de tokens no bytecode permite estritamente os accessors normativos
+LiteralTarget.name():String e ComputedTarget.name():Expression; Enum.name(), toString()
+e ordinais não fornecem tokens wire. Um challenge compilável protege essa distinção.
+GOBACK e scalar-assign mantêm bytes e hashes originais.

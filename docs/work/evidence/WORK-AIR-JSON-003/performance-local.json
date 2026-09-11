@@ -1,0 +1,14 @@
+{
+  "gate": "performance",
+  "head": "3bafe3978f0f392e842038ad5628e85dfd91d00d",
+  "observed_at": "2026-09-11T15:11:23.226962+00:00",
+  "results": [
+    {
+      "gate": "performance",
+      "status": "UNAVAILABLE",
+      "detail": "Future work; no executor or product claim"
+    }
+  ],
+  "exit_code": 3,
+  "unexecuted": []
+}
