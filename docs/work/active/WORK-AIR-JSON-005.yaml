@@ -1,0 +1,10 @@
+id: WORK-AIR-JSON-005
+title: CP6 — transport existing conservative AIR operations
+status: IN_PROGRESS
+scope:
+  - Encode/decode HavocMust, HavocMay and Opaque using AIR 2.0 and binding 1.0
+  - Transport object/storage memory scopes and label control scopes
+  - Preserve envelopes, operands, reasons and multiplicity without source-language rules
+baseline: 760593b923ca7311f699547c36349f54eb0dac42
+validation: FAST PASS; qualification-local PASS (179 model and 109 transport checks)
+notes: User explicitly authorized this scope extension after the conservative transport RED. No model, validator, AIR or binding changes. Draft review only.

@@ -175,6 +175,8 @@ final class BindingReader {
         String kind = operationFields(a);
         if (!Set.of("assign", "havoc.must", "havoc.may", "nop", "copy_bytes").contains(kind))
             throw a.invalid("I-04", "AIR 01 §3: terminator in instructions");
+        if (kind.equals("havoc.must")) return new Operations.HavocMust(header(a.child("header")), place(a.child("destination")), uncertaintyId(a.child("reason")));
+        if (kind.equals("havoc.may")) return new Operations.HavocMay(header(a.child("header")), memoryScope(a.child("scope")), uncertaintyId(a.child("reason")));
         if (!kind.equals("assign")) throw a.unsupported("Instruction " + kind);
         return new Operations.Assign(header(a.child("header")), place(a.child("destination")), expression(a.child("value")));
     }
@@ -212,6 +214,9 @@ final class BindingReader {
                     List.of(), List.of(), invocationSignature(a.child("signature")), a.child("effectOperands").list(this::place),
                     effects(a.child("effectBound")), outcomes(a.child("outcomes")), contract(a.child("contract")));
         }
+        if (kind.equals("opaque")) return new Operations.Opaque(header(a.child("header")), a.child("observedKind").modelText(),
+            a.child("knownOperands").list(v -> v.kind().equals("object") ? place(v) : expression(v)),
+            a.child("valueResults").list(this::operandId), conservativeEnvelope(a.child("envelope")));
         if (!kind.equals("return")) throw a.unsupported("Operation " + kind);
         a.child("values").empty(); return new Operations.Return(header(a.child("header")), List.of());
     }
@@ -250,6 +255,32 @@ final class BindingReader {
         return new Interactions.EffectBound(new Interactions.ForeignEffects(memoryBound(f.child("reads")), memoryBound(f.child("writes")),
                 f.child("mustOverwrite").list(this::operandId)), List.of());
     }
+    private Envelopes.Envelope conservativeEnvelope(At a) {
+        a.fields("memory", "control", "dependencies");
+        var m = a.child("memory").fields("knownReads", "otherReads", "knownWrites", "otherWrites", "mustOverwrite");
+        var c = a.child("control").fields("known", "remainder");
+        var d = a.child("dependencies").fields("known", "remainder"); d.child("known").empty();
+        return new Envelopes.Envelope(new Envelopes.MemoryEnvelope(m.child("knownReads").list(this::operandId), memoryBound(m.child("otherReads")),
+            m.child("knownWrites").list(this::operandId), memoryBound(m.child("otherWrites")), m.child("mustOverwrite").list(this::operandId)),
+            new Control.ControlEnvelope(c.child("known").list(this::controlAlternative), controlBound(c.child("remainder"))),
+            new Envelopes.DependencyEnvelope(List.of(), dependencyBound(d.child("remainder"))));
+    }
+    private Control.ControlAlternative controlAlternative(At a) {
+        return switch (a.kind()) {
+            case "jump" -> { a.fields("kind", "label"); yield new Control.JumpAlternative(labelId(a.child("label"))); }
+            case "return" -> { a.fields("kind"); yield Control.ReturnAlternative.INSTANCE; }
+            case "continue" -> { a.fields("kind"); yield Control.ContinueAlternative.INSTANCE; }
+            default -> alternative(a);
+        };
+    }
+    private Scopes.DependencyBound dependencyBound(At a) {
+        return switch (a.kind()) {
+            case "none" -> { a.fields("kind"); yield Scopes.NoResources.INSTANCE; }
+            case "any_resource" -> { a.fields("kind"); yield Scopes.AnyResource.INSTANCE; }
+            case "categories" -> { a.fields("kind", "categories"); yield new Scopes.ResourceCategories(a.child("categories").list(At::modelText)); }
+            default -> throw Json.input(a.path(), "Unknown DependencyBound kind");
+        };
+    }
     private Scopes.MemoryBound memoryBound(At a) {
         return switch (a.kind()) {
             case "none" -> { a.fields("kind"); yield Scopes.NoMemory.INSTANCE; }
@@ -267,7 +298,9 @@ final class BindingReader {
                 a.fields("kind", "publication", "includingEnvironment");
                 yield new Scopes.AllMemory(publicationId(a.child("publication")), a.child("includingEnvironment").bool());
             }
-            case "objects", "storage", "union" -> throw a.unsupported("MemoryScope " + a.kind());
+            case "objects" -> { a.fields("kind", "objects"); yield new Scopes.ObjectsMemory(a.child("objects").list(this::objectId)); }
+            case "storage" -> { a.fields("kind", "storage"); yield new Scopes.StorageMemory(a.child("storage").list(this::storageId)); }
+            case "union" -> throw a.unsupported("MemoryScope " + a.kind());
             default -> throw Json.input(a.path(), "Unknown MemoryScope kind");
         };
     }
@@ -313,7 +346,8 @@ final class BindingReader {
                         a.child("exceptionalExit").bool(), a.child("halt").bool(), a.child("diverge").bool(), a.child("externalControl").bool());
             }
             case "all" -> { a.fields("kind", "publication"); yield new Scopes.AllControl(publicationId(a.child("publication"))); }
-            case "labels", "union" -> throw a.unsupported("ControlScope " + a.kind());
+            case "labels" -> { a.fields("kind", "labels"); yield new Scopes.LabelsControl(a.child("labels").list(this::labelId)); }
+            case "union" -> throw a.unsupported("ControlScope " + a.kind());
             default -> throw Json.input(a.path(), "Unknown ControlScope kind");
         };
     }

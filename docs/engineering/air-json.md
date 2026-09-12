@@ -388,3 +388,24 @@ SameDomain e demais expressões continuam recusados.
 
 Sem SP decoder, COBOL, predicate evaluation, lower, CFG, dataflow ou dependências.
 W2B NOT_STARTED / NOT_AUTHORIZED. W2D NOT_STARTED / NOT_AUTHORIZED.
+
+## CP6 — conservative partial regions
+
+WORK-AIR-JSON-005 implements the existing binding forms `havoc.must`, `havoc.may`
+and `opaque`. Objects/Storage memory scopes and Labels control scopes are now
+transported. Opaque preserves known operands/results and the declared memory,
+control and dependency envelopes. This wave uses empty known dependency inventories;
+no/any/category dependency remainders are supported. Scope unions and other forms
+outside the implemented subset remain explicit codec limitations.
+
+The baseline `760593b923ca7311f699547c36349f54eb0dac42` validated these AIR models
+but refused their encoding. The user authorized extending air-java to remove that
+file-boundary blocker. AIR 2.0, binding 1.0, model and validator are unchanged.
+`ConservativeChecks` covers 1, 2, 5 and 40 occurrences, both directions, strict
+fields, known continuation and bounded open control. Existing canonical fixtures
+remain byte-for-byte stable. FAST and local qualification passed; subsequent
+work-record edits do not require repeating qualification.
+
+Multiplicity is a permanent completion criterion for new codec forms. Finite
+occurrence count cannot select rejection. Unsupported forms fail explicitly;
+encoding must never silently omit an operation or replace it with `nop`.
