@@ -9,6 +9,12 @@ import subprocess
 import tempfile
 from capacity_probe import ROOT, compile_sources
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent / 'harness'))
+from lean import require_local
+require_local()
+
 MODEL = 'air-model/src/main/java/io/github/gustavo2358/air/validation/'
 JSON = 'air-json/src/main/java/io/github/gustavo2358/air/json/'
 

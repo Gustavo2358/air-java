@@ -1,5 +1,11 @@
 # air-java
 
+Desenvolvimento: `python3 -B scripts/harness/lean.py fast`.
+Antes de merge tecnicamente importante: `python3 -B scripts/harness/lean.py qualification-local`.
+Abra PR, revisão humana, merge, DONE. [Política lean](docs/engineering/lean-harness.md).
+Remote FAST only; full, performance e mutation são locais sob demanda.
+
+
 Modelo Java imutável e Validator estrutural para **Analysis IR 2.0.0**.
 A autoridade semântica é `Gustavo2358/analysis-ir`, com baseline normativo fixado em
 `122ce54e1b9ef9b00646f93ece409ca8b63bc933` por

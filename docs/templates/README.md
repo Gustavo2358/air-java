@@ -1,9 +1,7 @@
-# Templates de trabalho e handoff
+# Work item mínimo
 
-Copie os cinco arquivos de [work-item](work-item) para active somente após preencher
-ID, autorização recebida, base sincronizada, branch, escopo, invariantes, evals e gates.
-O placeholder não é um item válido; nunca trate o template como aprovação.
+Use [work-item-lean.yaml](work-item-lean.yaml). Apenas id, title, status e scope são necessários.
 
-[Handoff](handoff.md) e [finding](finding.md) ajudam a registrar fatos sem duplicar
-contratos. O template de PR está em [.github](../../.github/pull_request_template.md).
-Documentação durável fica nas famílias canônicas, conforme [lifecycle](../engineering/work-item-protocol.md).
+Demais templates são legados, preservados para leitura de registros antigos.
+Não usar CP certificates, authorization/checkpoint manifests ou receipts para novos trabalhos.
+Veja [a política](../engineering/lean-harness.md).

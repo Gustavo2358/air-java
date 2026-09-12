@@ -10,6 +10,12 @@ import shutil
 import subprocess
 import tempfile
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent / 'harness'))
+from lean import require_local
+require_local()
+
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = 'air-json/src/main/java/io/github/gustavo2358/air/json/'
 
