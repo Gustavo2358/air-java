@@ -2,9 +2,9 @@
 
 | Item | Estado | Escopo |
 | --- | --- | --- |
-| [WORK-AIR-JSON-003](active/WORK-AIR-JSON-003/work-item.json) | ready_for_review | CP6 W1B: Invoke transport and semantic-obligation admission |
+| — | — | Nenhum item ativo; W1B encerrado administrativamente. |
 
-Leia o [state](active/WORK-AIR-JSON-003/state.md).
+W1B: [WORK-AIR-JSON-003](history/WORK-AIR-JSON-003.md), completed (APPROVED / MERGED / CLOSED).
 [Registry](registry.json) e [backlog](backlog.md); roadmap não autoriza etapas.
 
 Histórico: [WORK-AIR-HARNESS-001](history/WORK-AIR-HARNESS-001.md),

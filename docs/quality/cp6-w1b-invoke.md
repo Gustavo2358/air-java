@@ -38,7 +38,7 @@ Transport policy impact: BREAKING for callers relying on semantic obligations ca
 
 ## Evidence
 
-Work lifecycle: [JSON-003](../work/active/WORK-AIR-JSON-003/state.md). Raw receipts are under [evidence](../work/evidence/WORK-AIR-JSON-003/README.md).
+Work lifecycle: [JSON-003](../work/history/WORK-AIR-JSON-003.md). Raw receipts are under [evidence](../work/evidence/WORK-AIR-JSON-003/README.md).
 
 | Stage | Observed evidence |
 | --- | --- |

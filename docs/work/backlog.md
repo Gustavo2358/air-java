@@ -52,4 +52,4 @@ deste backlog ou bloqueio do caminho GOBACK atual.
 
 ## Sincronização pós-CP5
 
-[WORK-AIR-BASELINE-001](history/WORK-AIR-BASELINE-001.md) concluiu somente o pin normativo e proveniência, sem autorizar CP6 naquele checkpoint. W1B tem autorização própria em [WORK-AIR-JSON-003](active/WORK-AIR-JSON-003/work-item.json); as waves seguintes não estão autorizadas.
+[WORK-AIR-BASELINE-001](history/WORK-AIR-BASELINE-001.md) concluiu somente o pin normativo e proveniência, sem autorizar CP6 naquele checkpoint. W1B tem autorização própria em [WORK-AIR-JSON-003](history/WORK-AIR-JSON-003.md); as waves seguintes não estão autorizadas.
