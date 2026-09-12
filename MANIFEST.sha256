@@ -107,7 +107,7 @@ cca61645e2418dfe1c67fd20204c349a5dc015bf0abe2b86187a93ab85ab4e6f  docs/quality/a
 516cf3a6acc00d7339e328c10d87abc614c07cde10f444bb28424a6ccba75e47  docs/quality/cp5-baseline-sync.json
 dd8cbc5771f4397591099ca1a036ad92b44fa29ff95db43eedbc6c4a8666bab9  docs/quality/cp5-baseline-sync.md
 f11660d6abb8a817f66e930979460ec5e05727d3f4e3128449c30247787211c8  docs/quality/cp6-w1b-invoke.md
-670c782d963fcc2d14a7b3dad302c789ee6cb413e0f983f482a103aa5ccf9cc6  docs/quality/cp6-w2c-transport.md
+54f256188e9834aa433c453c5ebc2f39b32fbd20491dd59eb36b62a9df010376  docs/quality/cp6-w2c-transport.md
 59460856b5b6b23808367dfe9cad848ebb552f87ff3906e1a012c862d8eb239c  docs/quality/harness-validation.md
 0f949117412e878dd1ed5efd5b6a9ce7f07d297b53561097ea30303121d06e54  docs/quality/modularization-classfiles.json
 6112bac8d87d56303526cfc44e5e7b487e633e06c0866ae6e7ca4b5c64eb2803  docs/quality/modularization-discovery.md
@@ -129,11 +129,6 @@ d04ba64b96a1346be075a767f65a52988338f09a58acf769509a418d85e6d20b  docs/sources/m
 3d593601c02d620be3dc9af8b1109babfbc84748db939e76bda2a7ff8260548b  docs/templates/work-item/work-item.json.template
 273e08252a86940bb60a246a0fbcfc270d9ff1ea3419cc7068dc7f5315a621bd  docs/validation-evidence.md
 3f45524cb7059520a4e95cf0eab4fdac78a2f0066d9b56a6a42bbfbb1193cb79  docs/work/active/README.md
-bd239290e44932a4159db6cfa2d7841a4c22f287581cbaca618426c2097a915b  docs/work/active/WORK-AIR-JSON-004/eval.md
-71f98745070df1805922859afd92efb65bda0603446faf73803bfec23aa5bb56  docs/work/active/WORK-AIR-JSON-004/plan.md
-7d037d29a72b6e8f71a9d45489a7c08c536850b7e43be8caf02b86907e99df64  docs/work/active/WORK-AIR-JSON-004/spec.md
-03e6b19a45de21e900ee900393b80bd6637af247bf0224f90aec14710669c5a5  docs/work/active/WORK-AIR-JSON-004/state.md
-8704dc8f937fdbffa54a49bd760db2d7e36b4e4cda36cc55b99861a3164002e9  docs/work/active/WORK-AIR-JSON-004/work-item.json
 99ef9c2d071df2d60c0c19113983f4af36699afd234525b013701855aff8dc06  docs/work/backlog.md
 7a8a7b585f521ebff3db64c1f10b40dcdb61fa92ab6ab8eb1df9df16b3bc49a7  docs/work/evidence/WORK-AIR-JSON-003/InvokeChecks.red.java.txt
 fd7f9ee54b77ff6aaf8ed65cc198a90162b3e30f30fc71f12307b9ccd3e8ecaf  docs/work/evidence/WORK-AIR-JSON-003/InvokeOracle.red.java.txt
@@ -314,7 +309,7 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  docs/work/evid
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  docs/work/evidence/WORK-AIR-JSON-003/w1b-challenges-reviewed.logs/suppress-i56/compile-model-tests.log
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  docs/work/evidence/WORK-AIR-JSON-003/w1b-challenges-reviewed.logs/suppress-i56/compile-model.log
 3f01ca3f8c92596e9e72bb2d64daa5cada0dcadcc4c8ca15b9e6819f09ed3463  docs/work/evidence/WORK-AIR-JSON-003/w1b-challenges-reviewed.logs/suppress-i56/test.log
-59388c8f240fd0d0d3c6879f3bd518170ac9875fbb3275b32dd76adb5c461690  docs/work/evidence/WORK-AIR-JSON-004/README.md
+5866206e2696af9728a717e201e1a65f1fdecc8dc0f1c61dfaaf1f161c0f66b6  docs/work/evidence/WORK-AIR-JSON-004/README.md
 2e79614a4894feb6c54385bea3dc2841c45442fc06a98929c6234ce8b549761f  docs/work/evidence/WORK-AIR-JSON-004/W2cBaselineProbe.java.txt
 d665911a366c46b891fce4103cbfd5f2fe34ab79031aa5e1a268140a7d480689  docs/work/evidence/WORK-AIR-JSON-004/W2cChecks.red.java.txt
 a84efc5179d9e9c73b385d444f50caec590970b5a21a38bd1b6570fe6d3193b8  docs/work/evidence/WORK-AIR-JSON-004/W2cOracle.red.java.txt
@@ -451,6 +446,12 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  docs/work/evid
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  docs/work/evidence/WORK-AIR-JSON-004/challenges.logs/writer-rejects-unknown/compile-model-tests.log
 e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  docs/work/evidence/WORK-AIR-JSON-004/challenges.logs/writer-rejects-unknown/compile-model.log
 9c94593bf4638e6952c18aba5b1fd2434fa59f8a0db5e65fff008a6a0747d21e  docs/work/evidence/WORK-AIR-JSON-004/challenges.logs/writer-rejects-unknown/test.log
+dd239bd4aa96887fcab89e3b188365d66c4d12d2c285419e299c0477257cdc8d  docs/work/evidence/WORK-AIR-JSON-004/closeout/README.md
+bf9f00610434ebe937022f3aebeb9d8001ca70067999a7112d7e9f2be23fbefc  docs/work/evidence/WORK-AIR-JSON-004/closeout/post-merge-fast.json
+80d0440cc7d43161a63b9be1218f6f83a96b79791604b1a3be7a18a999188805  docs/work/evidence/WORK-AIR-JSON-004/closeout/pre-merge-check.json
+9c13fcffe35471f5c0f90d02332a360f70d8b3ac3cb653cd7e899a0b4abb42a6  docs/work/evidence/WORK-AIR-JSON-004/closeout/preflight.json
+da676fc89a2a800a9249559321386d3b13ccf1c83b66f13656c76c4e96b4b379  docs/work/evidence/WORK-AIR-JSON-004/closeout/product-merge-receipt.json
+42d85aa71ef722c687e6ff0d8244228d5c1971ef91dc63218cd7998ab3f10d7f  docs/work/evidence/WORK-AIR-JSON-004/closeout/qualified-ci-receipt.json
 29c53ab9da7215779a7a7e2afcd5026d4d762fcc19bf3eb6b6ef44a1a7439a2f  docs/work/evidence/WORK-AIR-JSON-004/comprehensive-first.log
 5b26e836b364bfbd3ef5e7b2c7f3c0f1c4a9e208d10f87a1d74878b45117303a  docs/work/evidence/WORK-AIR-JSON-004/deterministic-processes.json
 ee3a6fe8a98e55e557c54b5ab6dbef7986511659000ecd5d3ede527ff5b01f88  docs/work/evidence/WORK-AIR-JSON-004/fast-handoff.log
@@ -487,10 +488,11 @@ cf14f90f6e963170140af943173aee12fb30fcc11247a29d8669d73e86c10814  docs/work/hist
 539c0b90cc118a0af40536bb2457834c7667cd7cc0093d1ce83de0163b9a5ee3  docs/work/history/WORK-AIR-JSON-001.md
 fd9aafbe8d9e72706f413e5a91499d1726b0929cd1970156560b079f505310b0  docs/work/history/WORK-AIR-JSON-002.md
 0e7687c0976af0648994017abaf571695cdff3cbad877e5db9c6b681183569af  docs/work/history/WORK-AIR-JSON-003.md
+69f6239077ed7010d452e85586872c72c2155b55ffdb842d2c055b7faf972d16  docs/work/history/WORK-AIR-JSON-004.md
 ce0f1934278ddeddeac3a0c9714e1a0522b8032baac7249f131cfa4d5bd21bf5  docs/work/history/WORK-AIR-MODULARIZATION-001.md
 d4408a1cfeaaf4038e5c59197aa88ee3fedf829b1330cd52e8030b9f270bccd8  docs/work/history/WORK-AIR-MODULARIZATION-002.md
-2c53d488c8921c57c599ce11757f778ac188f4f4ee28d3322775822c5e099e09  docs/work/index.md
-136a44be848108637a6d98741ec66d2ced1fdb7c8de69ed94508b2b8ad1be0ba  docs/work/registry.json
+cfcb36cbebcd666104b04bd6ba0a6e299b640aadc2fbda72e66e41cffc856814  docs/work/index.md
+3a85119ba052fb8cbddc5c5ebb828a4fb63d1b218607f2863a7126eba46b257a  docs/work/registry.json
 2b122b27616eaf4f74c84aaa5bed27961c976b843c72340027bbb499237ad1a1  examples/MinimalPublication.java
 353569e5eaefc36a5a852a0f7d77fcb6d867e486057cbba1d17a82db876cf4f5  pom.xml
 aadb5ff0d11b32e91ff5cd4cc3b187af0a26add7042124fd7515b0de30340836  scripts/capacity_probe.py

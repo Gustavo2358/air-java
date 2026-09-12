@@ -2,7 +2,7 @@
 
 | Item | Estado | Escopo |
 | --- | --- | --- |
-| [WORK-AIR-JSON-004](active/WORK-AIR-JSON-004/work-item.json) | ready_for_review | CP6 W2C: Branch/Jump/Unknown BOOL/DisjointStorage transport |
+| [WORK-AIR-JSON-004](history/WORK-AIR-JSON-004.md) | completed | CP6 W2C: Branch/Jump/Unknown BOOL/DisjointStorage transport |
 
 W1B: [WORK-AIR-JSON-003](history/WORK-AIR-JSON-003.md), completed (APPROVED / MERGED / CLOSED).
 [Registry](registry.json) e [backlog](backlog.md); roadmap não autoriza etapas.
@@ -17,4 +17,5 @@ Histórico de capacidade: [WORK-AIR-CAPACITY-001](history/WORK-AIR-CAPACITY-001.
 
 Baseline repin: [WORK-AIR-BASELINE-001](history/WORK-AIR-BASELINE-001.md), completed after PR8 merge.
 
-Leia o [state W2C](active/WORK-AIR-JSON-004/state.md).
+W2C APPROVED / MERGED / CLOSED; [closeout e baseline congelado](history/WORK-AIR-JSON-004.md).
+Nenhum item ativo. W2B NOT_STARTED / NOT_AUTHORIZED. W2D NOT_STARTED / NOT_AUTHORIZED.

@@ -1,6 +1,6 @@
 # W2C raw evidence
 
-[Work item](../../active/WORK-AIR-JSON-004/work-item.json) and [qualification report](../../../quality/cp6-w2c-transport.md).
+[Completed work item](../../history/WORK-AIR-JSON-004.md) and [qualification report](../../../quality/cp6-w2c-transport.md).
 
 - `red-A.log` through `red-E.log`: future-positive failures against unchanged main mappings; original model/wire/test Java sources saved with `.red.java.txt` suffix.
 - `red-typed.log`: independent replay against git-archived main, codes/paths/empty issues; `W2cRedReceipt.java.txt` is the exact probe.
@@ -17,3 +17,5 @@ Build caches, compiled classes/JARs and toolchains are not evidence and are not 
 Final local receipts: `transport.log`, `git.log`, `full-qualified.log`/`.json`, `self-review.json`, and `siblings.json`. The first Maven DNS failure remains in `full-initial-network-failure.json`. Full gate was rerun successfully; subsequent changes are documentation/evidence only.
 
 The original failed Maven log includes trailing spaces emitted by Maven. It is stored losslessly as a UTF-8 JSON string with its original SHA-256 so the repository whitespace gate can check source files without rewriting evidence. Decoding `raw_utf8` reconstructs the exact original bytes; the failure is preserved.
+
+Subsequent authorized [formal closeout](closeout/README.md): PR #10 MERGED, WORK-AIR-JSON-004 completed. Original qualification logs and failed attempts below this directory remain historical and unchanged.

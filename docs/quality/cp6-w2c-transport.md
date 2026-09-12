@@ -1,9 +1,12 @@
 # CP6 W2C — transport qualification
 
-W2C IMPLEMENTED / LOCALLY_QUALIFIED / AWAITING_HUMAN_REVIEW. Remote CI is the final pending qualification at commit time; its receipt is recorded on the Draft PR. Human approval and merge are not claimed.
-WORK-AIR-JSON-004; branch `feat/cp6-w2c-if-air-json`. [State](../work/active/WORK-AIR-JSON-004/state.md),
+Historical pre-push qualification state: W2C IMPLEMENTED / LOCALLY_QUALIFIED / AWAITING_HUMAN_REVIEW. Remote CI is the final pending qualification at commit time; its receipt is recorded on the Draft PR. Human approval and merge are not claimed.
+WORK-AIR-JSON-004; branch `feat/cp6-w2c-if-air-json`. [Completed lifecycle](../work/history/WORK-AIR-JSON-004.md),
 [exact transport profile](../engineering/air-json.md#cp6-w2c--controle-explícito-unknown-e-disjointstorage),
 [raw evidence](../work/evidence/WORK-AIR-JSON-004/README.md).
+
+Current lifecycle: **APPROVED / MERGED / CLOSED** after authorized PR #10 merge.
+[Subsequent closeout receipt](../work/evidence/WORK-AIR-JSON-004/closeout/README.md) preserves the source/product/admin distinction; the qualification below remains historical.
 
 ## Baselines and authority
 
@@ -58,4 +61,4 @@ Self-review scope: mapping authority, closed fields and typed diagnostics, itera
 No remaining codec gap identified for the authorized W2 positive profile. Future W2B must translate SP facts into model occurrences and complete IDs/origins, retain BOOLEAN/PURE/TOTAL authority without evaluating truth, preserve known reads/completeness, materialize source-derived storage members exactly, and emit explicit Branch/Jump destinations. SP decoding and those producer decisions remain outside air-java. W2D consumer work is separate. SameDomain, general expressions, boolean literals and broader scopes are not implicitly authorized.
 
 W2B NOT_STARTED / NOT_AUTHORIZED. W2D NOT_STARTED / NOT_AUTHORIZED.
-Stop at Draft PR for human review. No merge or auto-merge.
+Historical handoff boundary: stop at Draft PR for human review, without merge or auto-merge. The subsequently authorized closeout is recorded separately above.
