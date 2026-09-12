@@ -1,0 +1,7 @@
+Exception in thread "main" io.github.gustavo2358.air.json.AirJsonException: Only Expression.literal/read implemented
+	at io.github.gustavo2358.air.json.Json.limit(Json.java:28)
+	at io.github.gustavo2358.air.json.BindingWriter.expression(BindingWriter.java:193)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at io.github.gustavo2358.air.json.W2cChecks.mapping(W2cChecks.java:52)
+	at io.github.gustavo2358.air.json.W2cChecks.main(W2cChecks.java:67)

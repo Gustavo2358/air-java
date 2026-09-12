@@ -1,0 +1,78 @@
+package io.github.gustavo2358.air.json;
+
+import io.github.gustavo2358.air.model.*;
+import io.github.gustavo2358.air.model.Unit;
+import io.github.gustavo2358.air.model.Ids.*;
+import io.github.gustavo2358.air.validation.*;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import static io.github.gustavo2358.air.json.W2cOracle.*;
+import static io.github.gustavo2358.air.json.InvokeChecks.at;
+import static io.github.gustavo2358.air.json.InvokeChecks.edit;
+import static io.github.gustavo2358.air.json.InvokeChecks.wire;
+
+/** W2C independent model and wire comparisons, runnable by gap before implementation. */
+final class W2cChecks {
+    private W2cChecks() {}
+    static final String TERM = "publication.units.0.sequences.0.terminator";
+    static final String PRED = TERM + ".predicate";
+    static void require(boolean condition, String message) { if (!condition) throw new AssertionError(message); }
+    static void equal(Object expected, Object actual) {
+        if (!expected.equals(actual)) throw new AssertionError("expected=" + expected + " actual=" + actual);
+    }
+    static void bytes(byte[] expected, byte[] actual) { require(Arrays.equals(expected, actual), "canonical bytes differ"); }
+    static ValidationResult valid(Publication p) {
+        var result = AirValidator.validate(p);
+        equal(ValidationResult.Status.STRUCTURALLY_VALID, result.status());
+        require(result.diagnostics().traversalCompleted(), "structural traversal incomplete");
+        return result;
+    }
+    static void roundTrip(Publication p) {
+        var before = valid(p); var codec = new AirJson(); var bytes = codec.encode(p); var restored = codec.decode(bytes);
+        equal(p, restored); bytes(bytes, codec.encode(restored)); equal(before, AirValidator.validate(restored));
+    }
+    static void form(String form) {
+        var p = publication(form); valid(p);
+        var codec = new AirJson(); var expected = wire(W2cWireOracle.document(form));
+        bytes(expected, codec.encode(p)); equal(p, codec.decode(expected)); roundTrip(p);
+    }
+    static void jump() { form("jump"); }
+    static void branch() { form("branch"); }
+    static void bool() { form("bool"); }
+    static void unknown() { form("unknown"); form("unknown-empty"); }
+    static void premise() { form("premise"); }
+    static void complete() { form("full"); }
+    static Json.Value mapping(String name, Class<?> argument, Object value) throws Exception {
+        var method = BindingWriter.class.getDeclaredMethod(name, argument); method.setAccessible(true);
+        try { return (Json.Value) method.invoke(new BindingWriter(), value); }
+        catch (InvocationTargetException e) {
+            if (e.getCause() instanceof RuntimeException failure) throw failure;
+            throw e;
+        }
+    }
+    public static void main(String[] args) throws Exception {
+        if (args.length > 0) {
+            String mode = args[0];
+            if (mode.equals("red-branch-mapping")) {
+                var p = publication("branch"); valid(p);
+                equal(at(W2cWireOracle.document("branch"), TERM), mapping("operation", Terminator.class, p.units().get(0).sequences().get(0).terminator()));
+            } else if (mode.equals("red-unknown-mapping")) {
+                var p = publication("unknown"); valid(p);
+                var value = ((Operations.Assign)p.units().get(0).sequences().get(0).instructions().get(0)).value();
+                equal(at(W2cWireOracle.document("unknown"), "publication.units.0.sequences.0.instructions.0.value"), mapping("expression", Expression.class, value));
+            } else if (mode.equals("export")) {
+                Files.createDirectories(Path.of(args[1]));
+                for (String f : List.of("jump", "branch", "bool", "unknown", "unknown-empty", "premise", "full"))
+                    Files.write(Path.of(args[1], f + ".json"), new AirJson().encode(publication(f)));
+            } else { form(mode); }
+            System.out.println("W2C " + mode + " PASS"); return;
+        }
+        jump(); branch(); bool(); unknown(); premise(); complete();
+        System.out.println("W2C PASS");
+    }
+}

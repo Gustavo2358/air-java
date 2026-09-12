@@ -1,0 +1,7 @@
+Exception in thread "main" io.github.gustavo2358.air.json.AirJsonException: Operation branch not implemented
+	at io.github.gustavo2358.air.json.Json.limit(Json.java:28)
+	at io.github.gustavo2358.air.json.BindingWriter.operation(BindingWriter.java:73)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at io.github.gustavo2358.air.json.W2cChecks.mapping(W2cChecks.java:52)
+	at io.github.gustavo2358.air.json.W2cChecks.main(W2cChecks.java:63)

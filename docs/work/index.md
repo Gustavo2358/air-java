@@ -2,9 +2,9 @@
 
 | Item | Estado | Escopo |
 | --- | --- | --- |
-| [WORK-AIR-JSON-003](active/WORK-AIR-JSON-003/work-item.json) | ready_for_review | CP6 W1B: Invoke transport and semantic-obligation admission |
+| [WORK-AIR-JSON-004](active/WORK-AIR-JSON-004/work-item.json) | ready_for_review | CP6 W2C: Branch/Jump/Unknown BOOL/DisjointStorage transport |
 
-Leia o [state](active/WORK-AIR-JSON-003/state.md).
+W1B: [WORK-AIR-JSON-003](history/WORK-AIR-JSON-003.md), completed (APPROVED / MERGED / CLOSED).
 [Registry](registry.json) e [backlog](backlog.md); roadmap não autoriza etapas.
 
 Histórico: [WORK-AIR-HARNESS-001](history/WORK-AIR-HARNESS-001.md),
@@ -16,3 +16,5 @@ Histórico: [WORK-AIR-HARNESS-001](history/WORK-AIR-HARNESS-001.md),
 Histórico de capacidade: [WORK-AIR-CAPACITY-001](history/WORK-AIR-CAPACITY-001.md), merge confirmado.
 
 Baseline repin: [WORK-AIR-BASELINE-001](history/WORK-AIR-BASELINE-001.md), completed after PR8 merge.
+
+Leia o [state W2C](active/WORK-AIR-JSON-004/state.md).

@@ -96,6 +96,23 @@
     "W1B non-obligation incomplete validation blocks with truncated issues",
     "W1B strict shapes duplicates kinds and local constraints",
     "W1B unimplemented invocation variants remain explicit",
-    "W1B Invoke N and 2N preserve linear structure"
+    "W1B Invoke N and 2N preserve linear structure",
+    "W2C Jump exact round trip",
+    "W2C Branch with independent BOOL Read predicate",
+    "W2C known BOOL TypeRef without new literals",
+    "W2C Unknown BOOL dependencies and empty list round trip",
+    "W2C DisjointStorage premise exact ordered members",
+    "W2C complete diamond independent wire oracle",
+    "W2C I-09 and I-59 remain semantic obligations",
+    "W2C open remaining reads and array order preserved",
+    "W2C Branch and Jump negative closure and placement",
+    "W2C Unknown negative reason type owner role and coverage",
+    "W2C Premise negative identity closure assertion and text",
+    "W2C new binding objects reject missing and extra fields",
+    "W2C existing labels in another Unit remain invalid",
+    "W2C W1 Assign and Invoke composition preserves obligations",
+    "W2C independent cardinality N and 2N work counts",
+    "W2C nested Unknown uses iterative transport frames",
+    "W2C frozen W1 main bytes remain exact"
   ]
 }

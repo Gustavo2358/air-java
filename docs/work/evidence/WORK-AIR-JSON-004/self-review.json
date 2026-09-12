@@ -1,0 +1,22 @@
+{
+  "review_kind": "SELF_REVIEW",
+  "product_sources": [
+    "air-json/src/main/java/io/github/gustavo2358/air/json/BindingReader.java",
+    "air-json/src/main/java/io/github/gustavo2358/air/json/BindingWriter.java"
+  ],
+  "model_validator_api_versions_poms_workflows_goldens_unchanged": true,
+  "challenge_tested_source_and_oracle_hashes_match": true,
+  "reviewed": [
+    "binding pin and exact closed discriminators",
+    "typed ID ownership and unchanged Validator closure",
+    "ordered arrays, explicit TRUE/FALSE and no fallthrough",
+    "Unknown dependencies, bounds and reason without interpretation",
+    "Premise text representability and atomic unsupported assertion failure",
+    "iterative frames, no inventory scans",
+    "I-09/I-59 retained, I-56 composition, blocking categories unchanged",
+    "baseline W1 bytes and two-process determinism",
+    "scope, lifecycle, dependencies and unchanged siblings"
+  ],
+  "human_approval": false,
+  "merge_authorized": false
+}

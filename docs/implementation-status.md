@@ -92,7 +92,7 @@ não alega certificação de todas as dimensões semânticas daquele invariável
    Sem implementação do manifesto, o resultado é unsupported/limit, nunca
    `TYPE_UNKNOWN` ou semântica inventada.
 8. **Transporte.** JSON, schema, reader/writer, filesystem e round-trip ficam em
-   adapters. O módulo air-json implementa somente os subsets 1A + 4B + CP6 W1B declarados na política.
+   adapters. O módulo air-json implementa somente os subsets 1A + 4B + CP6 W1B/W2C declarados na política.
 
 ## Detalhes Java sem autoridade semântica
 
@@ -130,3 +130,14 @@ não significa obrigação satisfeita nem perfil certificado. Todas as outras fa
 de validação e limites continuam bloqueantes. Sem mudança de AIR/binding version,
 semântica de model/Validator, linguagem fonte, lowering, CFG ou análise derivada.
 W1C/W1D/W2 permanecem fora da autorização desta entrega.
+
+
+## CP6 W2C — Branch/Jump/Unknown BOOL/DisjointStorage
+
+Reader e writer transportam Branch e Jump com destinos explícitos, known(bool),
+Unknown com dependências cobertas e remainingReads/reason preservados, e listas de
+Premise(DisjointStorage) em ordem. [Perfil e limites](engineering/air-json.md#cp6-w2c--controle-explícito-unknown-e-disjointstorage)
+e [qualificação](quality/cp6-w2c-transport.md). Sem mudança de model/Validator, normas,
+versões ou dependências. SameDomain, BoolValue e demais formas não cobertas continuam
+limites explícitos. I-09/I-59 continuam obrigações semânticas do produtor.
+W2B NOT_STARTED / NOT_AUTHORIZED. W2D NOT_STARTED / NOT_AUTHORIZED.

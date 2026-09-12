@@ -1,0 +1,8 @@
+W2C NEGATIVE branch/jump cases=12
+W2C NEGATIVE unknown cases=17
+Exception in thread "main" java.lang.AssertionError: expected IMPLEMENTATION_LIMIT rejection
+	at io.github.gustavo2358.air.json.InvokeChecks.failure(InvokeChecks.java:355)
+	at io.github.gustavo2358.air.json.W2cChecks.reject(W2cChecks.java:107)
+	at io.github.gustavo2358.air.json.W2cChecks.premiseNegatives(W2cChecks.java:181)
+	at io.github.gustavo2358.air.json.W2cChecks.focused(W2cChecks.java:395)
+	at io.github.gustavo2358.air.json.W2cChecks.main(W2cChecks.java:386)

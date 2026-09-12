@@ -1,0 +1,13 @@
+W2C NEGATIVE branch/jump cases=12
+W2C NEGATIVE unknown cases=17
+W2C NEGATIVE premise cases=24
+W2C NEGATIVE closed objects cases=94
+W2C SCALE dimension=controls n=256 bytes=1054820 nodes=60420 entities=1316 operations=516 operands=259 domainQueries=0 obligations=258
+W2C SCALE dimension=controls n=512 bytes=2092644 nodes=119812 entities=2596 operations=1028 operands=515 domainQueries=0 obligations=514
+W2C SCALE dimension=dependencies n=256 bytes=180900 nodes=10463 entities=546 operations=4 operands=513 domainQueries=0 obligations=2
+W2C SCALE dimension=dependencies n=512 bytes=344996 nodes=19935 entities=1058 operations=4 operands=1025 domainQueries=0 obligations=2
+W2C SCALE dimension=premises n=256 bytes=136886 nodes=6638 entities=291 operations=4 operands=3 domainQueries=0 obligations=257
+W2C SCALE dimension=premises n=512 bytes=256694 nodes=12270 entities=547 operations=4 operands=3 domainQueries=0 obligations=513
+W2C SCALE dimension=members n=256 bytes=130694 nodes=7420 entities=292 operations=4 operands=3 domainQueries=0 obligations=2
+W2C SCALE dimension=members n=512 bytes=244102 nodes=13820 entities=548 operations=4 operands=3 domainQueries=0 obligations=2
+W2C PASS

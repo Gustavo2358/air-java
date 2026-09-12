@@ -1,0 +1,7 @@
+Exception in thread "main" io.github.gustavo2358.air.json.AirJsonException: Binding form outside implemented 1A/4B coverage
+	at io.github.gustavo2358.air.json.Json.limit(Json.java:28)
+	at io.github.gustavo2358.air.json.BindingWriter.empty(BindingWriter.java:12)
+	at io.github.gustavo2358.air.json.BindingWriter.envelope(BindingWriter.java:24)
+	at io.github.gustavo2358.air.json.AirJson.encode(AirJson.java:39)
+	at io.github.gustavo2358.air.json.W2cChecks.form(W2cChecks.java:42)
+	at io.github.gustavo2358.air.json.W2cChecks.main(W2cChecks.java:72)

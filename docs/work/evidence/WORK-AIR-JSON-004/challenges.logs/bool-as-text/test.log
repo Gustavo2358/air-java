@@ -1,0 +1,7 @@
+Exception in thread "main" java.lang.AssertionError: canonical bytes differ
+	at io.github.gustavo2358.air.json.W2cChecks.require(W2cChecks.java:27)
+	at io.github.gustavo2358.air.json.W2cChecks.bytes(W2cChecks.java:31)
+	at io.github.gustavo2358.air.json.W2cChecks.form(W2cChecks.java:45)
+	at io.github.gustavo2358.air.json.W2cChecks.branch(W2cChecks.java:49)
+	at io.github.gustavo2358.air.json.W2cChecks.focused(W2cChecks.java:394)
+	at io.github.gustavo2358.air.json.W2cChecks.main(W2cChecks.java:386)

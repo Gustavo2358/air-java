@@ -1,0 +1,24 @@
+CHALLENGE swap-branch-arms-writer: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE swap-arms-reader-and-writer-together: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE jump-as-branch: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE drop-predicate: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE bool-as-text: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE drop-known-dependencies: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE close-remaining-reads: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE drop-reason: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE unknown-to-literal: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE drop-premise-writer: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE drop-disjoint-member: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE sort-disjoint-members: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE object-id-as-storage: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE accept-same-domain-reader: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE ignore-unknown-assertion: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE empty-premises-reader: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE writer-loses-branch: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE reader-rejects-branch: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE reader-drops-dependencies: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE writer-rejects-unknown: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE suppress-purity-obligation: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE suppress-disjoint-obligation: DETECTED; compile=0; all_sources_and_oracles_restored=true
+CHALLENGE strengthen-header-coverage: DETECTED; compile=0; all_sources_and_oracles_restored=true
+W2C CHALLENGES PASS; second GREEN; exact restoration

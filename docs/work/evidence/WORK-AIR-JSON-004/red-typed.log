@@ -1,0 +1,5 @@
+RED mode=jump code=IMPLEMENTATION_LIMIT path=$.sequence.terminator issues=[]
+RED mode=red-branch-mapping code=IMPLEMENTATION_LIMIT path=$.sequence.terminator issues=[]
+RED mode=bool code=IMPLEMENTATION_LIMIT path=$.typeRef issues=[]
+RED mode=red-unknown-mapping code=IMPLEMENTATION_LIMIT path=$.expression issues=[]
+RED mode=premise code=IMPLEMENTATION_LIMIT path=$.publication.premises issues=[]

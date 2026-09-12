@@ -1,0 +1,42 @@
+{
+  "baseline": "2a37f5e980ba25fdc79614a66030a84d8bf5b8c9",
+  "production_unchanged": true,
+  "compile_exit": 0,
+  "reds": [
+    {
+      "red": "A",
+      "mode": "jump",
+      "exit": 1,
+      "log": "red-A.log",
+      "sha256": "5b57068fe20e16982444c4d6f52a73d3e44eea34d0604310b9b217ea0f091b5b"
+    },
+    {
+      "red": "B",
+      "mode": "red-branch-mapping",
+      "exit": 1,
+      "log": "red-B.log",
+      "sha256": "0e67f1cf78456a943a2e539ebbdabbe4679537f4e5e1ba3bb4d8899b2c0e3bb5"
+    },
+    {
+      "red": "C",
+      "mode": "bool",
+      "exit": 1,
+      "log": "red-C.log",
+      "sha256": "a47ef72043581f8ce5a7cf007119a0ebb3a313abce40151e690609a51d97352e"
+    },
+    {
+      "red": "D",
+      "mode": "red-unknown-mapping",
+      "exit": 1,
+      "log": "red-D.log",
+      "sha256": "5eebc9a6010d017e06291acc16478560e6b817cd9194ff29330c88acb601b1c2"
+    },
+    {
+      "red": "E",
+      "mode": "premise",
+      "exit": 1,
+      "log": "red-E.log",
+      "sha256": "6b47492479fc5d0bc27efc4de886eeb481ca884103e162c336e7cf0602eab7a9"
+    }
+  ]
+}

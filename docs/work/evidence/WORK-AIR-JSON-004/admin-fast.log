@@ -1,0 +1,94 @@
+RUN: docs
+PASS: docs: knowledge links, 7 invariants, 9 evals and work lifecycle checked offline; 340 Git-visible paths; MANIFEST hashes and coverage verified
+RUN: harness
+PASS: harness: test_empty_or_unparseable_output_fails_closed (test_architecture.BytecodeTests.test_empty_or_unparseable_output_fails_closed) ... ok
+test_foreign_class_is_rejected (test_architecture.BytecodeTests.test_foreign_class_is_rejected) ... ok
+test_inverse_dependency_is_rejected_from_compiled_descriptor (test_architecture.BytecodeTests.test_inverse_dependency_is_rejected_from_compiled_descriptor) ... ok
+test_io_network_reflection_process_and_json_are_rejected (test_architecture.BytecodeTests.test_io_network_reflection_process_and_json_are_rejected) ... ok
+test_json_dependency_is_rejected_even_if_missing_at_inspection (test_architecture.BytecodeTests.test_json_dependency_is_rejected_even_if_missing_at_inspection) ... ok
+test_model_cannot_depend_on_json_module_or_gson (test_architecture.BytecodeTests.test_model_cannot_depend_on_json_module_or_gson) ... ok
+test_nested_model_dependency_on_validation_is_rejected (test_architecture.BytecodeTests.test_nested_model_dependency_on_validation_is_rejected) ... ok
+test_values_records_lambdas_and_validation_to_model_are_allowed (test_architecture.BytecodeTests.test_values_records_lambdas_and_validation_to_model_are_allowed) ... ok
+test_wrong_major_or_preview_is_rejected (test_architecture.BytecodeTests.test_wrong_major_or_preview_is_rejected) ... ok
+test_actual_repository_documentation (test_docs.DocumentationTests.test_actual_repository_documentation) ... ok
+test_blank_authorization_evidence (test_docs.DocumentationTests.test_blank_authorization_evidence) ... ok
+test_broken_link (test_docs.DocumentationTests.test_broken_link) ... ok
+test_completed_cannot_remain_active (test_docs.DocumentationTests.test_completed_cannot_remain_active) ... ok
+test_completed_item_can_be_archived_without_active_directory (test_docs.DocumentationTests.test_completed_item_can_be_archived_without_active_directory) ... ok
+test_discovery_cannot_authorize_new_module_paths (test_docs.DocumentationTests.test_discovery_cannot_authorize_new_module_paths) ... ok
+test_duplicate_catalog_id (test_docs.DocumentationTests.test_duplicate_catalog_id) ... ok
+test_duplicate_json_key (test_docs.DocumentationTests.test_duplicate_json_key) ... ok
+test_harness_cannot_authorize_product (test_docs.DocumentationTests.test_harness_cannot_authorize_product) ... ok
+test_index_must_route_current_work (test_docs.DocumentationTests.test_index_must_route_current_work) ... ok
+test_index_status_cannot_be_stale (test_docs.DocumentationTests.test_index_status_cannot_be_stale) ... ok
+test_missing_anchor (test_docs.DocumentationTests.test_missing_anchor) ... ok
+test_missing_must_read (test_docs.DocumentationTests.test_missing_must_read) ... ok
+test_new_scope_is_allowed_but_absolute_and_parent_paths_are_rejected (test_docs.DocumentationTests.test_new_scope_is_allowed_but_absolute_and_parent_paths_are_rejected) ... ok
+test_orphan_active_directory (test_docs.DocumentationTests.test_orphan_active_directory) ... ok
+test_orphan_history (test_docs.DocumentationTests.test_orphan_history) ... ok
+test_registry_status_must_match (test_docs.DocumentationTests.test_registry_status_must_match) ... ok
+test_same_work_id_cannot_be_active_and_historical (test_docs.DocumentationTests.test_same_work_id_cannot_be_active_and_historical) ... ok
+test_source_lock_requires_immutable_ref (test_docs.DocumentationTests.test_source_lock_requires_immutable_ref) ... ok
+test_symlink_escape (test_docs.DocumentationTests.test_symlink_escape) ... ok
+test_template_is_not_valid_authorization (test_docs.DocumentationTests.test_template_is_not_valid_authorization) ... ok
+test_unavailable_gate_cannot_claim_implementation (test_docs.DocumentationTests.test_unavailable_gate_cannot_claim_implementation) ... ok
+test_unexpected_work_field (test_docs.DocumentationTests.test_unexpected_work_field) ... ok
+test_unknown_invariant_in_eval (test_docs.DocumentationTests.test_unknown_invariant_in_eval) ... ok
+test_unknown_work_gate (test_docs.DocumentationTests.test_unknown_work_gate) ... ok
+test_valid_anchor_and_fenced_example (test_docs.DocumentationTests.test_valid_anchor_and_fenced_example) ... ok
+test_valid_documentation (test_docs.DocumentationTests.test_valid_documentation) ... ok
+test_child_failure_is_not_success (test_execution.ContractOutputTests.test_child_failure_is_not_success) ... ok
+test_empty_expected_inventory_fails (test_execution.ContractOutputTests.test_empty_expected_inventory_fails) ... ok
+test_missing_duplicate_reordered_or_unexecuted_checks_fail (test_execution.ContractOutputTests.test_missing_duplicate_reordered_or_unexecuted_checks_fail) ... ok
+test_reactor_cannot_pass_with_missing_duplicated_or_reordered_modules (test_execution.ContractOutputTests.test_reactor_cannot_pass_with_missing_duplicated_or_reordered_modules) ... ok
+test_real_output_shape (test_execution.ContractOutputTests.test_real_output_shape) ... ok
+test_empty_or_skipped_harness_cannot_pass (test_execution.RunnerTests.test_empty_or_skipped_harness_cannot_pass) ... ok
+test_full_runs_each_required_gate_once (test_execution.RunnerTests.test_full_runs_each_required_gate_once) ... ok
+test_full_stops_and_records_unexecuted_after_failure (test_execution.RunnerTests.test_full_stops_and_records_unexecuted_after_failure) ... ok
+test_future_gates_are_unavailable (test_execution.RunnerTests.test_future_gates_are_unavailable) ... ok
+test_missing_harness_test_file_cannot_pass (test_execution.RunnerTests.test_missing_harness_test_file_cannot_pass) ... ok
+test_missing_tool_reports_error (test_execution.RunnerTests.test_missing_tool_reports_error) ... ok
+test_json_suite_output_must_execute_exactly_once_in_order (test_execution.TransportOutputTests.test_json_suite_output_must_execute_exactly_once_in_order) ... ok
+test_transport_has_an_executor_and_is_available (test_execution.TransportOutputTests.test_transport_has_an_executor_and_is_available) ... ok
+test_ci_authorizes_scope_before_full (test_execution.WorkflowOrderTests.test_ci_authorizes_scope_before_full) ... ok
+test_reversed_missing_or_optional_gate_is_rejected (test_execution.WorkflowOrderTests.test_reversed_missing_or_optional_gate_is_rejected) ... ok
+test_ci_allows_documentary_closure_without_permanent_active_item (test_git.GitScopeTests.test_ci_allows_documentary_closure_without_permanent_active_item) ... ok
+test_ci_closure_cannot_hide_product_or_source_lock_changes (test_git.GitScopeTests.test_ci_closure_cannot_hide_product_or_source_lock_changes) ... ok
+test_ci_event_diff_prevents_moving_base_to_hide_changes (test_git.GitScopeTests.test_ci_event_diff_prevents_moving_base_to_hide_changes) ... ok
+test_ci_missing_work_is_not_blanket_authorization (test_git.GitScopeTests.test_ci_missing_work_is_not_blanket_authorization) ... ok
+test_clean_scope_and_expected_branch (test_git.GitScopeTests.test_clean_scope_and_expected_branch) ... ok
+test_main_and_detached_are_not_work_branches (test_git.GitScopeTests.test_main_and_detached_are_not_work_branches) ... ok
+test_new_origin_main_must_be_integrated_before_local_handoff (test_git.GitScopeTests.test_new_origin_main_must_be_integrated_before_local_handoff) ... ok
+test_product_change_unstaged_staged_and_committed (test_git.GitScopeTests.test_product_change_unstaged_staged_and_committed) ... ok
+test_rename_cannot_hide_protected_source (test_git.GitScopeTests.test_rename_cannot_hide_protected_source) ... ok
+test_similar_directory_name_is_outside_scope (test_git.GitScopeTests.test_similar_directory_name_is_outside_scope) ... ok
+test_untracked_outside_scope (test_git.GitScopeTests.test_untracked_outside_scope) ... ok
+test_hash_coverage_and_generated_paths (test_manifest.ManifestTests.test_hash_coverage_and_generated_paths) ... ok
+test_jar_cannot_contain_stale_classfile (test_modules.CompiledOwnershipTests.test_jar_cannot_contain_stale_classfile) ... ok
+test_json_cannot_contain_model_classes_or_unowned_codec (test_modules.CompiledOwnershipTests.test_json_cannot_contain_model_classes_or_unowned_codec) ... ok
+test_model_output_cannot_be_missing (test_modules.CompiledOwnershipTests.test_model_output_cannot_be_missing) ... ok
+test_relocated_model_class_with_source_owner_is_rejected (test_modules.CompiledOwnershipTests.test_relocated_model_class_with_source_owner_is_rejected) ... ok
+test_unexpected_classfile_inside_known_package_is_rejected (test_modules.CompiledOwnershipTests.test_unexpected_classfile_inside_known_package_is_rejected) ... ok
+test_authorized_json_requires_implementation_suite_policy_modules_and_edge (test_modules.ModuleTests.test_authorized_json_requires_implementation_suite_policy_modules_and_edge) ... ok
+test_inverse_runtime_optional_parent_and_cycle_dependencies (test_modules.ModuleTests.test_inverse_runtime_optional_parent_and_cycle_dependencies) ... ok
+test_json_code_without_ownership_or_suite_policy_is_rejected (test_modules.ModuleTests.test_json_code_without_ownership_or_suite_policy_is_rejected) ... ok
+test_json_implementation_without_suite_policy_or_golden_is_red (test_modules.ModuleTests.test_json_implementation_without_suite_policy_or_golden_is_red) ... ok
+test_json_suite_launch_cannot_be_omitted_or_skipped (test_modules.ModuleTests.test_json_suite_launch_cannot_be_omitted_or_skipped) ... ok
+test_json_without_model_edge_is_not_accepted (test_modules.ModuleTests.test_json_without_model_edge_is_not_accepted) ... ok
+test_missing_module (test_modules.ModuleTests.test_missing_module) ... ok
+test_profile_cannot_hide_runtime_dependency (test_modules.ModuleTests.test_profile_cannot_hide_runtime_dependency) ... ok
+test_suite_missing_duplicated_wrong_cwd_or_assertions_is_rejected (test_modules.ModuleTests.test_suite_missing_duplicated_wrong_cwd_or_assertions_is_rejected) ... ok
+test_third_or_ignored_module (test_modules.ModuleTests.test_third_or_ignored_module) ... ok
+test_unapproved_external_json_dependency_is_red (test_modules.ModuleTests.test_unapproved_external_json_dependency_is_red) ... ok
+test_unowned_source_root_or_root_classfile (test_modules.ModuleTests.test_unowned_source_root_or_root_classfile) ... ok
+test_cli_skip_interpolation_overrides_declaration_in_launcher (test_modules.ResolvedGraphTests.test_cli_skip_interpolation_overrides_declaration_in_launcher) ... ok
+test_cycle_transitive_and_wrong_scope_in_json_graph_are_rejected (test_modules.ResolvedGraphTests.test_cycle_transitive_and_wrong_scope_in_json_graph_are_rejected) ... ok
+test_effective_runtime_dependency_is_rejected_without_bytecode_reference (test_modules.ResolvedGraphTests.test_effective_runtime_dependency_is_rejected_without_bytecode_reference) ... ok
+test_real_directions_and_empty_compile_runtime_graph (test_modules.ResolvedGraphTests.test_real_directions_and_empty_compile_runtime_graph) ... ok
+test_skip_or_wrong_effective_source_path_is_rejected (test_modules.ResolvedGraphTests.test_skip_or_wrong_effective_source_path_is_rejected) ... ok
+test_unused_runtime_optional_and_test_dependencies_are_rejected (test_modules.ResolvedGraphTests.test_unused_runtime_optional_and_test_dependencies_are_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 86 tests in 8.203s
+
+OK

@@ -167,7 +167,7 @@ final class ScalarAssignChecks {
         equal(List.of(), AirValidator.validate(nop).issues());
         failure(IMPLEMENTATION_LIMIT, () -> CODEC.encode(nop));
         failsAt(IMPLEMENTATION_LIMIT, OP, changed(OP, Json.object("kind", "nop", "header", at(OP + ".header"))));
-        for (String kind : List.of("bool", "int", "decimal", "bytes", "opaque_type", "label"))
+        for (String kind : List.of("int", "decimal", "bytes", "opaque_type", "label"))
             failsAt(IMPLEMENTATION_LIMIT, OBJECT_PATH + ".typeRef.type", changed(OBJECT_PATH + ".typeRef.type.kind", Json.value(kind)));
         failsAt(IMPLEMENTATION_LIMIT, OBJECT_PATH + ".typeRef", changed(OBJECT_PATH + ".typeRef", Json.object("kind", "unknown_type", "uncertainty", at("publication.uncertainties.0.id"))));
         for (String kind : List.of("view", "alias", "alternatives", "unknown"))
@@ -176,7 +176,9 @@ final class ScalarAssignChecks {
         for (String kind : List.of("choice", "region_slice")) failsAt(IMPLEMENTATION_LIMIT, DEST, changed(DEST + ".kind", Json.value(kind)));
         // Read is now mapped: the former Literal shape must be rejected for its unexpected value field.
         failsAt(INPUT_ERROR, VALUE + ".value", changed(VALUE + ".kind", Json.value("read")));
-        for (String kind : List.of("unknown", "unary", "binary", "quantize", "fit_text", "slice_text", "trim_right"))
+        // Unknown now has a closed shape: the old Literal value field is invalid.
+        failsAt(INPUT_ERROR, VALUE + ".value", changed(VALUE + ".kind", Json.value("unknown")));
+        for (String kind : List.of("unary", "binary", "quantize", "fit_text", "slice_text", "trim_right"))
             failsAt(IMPLEMENTATION_LIMIT, VALUE, changed(VALUE + ".kind", Json.value(kind)));
         for (String kind : List.of("bool", "int", "decimal", "bytes", "label"))
             failsAt(IMPLEMENTATION_LIMIT, VALUE + ".value", changed(VALUE + ".value.kind", Json.value(kind)));

@@ -1,0 +1,13 @@
+package io.github.gustavo2358.air.json;
+public final class W2cRedReceipt {
+    private W2cRedReceipt() {}
+    public static void main(String[] args) throws Exception {
+        for (String mode : new String[]{"jump", "red-branch-mapping", "bool", "red-unknown-mapping", "premise"}) {
+            try { W2cChecks.main(new String[]{mode}); throw new AssertionError("Expected RED " + mode); }
+            catch (AirJsonException e) {
+                if (e.code() != AirJsonException.Code.IMPLEMENTATION_LIMIT || !e.issues().isEmpty()) throw new AssertionError("Wrong gap classification", e);
+                System.out.println("RED mode=" + mode + " code=" + e.code() + " path=" + e.path() + " issues=" + e.issues());
+            }
+        }
+    }
+}

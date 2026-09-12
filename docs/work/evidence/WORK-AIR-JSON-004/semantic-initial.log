@@ -1,0 +1,2 @@
+RUN: semantic
+PASS: semantic: 179 model + 107 transport deterministic checks executed via scripts/check.sh

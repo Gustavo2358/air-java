@@ -5,6 +5,7 @@ import io.github.gustavo2358.air.model.Unit;
 import io.github.gustavo2358.air.model.Ids.*;
 import io.github.gustavo2358.air.validation.ValidationIssue;
 import java.math.BigInteger;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -84,12 +85,29 @@ final class BindingReader {
         var p = e.child("publication").fields("id", "capabilities", "artifacts", "units", "storage", "resources",
                 "artifactRelations", "origins", "coverage", "uncertainties", "premises");
         var manifest = manifest(p.child("capabilities"));
-        var storage = p.child("storage").list(this::storage); p.child("resources").empty(); p.child("artifactRelations").empty(); p.child("premises").empty();
+        var storage = p.child("storage").list(this::storage); p.child("resources").empty(); p.child("artifactRelations").empty();
+        var premises = p.child("premises").list(this::premise);
         var id = publicationId(p.child("id")); var artifacts = p.child("artifacts").list(this::artifact);
         var units = p.child("units").list(this::unit); var origins = p.child("origins").list(this::origin);
         var coverage = coverage(p.child("coverage")); var gaps = p.child("uncertainties").list(this::uncertainty);
         return new Publication(id, SemanticVersion.AIR_2_0_0, manifest, artifacts, units,
-                storage, List.of(), List.of(), origins, coverage, gaps, List.of());
+                storage, List.of(), List.of(), origins, coverage, gaps, premises);
+    }
+    private Proofs.Premise premise(At a) {
+        a.fields("id", "authority", "justification", "origin", "assertion");
+        var assertion = a.child("assertion");
+        var content = switch (assertion.kind()) {
+            case "disjoint_storage" -> {
+                assertion.fields("kind", "storage");
+                yield new Proofs.DisjointStorage(assertion.child("storage").list(this::storageId));
+            }
+            case "same_domain" -> {
+                assertion.fields("kind", "left", "right", "scope"); throw assertion.unsupported("Assertion.same_domain");
+            }
+            default -> throw Json.input(assertion.path(), "Unknown Assertion kind");
+        };
+        return new Proofs.Premise(typedId(a.child("id"), PremiseId.class), a.child("authority").modelText(),
+                a.child("justification").modelText(), originId(a.child("origin")), content);
     }
     private void version(At at, String expected) {
         String actual = at.text();
@@ -185,6 +203,9 @@ final class BindingReader {
         String kind = operationFields(a);
         if (Set.of("assign", "havoc.must", "havoc.may", "nop", "copy_bytes").contains(kind))
             throw a.invalid("I-04", "AIR 01 §3: ordinary operation as terminator");
+        if (kind.equals("jump")) return new Operations.Jump(header(a.child("header")), labelId(a.child("destination")));
+        if (kind.equals("branch")) return new Operations.Branch(header(a.child("header")), expression(a.child("predicate")),
+                labelId(a.child("trueDestination")), labelId(a.child("falseDestination")));
         if (kind.equals("invoke")) {
             a.child("arguments").empty(); a.child("results").empty();
             return new Operations.Invoke(header(a.child("header")), a.child("action").modelText(), target(a.child("target")),
@@ -324,11 +345,11 @@ final class BindingReader {
             case "known" -> {
                 a.fields("kind", "type"); var type = a.child("type");
                 switch (type.kind()) {
-                    case "text" -> type.fields("kind");
-                    case "bool", "int", "decimal", "bytes", "opaque_type", "label" -> throw type.unsupported("Type " + type.kind());
+                    case "text", "bool" -> type.fields("kind");
+                    case "int", "decimal", "bytes", "opaque_type", "label" -> throw type.unsupported("Type " + type.kind());
                     default -> throw Json.input(type.path(), "Unknown Type kind");
                 }
-                yield Types.known(Types.Builtin.TEXT);
+                yield Types.known(type.kind().equals("bool") ? Types.Builtin.BOOL : Types.Builtin.TEXT);
             }
             case "unknown_type" -> throw a.unsupported("TypeRef.unknown_type");
             default -> throw Json.input(a.path(), "Unknown TypeRef kind");
@@ -376,20 +397,45 @@ final class BindingReader {
             default -> throw Json.input(a.path(), "Unknown Place kind");
         };
     }
-    private Expression expression(At a) {
-        return switch (a.kind()) {
-            case "literal" -> {
-                a.fields("kind", "header", "value");
-                yield new Expressions.Literal(operandHeader(a.child("header")), literalValue(a.child("value")));
+    private static final class ExpressionFrame {
+        final At at;
+        final List<At> dependencies;
+        final List<Expression> values = new ArrayList<>();
+        int next;
+        ExpressionFrame(At at) {
+            this.at = at;
+            dependencies = at.kind().equals("unknown")
+                    ? at.fields("kind", "header", "typeRef", "dependencies", "remainingReads", "reason").child("dependencies").elements()
+                    : List.of();
+        }
+    }
+    private Expression expression(At root) {
+        var stack = new ArrayDeque<ExpressionFrame>(); stack.push(new ExpressionFrame(root));
+        while (!stack.isEmpty()) {
+            var frame = stack.peek(); var a = frame.at;
+            if (frame.next < frame.dependencies.size()) {
+                stack.push(new ExpressionFrame(frame.dependencies.get(frame.next++))); continue;
             }
-            case "read" -> {
-                a.fields("kind", "header", "place");
-                yield new Expressions.Read(operandHeader(a.child("header")), place(a.child("place")));
-            }
-            case "unknown", "unary", "binary", "quantize", "fit_text", "slice_text", "trim_right" ->
-                    throw a.unsupported("Expression " + a.kind());
-            default -> throw Json.input(a.path(), "Unknown Expression kind");
-        };
+            Expression result = switch (a.kind()) {
+                case "literal" -> {
+                    a.fields("kind", "header", "value");
+                    yield new Expressions.Literal(operandHeader(a.child("header")), literalValue(a.child("value")));
+                }
+                case "read" -> {
+                    a.fields("kind", "header", "place");
+                    yield new Expressions.Read(operandHeader(a.child("header")), place(a.child("place")));
+                }
+                case "unknown" -> new Expressions.Unknown(operandHeader(a.child("header")), typeRef(a.child("typeRef")),
+                        frame.values, memoryBound(a.child("remainingReads")), uncertaintyId(a.child("reason")));
+                case "unary", "binary", "quantize", "fit_text", "slice_text", "trim_right" ->
+                        throw a.unsupported("Expression " + a.kind());
+                default -> throw Json.input(a.path(), "Unknown Expression kind");
+            };
+            stack.pop();
+            if (stack.isEmpty()) return result;
+            stack.peek().values.add(result);
+        }
+        throw new IllegalStateException("Expression frame invariant");
     }
     private Values.LiteralValue literalValue(At a) {
         return switch (a.kind()) {

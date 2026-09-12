@@ -1,0 +1,2 @@
+RUN: architecture
+PASS: architecture: 325 model + 21 JSON Java 21 classfiles; 5001 model + 616 JSON dependencies; boundaries preserved
