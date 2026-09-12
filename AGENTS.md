@@ -1,5 +1,20 @@
 # AGENTS.md
 
+## Política de engenharia vigente
+
+[LEAN HARNESS / GIT-IS-THE-RECORD](docs/engineering/lean-harness.md) governa o trabalho.
+Git, commits, Pull Requests, testes e merge são a fonte de verdade do desenvolvimento.
+Remote FAST only; full local/on-demand. Receipts e certificados CP não são requisitos.
+História é READ_ONLY / BEST_EFFORT; registry/index servem à navegação.
+Work items novos usam id/title/status/scope, com TODO/IN_PROGRESS/BLOCKED/DONE.
+PR merged + required technical tests passed = DONE. Pins cross-repo permanecem estritos.
+Mudanças semânticas importantes exigem revisão humana; metadata não exige cerimônia.
+Execute `python3 -B scripts/harness/lean.py fast`; full local quando tecnicamente
+necessário: `python3 -B scripts/harness/lean.py qualification-local`.
+Preserve branches dedicadas, escopo, mudanças alheias e isolamento entre repositórios.
+Não faça merge/auto-merge sem autorização.
+
+
 ## Missão e autoridade
 
 Biblioteca Java compartilhada do modelo imutável e Validator estrutural AIR.
@@ -9,10 +24,8 @@ só a verdade do produtor ou um perfil de conformidade.
 
 ## Comece pelo índice
 
-Leia [trabalho atual](docs/work/index.md), manifesto e `state.md` do item autorizado.
-Carregue seu `must_read` e amplie por dependência concreta. O [índice geral](docs/index.md)
-é mapa, não leitura integral obrigatória. História e evidências antigas não são
-contexto padrão nem instruções atuais.
+[Trabalho atual](docs/work/index.md) e [índice geral](docs/index.md) são navegação.
+Carregue contexto por dependência concreta. História não é instrução atual.
 
 | Decisão | Contexto mínimo |
 | --- | --- |
@@ -43,8 +56,7 @@ contexto padrão nem instruções atuais.
   Nunca promova `INCOMPLETE_VALIDATION` a validade para acomodar um caller.
 - Capacidade limita formas, não cardinalidade. Indexe joins; evite varrer inventário
   ou todas as premissas novamente para cada operação.
-- Regra → classes → oracle independente → RED → implementação → GREEN → challenge
-  → segundo GREEN. Testes negativos falham pela regra identificável; expected não
+- Regra → classes → oracle independente → RED → implementação → GREEN; challenge local sob demanda. Testes negativos falham pela regra identificável; expected não
   deriva do Validator sob teste. Preserve falsificações como regressão.
 - Backlog e roadmap descrevem futuro; não autorizam implementação. A autorização
   da sessão governa o trabalho; registre-a sem inventar aprovações intermediárias.
@@ -53,13 +65,9 @@ contexto padrão nem instruções atuais.
 
 ## Verificação e handoff
 
-Entrypoint: `python3 -B scripts/harness/run.py <gate>`.
-Use `fast` durante edição documental; `architecture` e `semantic` para núcleo;
-`full` no handoff (inclui o `mvn clean verify`). `git --work <ID>` verifica branch,
-base e escopo. Os comandos existentes `./scripts/check.sh` e `mvn verify` continuam
-válidos. Reporte somente comandos realmente executados e seus limites.
+Execute `python3 -B scripts/harness/lean.py fast`: compile offline, contratos de
+modelo/codec e fronteiras de módulos. Full local quando tecnicamente necessário:
+`python3 -B scripts/harness/lean.py qualification-local`.
 
-Atualize `state.md` quando houver mudança material. Antes de commit/push, revise
-staged diff, dependências, escopo, lifecycle e Git. No handoff informe commit/PR,
-gates executados e não executados, limitações e próximo passo não iniciado.
-Pare no PR para revisão humana quando esse for o limite autorizado.
+Reporte diff, commit/PR, testes executados e resultados, limites e próximo passo.
+Pare no PR para revisão humana. Não há gate de histórico, manifesto ou receipt.

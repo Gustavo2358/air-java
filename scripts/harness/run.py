@@ -13,37 +13,25 @@ sys.dont_write_bytecode = True
 
 import architecture
 import contracts
-import docs
-import git_checks
-import manifest
 from common import ROOT, Failure, git, read_json, require, run
 from pathlib import Path
 
 UNAVAILABLE = {"integration", "performance"}
-GROUPS = {"fast": ["docs", "harness"],
-          "full": ["docs", "harness", "architecture", "semantic", "maven"]}
 
 
 def execute(name, root, work):
     if name == "docs":
-        return docs.check(root) + "; " + manifest.check(root)
+        from lean import check
+        check(root)
+        return 'PASS lean policy'
     if name == "architecture":
         return architecture.check(root)
     if name == "transport":
         return architecture.transport(root)
     if name in {"semantic", "maven"}:
         return contracts.check(root, maven=name == "maven")
-    if name in {"git", "scope"}:
-        return git_checks.check(root, work, scope_only=name == "scope")
-    if name == "ci-scope":
-        require(os.environ.get("GITHUB_EVENT_PATH"), "ci-scope requires GitHub event metadata")
-        event = read_json(Path(os.environ["GITHUB_EVENT_PATH"]))
-        base = event.get("pull_request", {}).get("base", {}).get("sha") or event.get("before")
-        if base == "0" * 40:
-            base = git(root, "rev-parse", "origin/main")
-        return git_checks.check_ci(root, base)
     if name == "harness":
-        for file in ("test_docs.py", "test_architecture.py", "test_modules.py", "test_manifest.py", "test_execution.py", "test_git.py"):
+        for file in ("test_architecture.py", "test_modules.py", "test_execution.py"):
             require((root / "scripts/harness/tests" / file).is_file(), f"Missing harness suite: {file}")
         output = run([sys.executable, "-B", "-m", "unittest", "discover", "-s",
                       "scripts/harness/tests", "-v"], root).strip()
@@ -55,39 +43,26 @@ def execute(name, root, work):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("gate", choices=sorted(docs.GATES))
-    parser.add_argument("--work", help="Active work item for git/scope; no inferred authorization")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('gate', choices=['fast','docs','harness','architecture','semantic','transport','full','qualification-local','maven'])
     args = parser.parse_args()
-    if args.gate in {"git", "scope"} and not args.work:
-        parser.error("git/scope require --work")
-    report = {"gate": args.gate, "head": git(ROOT, "rev-parse", "HEAD"),
-              "observed_at": datetime.now(timezone.utc).isoformat(), "results": []}
-    code = 0
-    for name in GROUPS.get(args.gate, [args.gate]):
-        print(f"RUN: {name}", flush=True)
-        try:
-            if name in UNAVAILABLE:
-                status, detail, code = "UNAVAILABLE", "Future work; no executor or product claim", 3
-            else:
-                detail = execute(name, ROOT, args.work)
-                status = "PASS"
-        except Failure as error:
-            status, detail, code = "FAIL", str(error), 1
-        except (OSError, ValueError, KeyError, TypeError) as error:
-            status, detail, code = "ERROR", str(error), 2
-        print(f"{status}: {name}: {detail}", flush=True)
-        report["results"].append({"gate": name, "status": status, "detail": detail})
-        if code:
-            break
-    report["exit_code"] = code
-    report["unexecuted"] = [name for name in GROUPS.get(args.gate, [args.gate])
-                            if name not in {entry["gate"] for entry in report["results"]}]
-    output = ROOT / "target/harness"
-    output.mkdir(parents=True, exist_ok=True)
-    (output / f"{args.gate}.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
-    return code
+    from lean import execute as lean_execute, require_local
+    from lean_project import full_local
+    try:
+        if args.gate in ('fast', 'docs'):
+            lean_execute('CODE_CHANGE' if args.gate == 'fast' else 'DOCS_ONLY', ROOT)
+        elif args.gate in ('full','qualification-local'):
+            require_local()
+            full_local(ROOT)
+        else:
+            if args.gate == 'maven':
+                require_local()
+            print(execute(args.gate, ROOT, None))
+        print('PASS')
+        return 0
+    except (Failure, RuntimeError, OSError) as error:
+        print('FAIL: ' + str(error), file=sys.stderr)
+        return 1
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     sys.exit(main())

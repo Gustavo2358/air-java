@@ -5,3 +5,9 @@ target/
 # Temporary delivery document: promote to analysis-ir/bindings/json-v1.md.
 /handoff/
 __pycache__/
+
+.harness-results/
+
+**/__pycache__/
+
+*.pyc

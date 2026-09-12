@@ -1,12 +1,18 @@
-name: Java contract checks
-on: [push, pull_request]
+name: Fast CI
+"on":
+  push:
+  pull_request:
 permissions:
   contents: read
 jobs:
   contracts:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -14,7 +20,5 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Compile contract checks and inspect bytecode dependencies
-        run: ./scripts/check.sh
-      - name: Maven lifecycle
-        run: mvn --batch-mode --no-transfer-progress verify
+      - run: python3 -m pip install PyYAML==6.0.3
+      - run: python3 -B scripts/harness/lean.py ci
