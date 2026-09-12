@@ -1,0 +1,2 @@
+RUN: docs
+FAIL: docs: Broken/escaping link in docs/quality/cp6-w1b-invoke.md: ../work/active/WORK-AIR-JSON-003/state.md

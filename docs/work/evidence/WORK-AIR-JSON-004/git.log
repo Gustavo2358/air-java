@@ -1,0 +1,2 @@
+RUN: git
+PASS: git: 187 changed paths inside WORK-AIR-JSON-004; base 2a37f5e980ba25fdc79614a66030a84d8bf5b8c9; no remote claim

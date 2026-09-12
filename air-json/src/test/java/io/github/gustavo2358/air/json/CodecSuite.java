@@ -362,6 +362,23 @@ public final class CodecSuite {
         check("W1B strict shapes duplicates kinds and local constraints", InvokeChecks::physical);
         check("W1B unimplemented invocation variants remain explicit", InvokeChecks::unsupported);
         check("W1B Invoke N and 2N preserve linear structure", InvokeChecks::scale);
+        check("W2C Jump exact round trip", W2cChecks::jump);
+        check("W2C Branch with independent BOOL Read predicate", W2cChecks::branch);
+        check("W2C known BOOL TypeRef without new literals", W2cChecks::bool);
+        check("W2C Unknown BOOL dependencies and empty list round trip", W2cChecks::unknown);
+        check("W2C DisjointStorage premise exact ordered members", W2cChecks::premise);
+        check("W2C complete diamond independent wire oracle", W2cChecks::wireOracle);
+        check("W2C I-09 and I-59 remain semantic obligations", W2cChecks::obligations);
+        check("W2C open remaining reads and array order preserved", W2cChecks::openReadsAndOrder);
+        check("W2C Branch and Jump negative closure and placement", W2cChecks::branchNegatives);
+        check("W2C Unknown negative reason type owner role and coverage", W2cChecks::unknownNegatives);
+        check("W2C Premise negative identity closure assertion and text", W2cChecks::premiseNegatives);
+        check("W2C new binding objects reject missing and extra fields", W2cChecks::closedShapes);
+        check("W2C existing labels in another Unit remain invalid", W2cChecks::foreignUnit);
+        check("W2C W1 Assign and Invoke composition preserves obligations", W2cChecks::composition);
+        check("W2C independent cardinality N and 2N work counts", W2cChecks::scale);
+        check("W2C nested Unknown uses iterative transport frames", W2cChecks::nestedUnknown);
+        check("W2C frozen W1 main bytes remain exact", W2cChecks::frozenW1);
         System.out.println("PASS: " + checks + " deterministic transport checks");
     }
     private static void check(String name, Runnable body) {
@@ -624,7 +641,7 @@ public final class CodecSuite {
         fails(IMPLEMENTATION_LIMIT,changed("publication.origins.0",Json.object("kind","contractual","id",at("publication.origins.0.id"),"authority","test","version","1")));
         // W1B maps UnknownBound.unknown; its independent preservation and limit tests live in InvokeChecks.
         // Nonempty containers never become empty successful Publications, regardless of deferred element form.
-        for(String path:List.of("publication.resources","publication.artifactRelations","publication.premises",
+        for(String path:List.of("publication.resources","publication.artifactRelations",
                 "publication.units.0.visibleObjects","publication.units.0.completionPorts",
                 "publication.units.0.entries.0.state.conditions","publication.units.0.entries.0.signature.parameters.known",
                 "publication.units.0.sequences.0.terminator.values"))

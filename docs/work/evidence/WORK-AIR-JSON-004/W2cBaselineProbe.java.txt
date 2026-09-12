@@ -1,0 +1,18 @@
+package io.github.gustavo2358.air.json;
+import java.nio.file.*;
+import java.util.List;
+public final class W2cBaselineProbe {
+    private W2cBaselineProbe() {}
+    public static void main(String[] args) throws Exception {
+        var codec = new AirJson(); var out = Path.of(args[0]); Files.createDirectories(out);
+        for (boolean c : List.of(false, true)) for (boolean k : List.of(false, true))
+            Files.write(out.resolve("invoke-" + c + "-" + k + ".json"), codec.encode(InvokeOracle.publication(c, k)));
+        Files.write(out.resolve("goback.json"), codec.encode(GobackOracle.publication()));
+        Files.write(out.resolve("scalar.json"), codec.encode(ScalarAssignOracle.publication()));
+        for (int i = 1; i < args.length; i++) {
+            var path = Path.of(args[i]); var original = Files.readAllBytes(path);
+            if (!java.util.Arrays.equals(original, codec.encode(codec.decode(original)))) throw new AssertionError("Frozen wire differs " + path);
+            System.out.println("FROZEN BYTE-EXACT " + path);
+        }
+    }
+}

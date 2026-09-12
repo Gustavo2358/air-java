@@ -1,0 +1,13 @@
+{
+  "java_processes": 2,
+  "equal": true,
+  "sha256": {
+    "bool.json": "186b6463a43d6a1f332a09d014a3fb046e2832b4ad9e2f1da9a8ba2b24d722d5",
+    "branch.json": "5c280d9ae6cfdce6464315f3086fe281a182677acbc3d3bce14aff0fd03e6eb6",
+    "full.json": "bea3a7e656e66617a446762e6faa60b52514af77f5f157ed6ce75cff99334996",
+    "jump.json": "4c9d7a955661a84756f6cd4600f51ffa2a866f448fdc756f91f9a4a82d3b0c87",
+    "premise.json": "f1e8ceb95d83a414c3596e0ba2f3e5422d8e35e9705dbfc3610e1b8be937ec73",
+    "unknown-empty.json": "d9d9c6f04d64ce521bf0f3892e5e93adfa636337cc1f1c6882679c03880cad66",
+    "unknown.json": "7629b3b3bea73d7b9085a49c4e740caadcf3cefed9769d5ab144832eb67614b6"
+  }
+}

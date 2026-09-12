@@ -1,5 +1,10 @@
 {
-  "active": [],
+  "active": [
+    {
+      "id": "WORK-AIR-JSON-004",
+      "status": "ready_for_review"
+    }
+  ],
   "history": [
     {
       "id": "WORK-AIR-HARNESS-001",

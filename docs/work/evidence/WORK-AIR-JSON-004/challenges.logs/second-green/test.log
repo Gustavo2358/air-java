@@ -1,0 +1,5 @@
+W2C NEGATIVE branch/jump cases=12
+W2C NEGATIVE unknown cases=17
+W2C NEGATIVE premise cases=24
+W2C NEGATIVE closed objects cases=94
+W2C challenge PASS

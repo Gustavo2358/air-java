@@ -1,0 +1,11 @@
+# Spec
+
+Scope: air-json transport only. AIR 2.0.0 / binding 1.0.0 DRAFT; analysis-ir pin `51b4d9a8ae0364232bd97103cd73a77e1a34996c`. Authority AIR → binding → existing model/Validator → codec. Binding §§5–7/10 defines jump(destination), branch(predicate,trueDestination,falseDestination), unknown(typeRef,dependencies,remainingReads,reason), known(type.kind=bool), Premise and disjoint_storage(storage[]). AIR 01 §§3–4, 02 §§3–4, 03 §3.1, 04 control, 06 §5.1; I-02/I-04/I-08/I-09/I-11/I-58/I-59 and O-02/09/10/29/30-STRUCT govern closure and preserved facts.
+
+Positive input is a model-level Publication: FLAG and WS-PGM text Objects/Cells, source-declared premise, Lif Branch with PREDICATE Unknown BOOL, known Read(ObjectPlace FLAG), no remaining reads, full reason; two Jumps to Lmerge Return. Predicate Read BOOL isolates Branch; BOOL Cell isolates TypeRef; Unknown can be isolated in a BOOL Assign. WithinMemory visible/all reuses W1 coverage without closing open reads. Ordered recursive dependencies admit only literal(text), read(object), unknown with known text/bool; other expression/type/assertion forms remain IMPLEMENTATION_LIMIT. Iterative transport traversal preserves finite nested Unknown without JVM recursion. Scope is forms, not cardinality.
+
+Premise authority/justification use audited Require.text representability policy (blank wire Text → IMPLEMENTATION_LIMIT, physical nonstring → INPUT_ERROR); no invented invalidity rule. Structural closure/owners/types go through unchanged Validator. SEMANTIC_OBLIGATION I-09/I-59 (and I-56 in composition) remains visible and nonblocking solely for transport. No evidence claims its discharge.
+
+No normative AIR change. No model semantic change expected. No lower, CFG, COBOL, SP decoder, predicate evaluation, dataflow, dependency resolver, SameDomain, BoolValue literal, general expression algebra, version/dependency/API change. Stop if model/Validator changes become necessary. W2B NOT_STARTED / NOT_AUTHORIZED. W2D NOT_STARTED / NOT_AUTHORIZED.
+
+W2A read-only context: proleap-poc PR35 product merge `4ffabded1aad39316b8a6f337f732976fdb3ca3e`, product tree `5880e174b33c85ba3f3cdbc70bd2d8dc7b1d567b`, SP 1.4.0. BOOLEAN/PURE/TOTAL, truth UNKNOWN, complete whole-item reads, IF completion, source-derived IndependentStorageSet are future W2B inputs, never codec inputs or normative JSON authority.

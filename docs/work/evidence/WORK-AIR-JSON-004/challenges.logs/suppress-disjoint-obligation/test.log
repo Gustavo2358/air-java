@@ -1,0 +1,5 @@
+Exception in thread "main" java.lang.AssertionError: expected=1 actual=0
+	at io.github.gustavo2358.air.json.W2cChecks.equal(W2cChecks.java:29)
+	at io.github.gustavo2358.air.json.W2cChecks.obligations(W2cChecks.java:70)
+	at io.github.gustavo2358.air.json.W2cChecks.focused(W2cChecks.java:394)
+	at io.github.gustavo2358.air.json.W2cChecks.main(W2cChecks.java:386)

@@ -3,6 +3,8 @@ package io.github.gustavo2358.air.json;
 import io.github.gustavo2358.air.model.*;
 import io.github.gustavo2358.air.model.Unit;
 import io.github.gustavo2358.air.model.Ids.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
 import static io.github.gustavo2358.air.json.Json.*;
 
@@ -21,7 +23,13 @@ final class BindingWriter {
                 "artifactRelations", empty(p.artifactRelations(), "$.publication.artifactRelations"),
                 "origins", array(p.origins(), this::origin), "coverage", coverage(p.coverage()),
                 "uncertainties", array(p.uncertainties(), this::uncertainty),
-                "premises", empty(p.premises(), "$.publication.premises")));
+                "premises", array(p.premises(), this::premise)));
+    }
+    private Value premise(Proofs.Premise p) {
+        if (!(p.assertion() instanceof Proofs.DisjointStorage d))
+            throw limit("$.publication.premises.assertion", "Only Assertion.disjoint_storage implemented");
+        return object("id", id(p.id()), "authority", p.authority(), "justification", p.justification(),
+                "origin", id(p.origin()), "assertion", object("kind", "disjoint_storage", "storage", array(d.storage(), this::id)));
     }
     private Value manifest(Capabilities.Manifest manifest) {
         if (!manifest.required().isEmpty() || !manifest.provided().isEmpty())
@@ -65,6 +73,11 @@ final class BindingWriter {
                 "terminator", operation(s.terminator()), "origin", id(s.origin()));
     }
     private Value operation(Terminator t) {
+        if (t instanceof Operations.Jump j)
+            return object("kind", "jump", "header", header(j.header()), "destination", id(j.destination()));
+        if (t instanceof Operations.Branch b)
+            return object("kind", "branch", "header", header(b.header()), "predicate", expression(b.predicate()),
+                    "trueDestination", id(b.trueDestination()), "falseDestination", id(b.falseDestination()));
         if (t instanceof Operations.Invoke i)
             return object("kind", "invoke", "header", header(i.header()), "action", i.action(), "target", target(i.target()),
                     "arguments", empty(i.arguments(), "$.invoke.arguments"), "results", empty(i.results(), "$.invoke.results"),
@@ -160,9 +173,12 @@ final class BindingWriter {
                 "coverage", coverageStatus(o.coverage()), "precision", precision(o.precision()));
     }
     private Value typeRef(Types.TypeRef t) {
-        if (!(t instanceof Types.Known k) || k.type() != Types.Builtin.TEXT)
-            throw limit("$.typeRef", "Only known(text) implemented");
-        return object("kind", "known", "type", object("kind", "text"));
+        if (!(t instanceof Types.Known k)) throw limit("$.typeRef", "Only known(text/bool) implemented");
+        String kind;
+        if (k.type() == Types.Builtin.TEXT) kind = "text";
+        else if (k.type() == Types.Builtin.BOOL) kind = "bool";
+        else throw limit("$.typeRef", "Only known(text/bool) implemented");
+        return object("kind", "known", "type", object("kind", kind));
     }
     private Value binding(Memory.Binding b) {
         if (!(b instanceof Memory.CellBinding c)) throw limit("$.object.storage", "Only StorageBinding.cell implemented");
@@ -187,11 +203,34 @@ final class BindingWriter {
         if (!(v instanceof Values.TextValue t)) throw limit("$.literal.value", "Only LiteralValue.text implemented");
         return object("kind", "text", "value", t.value());
     }
-    private Value expression(Expression e) {
-        if (e instanceof Expressions.Read r)
-            return object("kind", "read", "header", operandHeader(r.header()), "place", place(r.place()));
-        if (!(e instanceof Expressions.Literal l)) throw limit("$.expression", "Only Expression.literal/read implemented");
-        return object("kind", "literal", "header", operandHeader(l.header()), "value", literalValue(l.value()));
+    private static final class ExpressionFrame {
+        final Expression expression;
+        final List<Value> dependencies = new ArrayList<>();
+        int next;
+        ExpressionFrame(Expression expression) { this.expression = expression; }
+    }
+    private Value expression(Expression expression) {
+        // Unknown dependencies can nest: use postorder frames, never the JVM call stack.
+        var stack = new ArrayDeque<ExpressionFrame>(); stack.push(new ExpressionFrame(expression));
+        while (!stack.isEmpty()) {
+            var frame = stack.peek(); var e = frame.expression;
+            if (e instanceof Expressions.Unknown u && frame.next < u.dependencies().size()) {
+                stack.push(new ExpressionFrame(u.dependencies().get(frame.next++))); continue;
+            }
+            Value result;
+            if (e instanceof Expressions.Unknown u)
+                result = object("kind", "unknown", "header", operandHeader(u.header()), "typeRef", typeRef(u.typeRef()),
+                        "dependencies", new Arr(frame.dependencies), "remainingReads", memoryBound(u.remainingReads()), "reason", id(u.reason()));
+            else if (e instanceof Expressions.Read r)
+                result = object("kind", "read", "header", operandHeader(r.header()), "place", place(r.place()));
+            else if (e instanceof Expressions.Literal l)
+                result = object("kind", "literal", "header", operandHeader(l.header()), "value", literalValue(l.value()));
+            else throw limit("$.expression", "Only Expression.literal/read/unknown implemented");
+            stack.pop();
+            if (stack.isEmpty()) return result;
+            stack.peek().dependencies.add(result);
+        }
+        throw new IllegalStateException("Expression frame invariant");
     }
     private Value instruction(Instruction i) {
         if (!(i instanceof Operations.Assign a)) throw limit("$.sequence.instructions", "Only Instruction.assign implemented");

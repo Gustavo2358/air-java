@@ -1,7 +1,8 @@
-# Codec compartilhado AIR JSON — cobertura 1A + 4B + CP6 W1B
+# Codec compartilhado AIR JSON — cobertura 1A + 4B + CP6 W1B/W2C
 
 O módulo `air-json` implementa o subset transitivo do GOBACK descrito por 0B e
-o transporte escalar Object/Cell/Assign text de 4B e o subset Invoke W1B contra
+o transporte escalar Object/Cell/Assign text de 4B, Invoke W1B e Branch/Jump/Unknown
+BOOL/Premise DisjointStorage W2C contra
 **analysis-ir-json / bindingVersion 1.0.0 / airVersion 2.0.0, DRAFT**, no SHA
 `51b4d9a8ae0364232bd97103cd73a77e1a34996c`. A autoridade é AIR → binding → codec.
 [Baseline e arquivos consultados](../sources/air-json-baseline.json).
@@ -106,18 +107,18 @@ esta implementação aceita; GOBACK é testemunho, não perfil nem restrição n
 | Precision, Claim, Uncertainty, Dimension | todos os campos/tokens catalogados | cinco claims e cinco lacunas; dados opacos modificados em teste |
 | FactScope | publication, unit, entities | três formas preservadas; IDs não ampliam escopos |
 | ObjectDeclaration | oito campos do binding, displayName nullable, TypeRef e binding preservados | WS-PGM, nomes vazios/espaçados/Unicode/null sem joins textuais |
-| TypeRef, Type | known(text) | Object/Cell; demais formas reconhecidas dão IMPLEMENTATION_LIMIT |
+| TypeRef, Type | known(text), known(bool) | Object/Cell; demais formas reconhecidas dão IMPLEMENTATION_LIMIT |
 | Storage, StorageHeader, StorageBinding | Cell, header completo e cell(StorageId) | owner nullable; ACTIVATION requer owner por AIR 03 §2 |
-| OperandHeader, Place, Expression, LiteralValue | occurrence id/role/origin; ObjectPlace; Literal(TextValue) e Read(ObjectPlace) | duas ocorrências pertencentes ao Assign; sem TypeRef duplicado no Place |
+| OperandHeader, Place, Expression, LiteralValue | occurrence id/role/origin; ObjectPlace; Literal(TextValue), Read(ObjectPlace), Unknown | duas ocorrências pertencentes ao Assign; sem TypeRef duplicado no Place |
 | Assign | header, destination, value | ObjectPlace ← Literal(TextValue) ou Read(ObjectPlace); sameDomain pelo Validator |
-| resources/artifactRelations/premises; visibleObjects/completionPorts | contêineres vazios obrigatórios | omissão/null recusados; conteúdo falha explicitamente |
+| resources/artifactRelations; visibleObjects/completionPorts | contêineres vazios obrigatórios | omissão/null recusados; conteúdo falha explicitamente |
 
 **Fora da cobertura:** BodyKnowledge.unavailable, origens contractual/unavailable,
 Location.offsets, Elimination com conteúdo, Capability com conteúdo, Parameter /
-ResultSlot, TypeRef.unknown_type, tipos além de text,
-literais além de TextValue, expressões além de Literal/Read, Places além de ObjectPlace,
+ResultSlot, TypeRef.unknown_type, tipos além de text/bool,
+literais além de TextValue, expressões além de Literal/Read/Unknown, Places além de ObjectPlace,
 storage/bindings além de Cell/CellBinding, condições iniciais, recursos/relações,
-premissas, demais operações core e extensões/envelopes conservadores. Invoke tem somente o subset descrito abaixo.
+SameDomain, demais operações core e extensões/envelopes conservadores. Invoke tem somente o subset descrito abaixo.
 O envelope JSON top-level está implementado; `Envelopes.Envelope` de efeitos/controle
 é outra forma do binding e permanece fora da cobertura. Return não ganha tal envelope.
 
@@ -175,7 +176,9 @@ da Publication. A inspeção interrompe nesse limite; não certifica os demais f
 | Text blank nos campos auditados | Binding §§3/4/10.3 não define nonBlank; checar String.isBlank somente nos sites limitados por Require.text |
 
 Os sites Text auditados são os componentes opacos de IDs, Artifact.logicalName,
-CoverageItem.sourceKey, Uncertainty.code/reason, Derived.rule e IncludeFrame.requestedName.
+CoverageItem.sourceKey, Uncertainty.code/reason, Derived.rule e IncludeFrame.requestedName. W2C acrescenta Premise.authority e
+Premise.justification à mesma política auditada: o binding usa Text sem nonBlank,
+enquanto o model usa Require.text; blank é IMPLEMENTATION_LIMIT, não regra AIR inventada.
 AIR 06 §§4/5 exige código, motivo e regra como fatos, mas não define a gramática
 String.isBlank; o codec não decide semântica pelo conteúdo da mensagem. As constraints
 locais identificadas (como inputs e dimensões não vazios) são verificadas antes do
@@ -315,7 +318,8 @@ O formato continua binding 1.0.0 DRAFT / AIR 2.0.0; model e Validator não mudar
 **Não cobertos:** InternalTarget, EntrySignature, ExtensionName, qualquer Argument,
 results não vazios, Parameter/ResultSlot, efeitos perOutcome, ObjectsMemory,
 StorageMemory, MemoryUnion, LabelsControl, ControlUnion, TrimRight, FitText,
-expressões/places adicionais, origens Contractual/Unavailable e premissas com conteúdo.
+expressões/places adicionais e origens Contractual/Unavailable. W2C acrescenta Unknown
+e Premise(DisjointStorage), conforme o perfil abaixo.
 Essas formas continuam `IMPLEMENTATION_LIMIT`; manifestos com conteúdo continuam
 `UNSUPPORTED_CAPABILITY`. Demais limites de 1A/4B permanecem em vigor.
 
@@ -339,3 +343,48 @@ O guard de tokens no bytecode permite estritamente os accessors normativos
 LiteralTarget.name():String e ComputedTarget.name():Expression; Enum.name(), toString()
 e ordinais não fornecem tokens wire. Um challenge compilável protege essa distinção.
 GOBACK e scalar-assign mantêm bytes e hashes originais.
+
+## CP6 W2C — controle explícito, Unknown e DisjointStorage
+
+Cobertura de transporte para o futuro W2B. [Evidência e handoff](../quality/cp6-w2c-transport.md).
+Autoridade: binding pinado §§5–7/10, AIR 01 §§3–4, 02 §§3–4, 03 §3.1 e 06 §5.1.
+As versões continuam AIR 2.0.0 e binding 1.0.0 DRAFT. Mudam somente BindingReader e
+BindingWriter; model, Validator, política de admissão e camada física permanecem iguais.
+
+| Forma | Preservação / limite |
+| --- | --- |
+| Jump | kind jump, Header completo e destination LabelId completo; nenhum fallthrough inferido |
+| Branch | kind branch, Header, predicate, trueDestination e falseDestination distintos e explícitos, sem reordenação |
+| TypeRef | known com type.kind text ou bool em tabela fechada; BoolValue literal e demais tipos continuam fora |
+| Unknown | Header/OperandId/owner/role/origin, TypeRef conhecido, dependencies Expression[] ordenadas, remainingReads, reason UncertaintyId completo |
+| Dependencies | Literal(TextValue), Read(ObjectPlace) e Unknown recursivo; ocorrências e tipos próprios não são convertidos para o tipo do resultado |
+| MemoryBound | none e within visible/all reaproveitam W1B; listas completas não substituem um restante aberto publicado |
+| Premise | id PremiseId, authority, justification, origin OriginId e assertion obrigatórios; texto opaco preservado |
+| Assertion | somente disjoint_storage com storage StorageId[] em ordem física; sem inferir, expandir, reduzir ou ordenar membros |
+| Publication.premises | zero ou mais premissas cobertas; qualquer assertion desconhecida ou fora da cobertura impede retorno integral |
+
+I-02/I-04/I-08/I-11 verificam referências, ownership, posição e BOOL por meio do
+Validator existente. I-58 exige pelo menos duas bases existentes distintas.
+O codec não verifica a verdade física da separação. I-09 e I-59 permanecem
+SEMANTIC_OBLIGATION; I-56 também permanece em composições Invoke. Sucesso de transporte
+não satisfaz essas obrigações. SameDomain permanece IMPLEMENTATION_LIMIT nos dois
+sentidos; token de assertion desconhecido é INPUT_ERROR. Formas físicas malformadas,
+referências pendentes e limites operacionais seguem a taxonomia existente.
+
+O traversal de dependências usa frames explícitos para não introduzir recursão
+Java dependente de profundidade. Cada lista é percorrida em ordem, sem joins por
+nome, scans de labels/storages/uncertainties ou ordenação semântica. Caminhos de
+diagnóstico continuam strings completas; a retenção desses paths em aninhamento
+muito profundo tem custo adicional à quantidade de nós. Os probes não alegam
+streaming, heap ilimitado ou prova geral de complexidade do Validator.
+
+A fixture principal é AIR model-level e o oracle wire escreve o envelope inteiro
+somente com primitivas JSON, sem usar o model oracle ou os mappings. A comparação
+inclui campos fechados, todos os IDs, Unicode, precisão, coverage e ordens. Os
+hashes W1 foram congelados em main; as mudanças de cobertura apenas retiram bool,
+Unknown e premises dos antigos negativos de forma não implementada, substituindo-os
+por positivos, shape checks e regras estruturais específicas. Literais booleanos,
+SameDomain e demais expressões continuam recusados.
+
+Sem SP decoder, COBOL, predicate evaluation, lower, CFG, dataflow ou dependências.
+W2B NOT_STARTED / NOT_AUTHORIZED. W2D NOT_STARTED / NOT_AUTHORIZED.
