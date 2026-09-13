@@ -379,11 +379,11 @@ final class BindingReader {
             case "known" -> {
                 a.fields("kind", "type"); var type = a.child("type");
                 switch (type.kind()) {
-                    case "text", "bool" -> type.fields("kind");
-                    case "int", "decimal", "bytes", "opaque_type", "label" -> throw type.unsupported("Type " + type.kind());
+                    case "text", "bool", "int" -> type.fields("kind");
+                    case "decimal", "bytes", "opaque_type", "label" -> throw type.unsupported("Type " + type.kind());
                     default -> throw Json.input(type.path(), "Unknown Type kind");
                 }
-                yield Types.known(type.kind().equals("bool") ? Types.Builtin.BOOL : Types.Builtin.TEXT);
+                yield Types.known(switch(type.kind()){case "bool"->Types.Builtin.BOOL;case "int"->Types.Builtin.INT;default->Types.Builtin.TEXT;});
             }
             case "unknown_type" -> throw a.unsupported("TypeRef.unknown_type");
             default -> throw Json.input(a.path(), "Unknown TypeRef kind");

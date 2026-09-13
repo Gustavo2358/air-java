@@ -99,9 +99,9 @@ final class ScalarAssignChecks {
         var badOwner = new Memory.Cell(new Memory.StorageHeader(h.id(), Optional.of(new UnitId(PUB, "absent-unit")), h.lifetime(), h.visibility(), h.origin()), TEXT);
         invalid("I-02", replace(EXPECTED, objects(), List.of(badOwner), instructions(EXPECTED)),
                 changed(CELL_PATH + ".header.owner.localId", Json.value("absent-unit")));
-        // Unsupported domains/kinds remain model-level negatives; they do not expand transport.
+        // Integer transport exposes the existing domain mismatch; region remains unsupported.
         var wrongDomain = replace(EXPECTED, objects(), List.of(new Memory.Cell(h, Types.known(Types.Builtin.INT))), instructions(EXPECTED));
-        validatorInvalid("I-49", wrongDomain); failure(IMPLEMENTATION_LIMIT, () -> CODEC.encode(wrongDomain));
+        validatorInvalid("I-49", wrongDomain); failure(INVALID_IR, () -> CODEC.encode(wrongDomain));
         var wrongKind = replace(EXPECTED, objects(), List.of(new Memory.Region(h, Optional.of(BigInteger.TEN), Optional.empty())), instructions(EXPECTED));
         validatorInvalid("I-13", wrongKind); failure(IMPLEMENTATION_LIMIT, () -> CODEC.encode(wrongKind));
         localInvalid("I-02", OBJECT_PATH + ".storage.storage", changed(OBJECT_PATH + ".storage.storage", at(OBJECT_PATH + ".id")));
@@ -167,7 +167,7 @@ final class ScalarAssignChecks {
         equal(List.of(), AirValidator.validate(nop).issues());
         failure(IMPLEMENTATION_LIMIT, () -> CODEC.encode(nop));
         failsAt(IMPLEMENTATION_LIMIT, OP, changed(OP, Json.object("kind", "nop", "header", at(OP + ".header"))));
-        for (String kind : List.of("int", "decimal", "bytes", "opaque_type", "label"))
+        for (String kind : List.of("decimal", "bytes", "opaque_type", "label"))
             failsAt(IMPLEMENTATION_LIMIT, OBJECT_PATH + ".typeRef.type", changed(OBJECT_PATH + ".typeRef.type.kind", Json.value(kind)));
         failsAt(IMPLEMENTATION_LIMIT, OBJECT_PATH + ".typeRef", changed(OBJECT_PATH + ".typeRef", Json.object("kind", "unknown_type", "uncertainty", at("publication.uncertainties.0.id"))));
         for (String kind : List.of("view", "alias", "alternatives", "unknown"))
