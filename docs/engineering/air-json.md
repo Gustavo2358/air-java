@@ -107,7 +107,7 @@ esta implementação aceita; GOBACK é testemunho, não perfil nem restrição n
 | Precision, Claim, Uncertainty, Dimension | todos os campos/tokens catalogados | cinco claims e cinco lacunas; dados opacos modificados em teste |
 | FactScope | publication, unit, entities | três formas preservadas; IDs não ampliam escopos |
 | ObjectDeclaration | oito campos do binding, displayName nullable, TypeRef e binding preservados | WS-PGM, nomes vazios/espaçados/Unicode/null sem joins textuais |
-| TypeRef, Type | known(text), known(bool) | Object/Cell; demais formas reconhecidas dão IMPLEMENTATION_LIMIT |
+| TypeRef, Type | known(text), known(bool), known(int) | Object/Cell; demais formas reconhecidas dão IMPLEMENTATION_LIMIT |
 | Storage, StorageHeader, StorageBinding | Cell, header completo e cell(StorageId) | owner nullable; ACTIVATION requer owner por AIR 03 §2 |
 | OperandHeader, Place, Expression, LiteralValue | occurrence id/role/origin; ObjectPlace; Literal(TextValue), Read(ObjectPlace), Unknown | duas ocorrências pertencentes ao Assign; sem TypeRef duplicado no Place |
 | Assign | header, destination, value | ObjectPlace ← Literal(TextValue) ou Read(ObjectPlace); sameDomain pelo Validator |
@@ -115,7 +115,7 @@ esta implementação aceita; GOBACK é testemunho, não perfil nem restrição n
 
 **Fora da cobertura:** BodyKnowledge.unavailable, origens contractual/unavailable,
 Location.offsets, Elimination com conteúdo, Capability com conteúdo, Parameter /
-ResultSlot, TypeRef.unknown_type, tipos além de text/bool,
+ResultSlot, TypeRef.unknown_type, tipos além de text/bool/int,
 literais além de TextValue, expressões além de Literal/Read/Unknown, Places além de ObjectPlace,
 storage/bindings além de Cell/CellBinding, condições iniciais, recursos/relações,
 SameDomain, demais operações core e extensões/envelopes conservadores. Invoke tem somente o subset descrito abaixo.
@@ -409,3 +409,14 @@ work-record edits do not require repeating qualification.
 Multiplicity is a permanent completion criterion for new codec forms. Finite
 occurrence count cannot select rejection. Unsupported forms fail explicitly;
 encoding must never silently omit an operation or replace it with `nop`.
+
+
+## PERFORM family: transporte do domínio inteiro existente
+
+A wave acrescenta somente `TypeRef.known(int)` ao reader/writer. AIR 02 §1 e
+binding §5 já definem o token `int` no pin normativo vigente; nenhuma versão,
+operação, regra aritmética ou lattice muda. Object/Cell, Read e Unknown preservam
+o domínio inteiro publicado, com valor aberto. Literais inteiros e aritmética
+continuam fora deste incremento de cobertura. `IntegerTypeChecks` usa um oracle
+AIR manual, valida o round-trip e o token normativo, mantém bytes determinísticos
+e rejeita campos extras. A complexidade permanece constante por TypeRef.

@@ -180,11 +180,12 @@ final class BindingWriter {
                 "coverage", coverageStatus(o.coverage()), "precision", precision(o.precision()));
     }
     private Value typeRef(Types.TypeRef t) {
-        if (!(t instanceof Types.Known k)) throw limit("$.typeRef", "Only known(text/bool) implemented");
+        if (!(t instanceof Types.Known k)) throw limit("$.typeRef", "Only known(text/bool/int) implemented");
         String kind;
         if (k.type() == Types.Builtin.TEXT) kind = "text";
         else if (k.type() == Types.Builtin.BOOL) kind = "bool";
-        else throw limit("$.typeRef", "Only known(text/bool) implemented");
+        else if (k.type() == Types.Builtin.INT) kind = "int";
+        else throw limit("$.typeRef", "Only known(text/bool/int) implemented");
         return object("kind", "known", "type", object("kind", kind));
     }
     private Value binding(Memory.Binding b) {
