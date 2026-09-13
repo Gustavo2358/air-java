@@ -1,0 +1,10 @@
+id: WORK-STORAGE-AIR-001
+title: Storage Semantics campaign — ST-W0..ST-W5
+status: IN_PROGRESS
+scope:
+  - ST-W0 baseline and contract reconciliation; existing regional model is reused.
+  - ST-W1 regional manifest, Region/View/Slice, bytes, CopyBytes, codec profile and strict validator/JSON qualification.
+  - ST-W3/W4/W5 integration, cumulative scalar compatibility and explicit unsupported forms.
+  - AIR authority remains analysis-ir; IBM1047 requires a named normative codec contract before implementation.
+  - No COBOL interpretation, dataflow algorithms, W6-W8 features, merge or auto-merge.
+notes: User authorized one persistent campaign draft PR; review after W5. Existing model/codec work is not reimplemented.
