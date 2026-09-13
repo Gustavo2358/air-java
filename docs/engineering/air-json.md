@@ -453,3 +453,19 @@ forma/Validator correspondente; os mesmos contracasos permanecem na suíte.
 O guard de tokens admite somente accessors semânticos Capability.name e
 ExtensionCodec.name, além de BigInteger.toString para inteiros canônicos;
 Enum.name/toString, String.valueOf e concatenação de modelo continuam proibidos.
+
+
+### ST-W1.3/1.4 — interpretação qualificada
+
+A sequência ST-W1.2 acima registra o checkpoint anterior. Agora o Validator e o
+helper compartilhado interpretam IBM1047 pelo contrato exato de `sources.lock`.
+O oracle independente extrai os 256 pares da tabela IBM/IANA 1.00, além de goldens
+manuais de texto/octetos. A implementação JDK21 chamada IBM1047 troca LF/NEL nos
+bytes 0x15/0x25 em relação à tabela escolhida; esse contracaso foi preservado.
+Nenhum charset da JVM é usado na produção. O teste da tabela não deriva os fatos
+do encoder/decoder em teste. Leituras com codec desconhecido continuam limitadas.
+
+REDs preservados na campanha: manifesto regional bloqueado; IBM1047 sem suporte;
+slice de um octeto indevidamente aceita com codec de 16 bits; acesso puro sem
+limites de região demonstrados. Correções passaram no FAST cumulativo. O caso de
+extensão desconhecida sem acesso continua no golden regional, com seu UncertaintyId.

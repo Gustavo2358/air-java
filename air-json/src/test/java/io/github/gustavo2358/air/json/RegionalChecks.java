@@ -104,6 +104,37 @@ final class RegionalChecks {
     static void negative(Json.Value tree,String path,Json.Value value,AirJsonException.Code code) {
         reject(new String(Json.write(edit(tree,path.split("\\."),0,value),AirJson.Limits.defaults()),StandardCharsets.UTF_8),code);
     }
+    static Publication ibmPublication() {
+        var p=regional();var u=p.units().getFirst();var s=u.sequences().getFirst();
+        var objects=new ArrayList<Memory.ObjectDeclaration>();
+        objects.add(view(OBJECT,new Memory.ViewBinding(CELL,HUGE,BigInteger.valueOf(4),IBM),TEXT));
+        objects.add(view(new ObjectId(UNIT,"exact-alias"),new Memory.AliasBinding(OBJECT),TEXT));
+        objects.add(u.objects().get(2));
+        var sink=new ObjectId(UNIT,"text-result");var sinkStorage=new StorageId(PUB,"text-result-storage");
+        objects.add(object(sink,sinkStorage));
+        var storage=new ArrayList<Memory.Storage>(p.storage());storage.add(cell(sinkStorage));
+        var instructions=new ArrayList<Instruction>(s.instructions());
+        instructions.set(0,assign(ASSIGN,OBJECT," Aé "));
+        var op=new OperationId(UNIT,"decode-view");
+        var read=new Expressions.Read(operand(op,"read",Operand.Role.VALUE_READ),new Places.ObjectPlace(operand(op,"source",Operand.Role.VALUE_READ),OBJECT));
+        instructions.add(new Operations.Assign(header(op,"assignment"),new Places.ObjectPlace(operand(op,"destination",Operand.Role.VALUE_WRITE),sink),read));
+        var unit=new io.github.gustavo2358.air.model.Unit(u.id(),u.containingUnit(),objects,u.visibleObjects(),u.entries(),
+                List.of(new Sequence(s.label(),instructions,s.terminator(),s.origin())),u.completionPorts(),u.body(),u.bodyUnavailable(),u.coverage(),u.origin());
+        return new Publication(p.id(),p.airVersion(),new Capabilities.Manifest(List.of(Capabilities.MEMORY_REGIONS,IBM_CAP),List.of()),
+                p.artifacts(),List.of(unit),storage,p.resources(),p.artifactRelations(),p.origins(),p.coverage(),p.uncertainties(),p.premises());
+    }
+    static void ibmProfile() {
+        var p=ibmPublication();var validation=AirValidator.validate(p);
+        require(validation.status()==ValidationResult.Status.STRUCTURALLY_VALID,"explicit IBM1047 literal and total read valid: "+validation);
+        var codec=new AirJson();var bytes=codec.encode(p);
+        require(p.equals(codec.decode(bytes)),"IBM1047 identity and logical text preserved");
+        var tree=Json.parse(bytes,AirJson.Limits.defaults());
+        negative(tree,"publication.units.0.sequences.0.instructions.0.value.value.value",Json.value(" A€ "),AirJsonException.Code.INVALID_IR);
+        negative(tree,"publication.units.0.sequences.0.instructions.0.value.value.value",Json.value("A"),AirJsonException.Code.INVALID_IR);
+        negative(tree,"publication.units.0.objects.0.storage.codec.logicalType.type.kind",Json.value("bytes"),AirJsonException.Code.INVALID_IR);
+        negative(tree,"publication.units.0.objects.0.storage.codec.version",Json.value("2"),AirJsonException.Code.INVALID_IR);
+        negative(tree,"publication.capabilities.required.1.version",Json.value("2"),AirJsonException.Code.UNSUPPORTED_CAPABILITY);
+    }
     static Json.Value edit(Json.Value node,String[] path,int at,Json.Value replacement) {
         if(at==path.length)return replacement;
         if(node instanceof Json.Obj o){var fields=new LinkedHashMap<>(o.fields());fields.put(path[at],edit(fields.get(path[at]),path,at+1,replacement));return new Json.Obj(fields);}

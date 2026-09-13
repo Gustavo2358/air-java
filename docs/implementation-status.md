@@ -2,11 +2,11 @@
 
 Topologia pós-0C-I: `air-java-parent:pom` agrega `air-model` (artifactId `air-java`,
 modelo + validation) e `air-json` (codec 1A, dependência direta no modelo).
-A cobertura semântica do model abaixo não mudou. O transporte tem
+A cobertura regional ST-W1 acrescenta o codec IBM1047 explícito e checks de acesso. O transporte tem
 [cobertura própria e limites explícitos](engineering/air-json.md), comprovados
 por [golden manual e suíte](quality/air-json-implementation.md).
 
-Baseline normativo: Analysis IR 2.0.0, `Gustavo2358/analysis-ir@51b4d9a8ae0364232bd97103cd73a77e1a34996c`.
+Baseline normativo: Analysis IR 2.0.0, `Gustavo2358/analysis-ir@a9287917241a70665ad8d3d32d974928690e69f3`.
 A biblioteca `0.1.0-SNAPSHOT` é uma implementação Java revisável. Ela não declara
 conformidade integral de Producer, Validator ou Consumer com todos os perfis AIR.
 
@@ -141,3 +141,26 @@ e [qualificação](quality/cp6-w2c-transport.md). Sem mudança de model/Validato
 versões ou dependências. SameDomain, BoolValue e demais formas não cobertas continuam
 limites explícitos. I-09/I-59 continuam obrigações semânticas do produtor.
 W2B NOT_STARTED / NOT_AUTHORIZED. W2D NOT_STARTED / NOT_AUTHORIZED.
+
+## ST-W1 — codec explícito e precondições regionais
+
+`Capabilities.IBM1047` identifica a extensão normativa opcional; `MemoryCodecs`
+fornece encodeText/decodeText puros para ASCII e a tabela IBM/IANA 1.00 de IBM1047.
+Resultados distinguem EXACT, UNSUPPORTED_CODEC, UNREPRESENTABLE_TEXT, INVALID_BYTES
+ e EXTENT_MISMATCH, sem valor preciso nos demais estados. UnknownCodec não apaga
+bytes e não aciona default. A API só interpreta valores concretos; não calcula RD,
+valores possíveis, efeitos ou semântica de uma linguagem fonte.
+
+O Validator reconhece somente nome/versão/domínio exatos de IBM1047. Descarga a
+precondição de decodificação pela totalidade da tabela, e de escrita literal pelo
+domínio e extensão exatos. ASCII, codec desconhecido, não literal sem prova e
+outras extensões mantêm seus limites. BinaryCodec em RegionSlice exige extensão
+igual à largura/8, como ViewBinding. Acesso puro a ViewBinding cuja base tem
+extensão desconhecida agora emite VALIDATION_LIMIT; a declaração continua válida.
+Isso corrige uma precondição antes não verificada, sem transformar o limite em
+invalidade nem criar um certificado de segurança. W3 emitirá regiões finitas provadas.
+
+Impacto: APIs aditivas; correções do Validator podem rejeitar como INVALID_IR slices
+binárias contraditórias ou limitar acessos antes aceitos sem prova suficiente.
+Contratos anteriores escalares e seus goldens permanecem. Nenhuma promoção de
+SEMANTIC_OBLIGATION/VALIDATION_LIMIT ou alteração das versões AIR/binding.

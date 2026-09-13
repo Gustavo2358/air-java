@@ -14,6 +14,9 @@ public final class ContractSuite {
     private static int passed;
     private ContractSuite() {}
     public static void main(String[] args) throws Exception {
+        test("ST-W1 explicit text codec byte oracles and missing profile",RuntimeCodecChecks::run);
+        test("ST-W1 binary slice width matches physical extent",RegionalValidationChecks::binarySliceWidth);
+        test("ST-W1 pure view access requires established region bounds",RegionalValidationChecks::unknownExtentAccess);
         test("CORE-SIZE iterative semantic nesting",CapacityChecks::nesting);
         test("CORE-SIZE retention continues validation",CapacityChecks::retention);
         test("CORE-SIZE independent cardinality series",CapacityChecks::series);

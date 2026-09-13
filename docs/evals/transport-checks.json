@@ -10,6 +10,7 @@
     "CORE-SIZE exact UTF-8 byte budgets",
     "CORE-SIZE JSON independent cardinality series",
     "CORE-SIZE codec operational result remains explicit",
+    "ST-W1 explicit IBM1047 total read and exact literal write",
     "ST-W1 regional bytes, ranges, capability and copy transport",
     "known integer cells, reads and unknown values round trip",
     "conservative havoc and opaque multiplicity and envelopes",

@@ -248,3 +248,12 @@ defensivamente; `Optional` é uma escolha de representação Java.
 
 Não há inventário Java de contratos nem forma executável por `ResourceId`. O
 catálogo JSON futuro pertence à especificação DRAFT externa.
+
+## Interpretação explícita de codecs — ST-W1
+
+`MemoryCodecs.Result<T>(Status, Optional<T>)` é imutável e contém valor somente em
+EXACT. `encodeText(Codec, TextValue, BigInteger)` e
+`decodeText(Codec, BytesValue, BigInteger)` interpretam texto concreto pelo perfil
+explicitamente fornecido. A tabela é interna, sem estado ambiental ou I/O;
+`Capabilities.IBM1047` é o par normativo text.ebcdic.ibm1047/1. Nenhuma nova variante
+sealed ou regra de traversal nasce desse helper.
