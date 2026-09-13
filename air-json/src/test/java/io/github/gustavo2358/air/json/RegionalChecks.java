@@ -88,6 +88,7 @@ final class RegionalChecks {
         negative(tree,"publication.units.0.objects.0.storage.offset",Json.value("01"),AirJsonException.Code.INPUT_ERROR);
         for(String value:List.of("AH+A/x==","AH+A/w","AH+A/w==\n","AH-A_w=="))
             negative(tree,"publication.units.0.sequences.0.instructions.0.value.value.base64",Json.value(value),AirJsonException.Code.INPUT_ERROR);
+        additionalCodecsAndZero(tree);
         for(int count:List.of(1,2,5,40)) {
             var u=p.units().getFirst();var s=u.sequences().getFirst();var instructions=new ArrayList<Instruction>(s.instructions());
             for(int i=0;i<count;i++) {
@@ -100,6 +101,29 @@ final class RegionalChecks {
             var many=new Publication(p.id(),p.airVersion(),p.capabilities(),p.artifacts(),List.of(unit),p.storage(),p.resources(),p.artifactRelations(),p.origins(),p.coverage(),p.uncertainties(),p.premises());
             require(many.equals(codec.decode(codec.encode(many))),"regional cardinality "+count);
         }
+    }
+    static Json.Value set(Json.Value tree,String path,Json.Value value){return edit(tree,path.split("\\."),0,value);}
+    static Publication fromWire(Json.Value tree) {
+        var codec=new AirJson();var p=codec.decode(Json.write(tree,AirJson.Limits.defaults()));
+        require(p.equals(codec.decode(codec.encode(p))),"additional codec fields survive round trip");return p;
+    }
+    static void additionalCodecsAndZero(Json.Value base) {
+        for(String kind:List.of("unsigned.binary","signed.twos_complement"))for(String order:List.of("BIG","LITTLE")) {
+            var tree=set(base,"publication.units.0.objects.0.typeRef.type.kind",Json.value("int"));
+            tree=set(tree,"publication.units.0.objects.1.typeRef.type.kind",Json.value("int"));
+            tree=set(tree,"publication.units.0.objects.0.storage.codec",Json.object("kind",kind,"width","32","order",order));
+            tree=set(tree,"publication.units.0.sequences.0.instructions.0.value.value",Json.object("kind","int","value",kind.equals("unsigned.binary")?"4294967295":"-2147483648"));
+            var model=fromWire(tree);var view=(Memory.ViewBinding)model.units().getFirst().objects().getFirst().storage();
+            require(view.codec().equals(new Memory.BinaryCodec(kind.equals("signed.twos_complement"),BigInteger.valueOf(32),order.equals("BIG")?Memory.ByteOrder.BIG:Memory.ByteOrder.LITTLE)),"manual binary codec oracle");
+            negative(tree,"publication.units.0.objects.0.storage.codec.width",Json.value("31"),AirJsonException.Code.INVALID_IR);
+            negative(tree,"publication.units.0.objects.0.storage.codec.order",Json.value("BIG_ENDIAN"),AirJsonException.Code.INPUT_ERROR);
+        }
+        var zero=set(base,"publication.units.0.objects.0.storage.extent",Json.value("0"));
+        zero=set(zero,"publication.units.0.sequences.0.instructions.0.value.value.base64",Json.value(""));
+        zero=set(zero,"publication.units.0.sequences.0.instructions.2.destination.length.value.value",Json.value("0"));
+        zero=set(zero,"publication.units.0.sequences.0.instructions.2.value.value.base64",Json.value(""));
+        var model=fromWire(zero);
+        require(((Memory.ViewBinding)model.units().getFirst().objects().getFirst().storage()).extent().signum()==0,"explicit zero survives");
     }
     static void negative(Json.Value tree,String path,Json.Value value,AirJsonException.Code code) {
         reject(new String(Json.write(edit(tree,path.split("\\."),0,value),AirJson.Limits.defaults()),StandardCharsets.UTF_8),code);
@@ -134,6 +158,9 @@ final class RegionalChecks {
         negative(tree,"publication.units.0.objects.0.storage.codec.logicalType.type.kind",Json.value("bytes"),AirJsonException.Code.INVALID_IR);
         negative(tree,"publication.units.0.objects.0.storage.codec.version",Json.value("2"),AirJsonException.Code.INVALID_IR);
         negative(tree,"publication.capabilities.required.1.version",Json.value("2"),AirJsonException.Code.UNSUPPORTED_CAPABILITY);
+        var unknownCodec=Json.object("kind","unknown","logicalType",Json.object("kind","known","type",Json.object("kind","text")),
+                "reason",Json.object("domain","uncertainty","publication",PUB.localId(),"localId","unproved-values"));
+        negative(tree,"publication.units.0.objects.0.storage.codec",unknownCodec,AirJsonException.Code.INCOMPLETE_VALIDATION);
     }
     static Json.Value edit(Json.Value node,String[] path,int at,Json.Value replacement) {
         if(at==path.length)return replacement;
