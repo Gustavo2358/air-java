@@ -192,7 +192,7 @@ def inspect_topology(root):
                               'air-json/src/test/java/io/github/gustavo2358/air/json/')
                 require((rel.as_posix().startswith(java_roots) and path.suffix == '.java')
                         or rel.as_posix() in {'air-json/src/test/resources/goback.canonical.json',
-                                              'air-json/src/test/resources/scalar-assign.canonical.json'},
+                                              'air-json/src/test/resources/scalar-assign.canonical.json', 'air-json/src/test/resources/regional.canonical.json'},
                         f'Unowned JSON source/resource: {rel}')
             else:
                 require(rel.parts[:4] in [('air-model', 'src', 'main', 'java'), ('air-model', 'src', 'test', 'java')],
@@ -208,13 +208,13 @@ def inspect_topology(root):
                      'air-json/src/test/java/io/github/gustavo2358/air/json/CodecSuite.java',
                      'air-json/src/test/java/io/github/gustavo2358/air/json/GobackOracle.java',
                      'air-json/src/test/resources/goback.canonical.json',
-                     'air-json/src/test/resources/scalar-assign.canonical.json', 'docs/evals/transport-checks.json'):
+                     'air-json/src/test/resources/scalar-assign.canonical.json', 'air-json/src/test/resources/regional.canonical.json', 'docs/evals/transport-checks.json'):
         require((root / required).is_file(), f'Missing JSON suite/policy/evidence: {required}')
     from common import read_json
     policy = read_json(root / 'docs/evals/transport-checks.json')
     require(policy.get('binding') == 'analysis-ir-json' and policy.get('bindingVersion') == '1.0.0'
             and policy.get('airVersion') == '2.0.0' and policy.get('status') == 'DRAFT'
-            and policy.get('analysis_ir_pin') == '51b4d9a8ae0364232bd97103cd73a77e1a34996c'
+            and policy.get('analysis_ir_pin') == 'a9287917241a70665ad8d3d32d974928690e69f3'
             and policy.get('external_dependencies') == [] and policy.get('checks'), 'Invalid JSON suite/dependency policy')
     return version
 

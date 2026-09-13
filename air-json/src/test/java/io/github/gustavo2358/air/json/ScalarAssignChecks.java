@@ -99,11 +99,11 @@ final class ScalarAssignChecks {
         var badOwner = new Memory.Cell(new Memory.StorageHeader(h.id(), Optional.of(new UnitId(PUB, "absent-unit")), h.lifetime(), h.visibility(), h.origin()), TEXT);
         invalid("I-02", replace(EXPECTED, objects(), List.of(badOwner), instructions(EXPECTED)),
                 changed(CELL_PATH + ".header.owner.localId", Json.value("absent-unit")));
-        // Integer transport exposes the existing domain mismatch; region remains unsupported.
+        // Regional transport now exposes the existing cell-to-region kind contradiction.
         var wrongDomain = replace(EXPECTED, objects(), List.of(new Memory.Cell(h, Types.known(Types.Builtin.INT))), instructions(EXPECTED));
         validatorInvalid("I-49", wrongDomain); failure(INVALID_IR, () -> CODEC.encode(wrongDomain));
         var wrongKind = replace(EXPECTED, objects(), List.of(new Memory.Region(h, Optional.of(BigInteger.TEN), Optional.empty())), instructions(EXPECTED));
-        validatorInvalid("I-13", wrongKind); failure(IMPLEMENTATION_LIMIT, () -> CODEC.encode(wrongKind));
+        validatorInvalid("I-13", wrongKind); failure(INVALID_IR, () -> CODEC.encode(wrongKind));
         localInvalid("I-02", OBJECT_PATH + ".storage.storage", changed(OBJECT_PATH + ".storage.storage", at(OBJECT_PATH + ".id")));
         localInvalid("I-02", CELL_PATH + ".header.id", changed(CELL_PATH + ".header.id", at(OBJECT_PATH + ".id")));
         localInvalid("I-02", DEST + ".object", changed(DEST + ".object", at(CELL_PATH + ".header.id")));
@@ -138,7 +138,7 @@ final class ScalarAssignChecks {
         var a = assign(EXPECTED);
         var bad = withInstructions(List.of(new Operations.Assign(a.header(), a.destination(),
                 new Expressions.Literal(a.value().header(), new Values.IntValue(BigInteger.ONE)))));
-        validatorInvalid("I-08/I-52", bad); failure(IMPLEMENTATION_LIMIT, () -> CODEC.encode(bad));
+        validatorInvalid("I-08/I-52", bad); failure(INVALID_IR, () -> CODEC.encode(bad));
     }
     static void slots() {
         localInvalid("I-04", SEQ + ".terminator", changed(SEQ + ".terminator", at(OP)));
@@ -167,20 +167,26 @@ final class ScalarAssignChecks {
         equal(List.of(), AirValidator.validate(nop).issues());
         failure(IMPLEMENTATION_LIMIT, () -> CODEC.encode(nop));
         failsAt(IMPLEMENTATION_LIMIT, OP, changed(OP, Json.object("kind", "nop", "header", at(OP + ".header"))));
-        for (String kind : List.of("decimal", "bytes", "opaque_type", "label"))
+        for (String kind : List.of("decimal", "opaque_type", "label"))
             failsAt(IMPLEMENTATION_LIMIT, OBJECT_PATH + ".typeRef.type", changed(OBJECT_PATH + ".typeRef.type.kind", Json.value(kind)));
         failsAt(IMPLEMENTATION_LIMIT, OBJECT_PATH + ".typeRef", changed(OBJECT_PATH + ".typeRef", Json.object("kind", "unknown_type", "uncertainty", at("publication.uncertainties.0.id"))));
-        for (String kind : List.of("view", "alias", "alternatives", "unknown"))
+        for (String kind : List.of("alternatives", "unknown"))
             failsAt(IMPLEMENTATION_LIMIT, OBJECT_PATH + ".storage", changed(OBJECT_PATH + ".storage.kind", Json.value(kind)));
-        failsAt(IMPLEMENTATION_LIMIT, CELL_PATH, changed(CELL_PATH + ".kind", Json.value("region")));
-        for (String kind : List.of("choice", "region_slice")) failsAt(IMPLEMENTATION_LIMIT, DEST, changed(DEST + ".kind", Json.value(kind)));
+        // Newly transported forms reject the old cell/object shape, with its forbidden fields.
+        for (String kind : List.of("view", "alias"))
+            failsAt(INPUT_ERROR, OBJECT_PATH + ".storage.storage", changed(OBJECT_PATH + ".storage.kind", Json.value(kind)));
+        failsAt(INPUT_ERROR, CELL_PATH + ".typeRef", changed(CELL_PATH + ".kind", Json.value("region")));
+        failsAt(INPUT_ERROR, DEST + ".object", changed(DEST + ".kind", Json.value("region_slice")));
+        failsAt(IMPLEMENTATION_LIMIT, DEST, changed(DEST + ".kind", Json.value("choice")));
         // Read is now mapped: the former Literal shape must be rejected for its unexpected value field.
         failsAt(INPUT_ERROR, VALUE + ".value", changed(VALUE + ".kind", Json.value("read")));
         // Unknown now has a closed shape: the old Literal value field is invalid.
         failsAt(INPUT_ERROR, VALUE + ".value", changed(VALUE + ".kind", Json.value("unknown")));
         for (String kind : List.of("unary", "binary", "quantize", "fit_text", "slice_text", "trim_right"))
             failsAt(IMPLEMENTATION_LIMIT, VALUE, changed(VALUE + ".kind", Json.value(kind)));
-        for (String kind : List.of("bool", "int", "decimal", "bytes", "label"))
+        failsAt(INPUT_ERROR, VALUE + ".value.value", changed(VALUE + ".value.kind", Json.value("int")));
+        failsAt(INPUT_ERROR, VALUE + ".value.value", changed(VALUE + ".value.kind", Json.value("bytes")));
+        for (String kind : List.of("bool", "decimal", "label"))
             failsAt(IMPLEMENTATION_LIMIT, VALUE + ".value", changed(VALUE + ".value.kind", Json.value(kind)));
     }
     static void enumTables() {

@@ -32,10 +32,13 @@ final class BindingWriter {
                 "origin", id(p.origin()), "assertion", object("kind", "disjoint_storage", "storage", array(d.storage(), this::id)));
     }
     private Value manifest(Capabilities.Manifest manifest) {
-        if (!manifest.required().isEmpty() || !manifest.provided().isEmpty())
+        return object("required", array(manifest.required(), this::capability), "provided", array(manifest.provided(), this::capability));
+    }
+    private Value capability(Capabilities.Capability capability) {
+        if (!List.of(Capabilities.MEMORY_REGIONS, Capabilities.IBM1047).contains(capability))
             throw new AirJsonException(AirJsonException.Code.UNSUPPORTED_CAPABILITY,
-                    "$.publication.capabilities", "1A implements the empty capability manifest");
-        return object("required", new Arr(List.of()), "provided", new Arr(List.of()));
+                    "$.publication.capabilities", "Capability outside implemented transport profile");
+        return object("name", capability.name(), "version", capability.version());
     }
     private Value artifact(Origins.Artifact a) {
         return object("id", id(a.id()), "logicalName", a.logicalName(), "contentDigest", optional(a.contentDigest(), Json::value));
@@ -185,16 +188,40 @@ final class BindingWriter {
         if (k.type() == Types.Builtin.TEXT) kind = "text";
         else if (k.type() == Types.Builtin.BOOL) kind = "bool";
         else if (k.type() == Types.Builtin.INT) kind = "int";
+        else if (k.type() == Types.Builtin.BYTES) kind = "bytes";
         else throw limit("$.typeRef", "Only known(text/bool/int) implemented");
         return object("kind", "known", "type", object("kind", kind));
     }
     private Value binding(Memory.Binding b) {
-        if (!(b instanceof Memory.CellBinding c)) throw limit("$.object.storage", "Only StorageBinding.cell implemented");
-        return object("kind", "cell", "storage", id(c.storage()));
+        if (b instanceof Memory.CellBinding c) return object("kind", "cell", "storage", id(c.storage()));
+        if (b instanceof Memory.ViewBinding v) return object("kind", "view", "region", id(v.region()), "offset", v.offset().toString(), "extent", v.extent().toString(), "codec", codec(v.codec()));
+        if (b instanceof Memory.AliasBinding a) return object("kind", "alias", "object", id(a.object()));
+        throw limit("$.object.storage", "StorageBinding outside cell/view/exact alias profile");
     }
     private Value storage(Memory.Storage s) {
-        if (!(s instanceof Memory.Cell c)) throw limit("$.publication.storage", "Only Storage.cell implemented");
-        return object("kind", "cell", "header", storageHeader(c.header()), "typeRef", typeRef(c.typeRef()));
+        return switch (s) {
+            case Memory.Cell c -> object("kind", "cell", "header", storageHeader(c.header()), "typeRef", typeRef(c.typeRef()));
+            case Memory.Region r -> object("kind", "region", "header", storageHeader(r.header()), "extent", r.extent().isPresent()
+                    ? object("kind", "known", "value", r.extent().get().toString())
+                    : object("kind", "unknown", "uncertainty", id(r.extentUnknown().orElseThrow())));
+        };
+    }
+    private Value codec(Memory.Codec codec) {
+        return switch (codec) {
+            case Memory.IdentityBytes ignored -> object("kind", "bytes.identity");
+            case Memory.AsciiText ignored -> object("kind", "text.ascii");
+            case Memory.BinaryCodec b -> object("kind", b.signed() ? "signed.twos_complement" : "unsigned.binary",
+                    "width", b.width().toString(), "order", b.order() == Memory.ByteOrder.BIG ? "BIG" : "LITTLE");
+            case Memory.ExtensionCodec e -> object("kind", "extension", "name", e.name(), "version", e.version(), "logicalType", typeRef(e.logicalType()));
+            case Memory.UnknownCodec u -> object("kind", "unknown", "logicalType", typeRef(u.logicalType()), "reason", id(u.reason()));
+        };
+    }
+    private Value rangeExpression(Expression e) {
+        if (!(e instanceof Expressions.Literal)) throw limit("$.range", "Calculated physical bound outside constant-range profile");
+        return expression(e);
+    }
+    private Value byteRange(Memory.ByteRange r) {
+        return object("region", id(r.region()), "offset", rangeExpression(r.offset()), "extent", rangeExpression(r.extent()));
     }
     private Value storageHeader(Memory.StorageHeader h) {
         return object("id", id(h.id()), "owner", optional(h.owner(), this::id), "lifetime", lifetime(h.lifetime()),
@@ -204,10 +231,14 @@ final class BindingWriter {
         return object("id", id(h.id()), "role", role(h.role()), "origin", id(h.origin()));
     }
     private Value place(Place p) {
+        if (p instanceof Places.RegionSlice s) return object("kind", "region_slice", "header", operandHeader(s.header()),
+                "region", id(s.region()), "offset", rangeExpression(s.offset()), "length", rangeExpression(s.length()), "codec", codec(s.codec()), "typeRef", typeRef(s.typeRef()));
         if (!(p instanceof Places.ObjectPlace o)) throw limit("$.place", "Only Place.object implemented");
         return object("kind", "object", "header", operandHeader(o.header()), "object", id(o.object()));
     }
     private Value literalValue(Values.LiteralValue v) {
+        if (v instanceof Values.IntValue i) return object("kind", "int", "value", i.value().toString());
+        if (v instanceof Values.BytesValue b) return object("kind", "bytes", "base64", java.util.Base64.getEncoder().encodeToString(b.toByteArray()));
         if (!(v instanceof Values.TextValue t)) throw limit("$.literal.value", "Only LiteralValue.text implemented");
         return object("kind", "text", "value", t.value());
     }
@@ -263,6 +294,8 @@ final class BindingWriter {
     private Value instruction(Instruction i) {
         if (i instanceof Operations.HavocMust h) return object("kind", "havoc.must", "header", header(h.header()), "destination", place(h.destination()), "reason", id(h.reason()));
         if (i instanceof Operations.HavocMay h) return object("kind", "havoc.may", "header", header(h.header()), "scope", memoryScope(h.scope()), "reason", id(h.reason()));
+        if (i instanceof Operations.CopyBytes c) return object("kind", "copy_bytes", "header", header(c.header()),
+                "destination", byteRange(c.destination()), "source", byteRange(c.source()), "length", c.length().toString(), "fallback", conservativeEnvelope(c.fallback()));
         if (!(i instanceof Operations.Assign a)) throw limit("$.sequence.instructions", "Only Instruction.assign implemented");
         return object("kind", "assign", "header", header(a.header()), "destination", place(a.destination()), "value", expression(a.value()));
     }

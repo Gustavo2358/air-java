@@ -35,6 +35,7 @@ public final class CodecSuite {
         check("CORE-SIZE exact UTF-8 byte budgets", JsonCapacityChecks::byteBudgets);
         check("CORE-SIZE JSON independent cardinality series", JsonCapacityChecks::series);
         check("CORE-SIZE codec operational result remains explicit", JsonCapacityChecks::validationBudget);
+        check("ST-W1 regional bytes, ranges, capability and copy transport", RegionalChecks::roundTrip);
         check("known integer cells, reads and unknown values round trip", IntegerTypeChecks::roundTrip);
         check("conservative havoc and opaque multiplicity and envelopes", ConservativeChecks::roundTrips);
         check("manual AIR oracle valid and complete", () -> {
@@ -521,15 +522,18 @@ public final class CodecSuite {
                 if (tags[i] != 10 && tags[i] != 11 && tags[i] != 18) continue;
                 int[] ref = (int[])pool[i], nameType = (int[])pool[ref[1]];
                 String name = (String)pool[nameType[0]], descriptor = (String)pool[nameType[1]];
-                require(!name.equals("toString"), "Runtime token authority: " + name);
                 if (tags[i] == 18) {
                     require(!(descriptor.contains("io/github/gustavo2358/air/model/") && descriptor.endsWith("Ljava/lang/String;")),
                             "Runtime model-to-string concatenation");
                 } else {
                     String owner = (String)pool[(Integer)pool[ref[0]]];
+                    // Canonical arbitrary-precision decimal numbers are binding data, not enum tokens.
+                    require(!name.equals("toString") || (owner.equals("java/math/BigInteger") && descriptor.equals("()Ljava/lang/String;")), "Runtime token authority: " + owner + "." + name);
                     // Actual target name fields are AIR data; Enum.name remains forbidden token authority.
                     if (name.equals("name")) require(
                             (owner.equals("io/github/gustavo2358/air/model/Interactions$LiteralTarget") && descriptor.equals("()Ljava/lang/String;"))
+                            || (owner.equals("io/github/gustavo2358/air/model/Capabilities$Capability") && descriptor.equals("()Ljava/lang/String;"))
+                            || (owner.equals("io/github/gustavo2358/air/model/Memory$ExtensionCodec") && descriptor.equals("()Ljava/lang/String;"))
                             || (owner.equals("io/github/gustavo2358/air/model/Interactions$ComputedTarget") && descriptor.equals("()Lio/github/gustavo2358/air/model/Expression;")),
                             "Runtime token authority: " + owner + ".name");
                     require(!(owner.equals("java/lang/String") && name.equals("valueOf")), "Runtime String.valueOf token authority");

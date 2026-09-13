@@ -1,7 +1,7 @@
 {
   "analysis_ir": {
     "repository": "Gustavo2358/analysis-ir",
-    "ref": "51b4d9a8ae0364232bd97103cd73a77e1a34996c",
+    "ref": "a9287917241a70665ad8d3d32d974928690e69f3",
     "semantic_version": "2.0.0",
     "role": "normative",
     "normative_sections": [
@@ -17,7 +17,8 @@
       "especificacao/10-perfis-de-conformidade.md",
       "especificacao/11-rastreabilidade-bilateral.md",
       "conformidade/01-invariantes.md",
-      "conformidade/02-oraculos.md"
+      "conformidade/02-oraculos.md",
+      "especificacao/12-codec-ibm1047.md"
     ],
     "implementation_handoff": "bindings/revisao-json-v1.md",
     "consulted_draft_transport": "bindings/json-v1.md"

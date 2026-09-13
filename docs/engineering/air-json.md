@@ -420,3 +420,36 @@ o domínio inteiro publicado, com valor aberto. Literais inteiros e aritmética
 continuam fora deste incremento de cobertura. `IntegerTypeChecks` usa um oracle
 AIR manual, valida o round-trip e o token normativo, mantém bytes determinísticos
 e rejeita campos extras. A complexidade permanece constante por TypeRef.
+
+## ST-W1.2 — transporte regional constante
+
+Autoridade AIR 03/04 e binding §§3/5–7/10 em `a9287917241a70665ad8d3d32d974928690e69f3`.
+O delta normativo nesse snapshot é somente a extensão IBM1047 opcional; AIR 2.0 e
+binding 1.0 DRAFT permanecem. O transporte agora cobre manifestos com
+`memory.regions@1` e a identidade `text.ebcdic.ibm1047@1`, Region de extensão conhecida
+ou explicitamente desconhecida, View/alias exato, RegionSlice constante, bytes/base64,
+literais inteiros BigInteger e CopyBytes com envelope preservado. Reconhecer a
+identidade IBM1047 no wire ainda não qualifica sua interpretação; o Validator
+continua recusando contratos que não interpreta até a implementação ST-W1.4.
+
+Todos os inteiros usam strings canônicas e base64 exige alfabeto/padding/bits exatos.
+Não há unidades implícitas além de octetos normativos. Bound calculado, Choice,
+AlternativesBinding e UnknownBinding continuam explicitamente fora do transporte
+neste incremento; não são reduzidos à primeira alternativa. A extensão desconhecida
+pode ser representada no modelo, mas não é admitida como capacidade precisa.
+UnknownCodec em declaração conserva domínio/fatos de bytes; não libera leitura exata.
+
+O novo golden `regional.canonical.json` foi escrito com primitivas JSON e os fatos
+manuais do binding, usando apenas o envelope escalar histórico como base. Nenhum
+encoder produtivo o gerou. SHA-256:
+`3ce2442ac38b8b62fc2fb51998d430162e9f726392b14db1b348f59fe89c2677`.
+O oracle AIR foi escrito separadamente. Quatro igualdades, offsets acima de 64 bits,
+extensão desconhecida, cópia, negativos de IDs/aliases/faixas/capabilities/base64 e
+cardinalidades 1/2/5/40 são executados no FAST. Goldens escalares ficam byte-exatos.
+
+Classificação: adição de cobertura, compatível para publicações antes aceitas.
+Formas recém-cobertas inválidas passam de IMPLEMENTATION_LIMIT ao diagnóstico de
+forma/Validator correspondente; os mesmos contracasos permanecem na suíte.
+O guard de tokens admite somente accessors semânticos Capability.name e
+ExtensionCodec.name, além de BigInteger.toString para inteiros canônicos;
+Enum.name/toString, String.valueOf e concatenação de modelo continuam proibidos.
