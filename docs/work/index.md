@@ -19,3 +19,5 @@ Baseline repin: [WORK-AIR-BASELINE-001](history/WORK-AIR-BASELINE-001.md), compl
 
 W2C APPROVED / MERGED / CLOSED; [closeout e baseline congelado](history/WORK-AIR-JSON-004.md).
 Nenhum item ativo. W2B NOT_STARTED / NOT_AUTHORIZED. W2D NOT_STARTED / NOT_AUTHORIZED.
+
+- [WORK-AIR-JSON-005 — conservative operation transport](active/WORK-AIR-JSON-005.yaml): IN_PROGRESS / Draft review.

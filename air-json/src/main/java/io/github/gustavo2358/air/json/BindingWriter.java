@@ -83,6 +83,10 @@ final class BindingWriter {
                     "arguments", empty(i.arguments(), "$.invoke.arguments"), "results", empty(i.results(), "$.invoke.results"),
                     "signature", invocationSignature(i.signature()), "effectOperands", array(i.effectOperands(), this::place),
                     "effectBound", effects(i.effectBound()), "outcomes", outcomes(i.outcomes()), "contract", contract(i.contract()));
+        if (t instanceof Operations.Opaque o)
+            return object("kind", "opaque", "header", header(o.header()), "observedKind", o.observedKind(),
+                "knownOperands", array(o.knownOperands(), v -> v instanceof Place p ? place(p) : expression((Expression) v)),
+                "valueResults", array(o.valueResults(), this::id), "envelope", conservativeEnvelope(o.envelope()));
         if (!(t instanceof Operations.Return r)) throw limit("$.sequence.terminator", "Operation " + t.kind() + " not implemented");
         return object("kind", "return", "header", header(r.header()), "values", empty(r.values(), "$.return.values"));
     }
@@ -121,6 +125,8 @@ final class BindingWriter {
         return switch (s) {
             case Scopes.VisibleMemory v -> object("kind", "visible", "unit", id(v.unit()), "includingExternal", v.includingExternal());
             case Scopes.AllMemory a -> object("kind", "all", "publication", id(a.publication()), "includingEnvironment", a.includingEnvironment());
+            case Scopes.ObjectsMemory o -> object("kind", "objects", "objects", array(o.objects(), this::id));
+            case Scopes.StorageMemory o -> object("kind", "storage", "storage", array(o.storage(), this::id));
             default -> throw limit("$.memory.scope", "Only visible/all MemoryScope implemented");
         };
     }
@@ -153,6 +159,7 @@ final class BindingWriter {
             case Scopes.UnitControl u -> object("kind", "unit", "unit", id(u.unit()), "labels", u.labels(), "normalExit", u.normalExit(),
                     "exceptionalExit", u.exceptionalExit(), "halt", u.halt(), "diverge", u.diverge(), "externalControl", u.externalControl());
             case Scopes.AllControl a -> object("kind", "all", "publication", id(a.publication()));
+            case Scopes.LabelsControl l -> object("kind", "labels", "labels", array(l.labels(), this::id));
             default -> throw limit("$.control.scope", "Only unit/all ControlScope implemented");
         };
     }
@@ -232,7 +239,29 @@ final class BindingWriter {
         }
         throw new IllegalStateException("Expression frame invariant");
     }
+    private Value conservativeEnvelope(Envelopes.Envelope e) {
+        var m = e.memory(); var c = e.control(); var d = e.dependencies();
+        return object("memory", object("knownReads", array(m.knownReads(), this::id), "otherReads", memoryBound(m.otherReads()),
+                "knownWrites", array(m.knownWrites(), this::id), "otherWrites", memoryBound(m.otherWrites()), "mustOverwrite", array(m.mustOverwrite(), this::id)),
+            "control", object("known", array(c.known(), this::controlAlternative), "remainder", controlBound(c.remainder())),
+            "dependencies", object("known", empty(d.known(), "$.opaque.envelope.dependencies.known"), "remainder", dependencyBound(d.remainder())));
+    }
+    private Value controlAlternative(Control.ControlAlternative c) {
+        if (c instanceof Control.InvocationAlternative i) return alternative(i);
+        if (c instanceof Control.JumpAlternative j) return object("kind", "jump", "label", id(j.label()));
+        if (c instanceof Control.ReturnAlternative) return object("kind", "return");
+        return object("kind", "continue");
+    }
+    private Value dependencyBound(Scopes.DependencyBound b) {
+        return switch (b) {
+            case Scopes.NoResources ignored -> object("kind", "none");
+            case Scopes.AnyResource ignored -> object("kind", "any_resource");
+            case Scopes.ResourceCategories c -> object("kind", "categories", "categories", array(c.categories(), Json::value));
+        };
+    }
     private Value instruction(Instruction i) {
+        if (i instanceof Operations.HavocMust h) return object("kind", "havoc.must", "header", header(h.header()), "destination", place(h.destination()), "reason", id(h.reason()));
+        if (i instanceof Operations.HavocMay h) return object("kind", "havoc.may", "header", header(h.header()), "scope", memoryScope(h.scope()), "reason", id(h.reason()));
         if (!(i instanceof Operations.Assign a)) throw limit("$.sequence.instructions", "Only Instruction.assign implemented");
         return object("kind", "assign", "header", header(a.header()), "destination", place(a.destination()), "value", expression(a.value()));
     }

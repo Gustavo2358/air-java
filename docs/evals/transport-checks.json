@@ -10,6 +10,7 @@
     "CORE-SIZE exact UTF-8 byte budgets",
     "CORE-SIZE JSON independent cardinality series",
     "CORE-SIZE codec operational result remains explicit",
+    "conservative havoc and opaque multiplicity and envelopes",
     "manual AIR oracle valid and complete",
     "zero known publication remains explicitly complete",
     "encode equals independent canonical golden",

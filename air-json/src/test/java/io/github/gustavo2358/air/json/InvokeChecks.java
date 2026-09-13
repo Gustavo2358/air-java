@@ -265,10 +265,7 @@ final class InvokeChecks {
                 new Object[]{"target.name.kind", Json.value("trim_right")},
                 new Object[]{"target.name.kind", Json.value("fit_text")},
                 new Object[]{"target.name.place.kind", Json.value("choice")},
-                new Object[]{"effectBound.otherwise.reads.scope", object("kind", "objects", "objects", new Json.Arr(List.of(ownedId("object", "name-cell"))))},
-                new Object[]{"effectBound.otherwise.reads.scope", object("kind", "storage", "storage", new Json.Arr(List.of(globalId("storage", "storage-name-cell"))))},
                 new Object[]{"effectBound.otherwise.reads.scope", object("kind", "union", "members", new Json.Arr(List.of()))},
-                new Object[]{"outcomes.remainder.scope", object("kind", "labels", "labels", new Json.Arr(List.of(ownedId("label", "continuation"))))},
                 new Object[]{"outcomes.remainder.scope", object("kind", "union", "members", new Json.Arr(List.of()))});
         for (Object[] pair : pairs)
             failure(IMPLEMENTATION_LIMIT, () -> new AirJson().decode(wire(edit(t, OP + "." + pair[0], (Json.Value)pair[1]))));
@@ -281,13 +278,12 @@ final class InvokeChecks {
         failure(IMPLEMENTATION_LIMIT, () -> new AirJson().encode(publication(args)));
         var effects = new Interactions.EffectBound(i.effectBound().otherwise(), List.of(new Interactions.OutcomeEffects(Control.NormalOutcome.INSTANCE, i.effectBound().otherwise())));
         failure(IMPLEMENTATION_LIMIT, () -> new AirJson().encode(publication(copy(i, i.target(), external(i), effects, i.outcomes(), i.contract()))));
-        for (Scopes.MemoryScope scope : List.of(new Scopes.ObjectsMemory(List.of(OBJECT)),
-                new Scopes.StorageMemory(List.of(new StorageId(PUB, "storage-name-cell"))), new Scopes.MemoryUnion(List.of(new Scopes.AllMemory(PUB, true))))) {
+        for (Scopes.MemoryScope scope : List.of(new Scopes.MemoryUnion(List.of(new Scopes.AllMemory(PUB, true))))) {
             var bound = new Interactions.EffectBound(new Interactions.ForeignEffects(new Scopes.WithinMemory(scope),
                     i.effectBound().otherwise().writes(), List.of()), List.of());
             failure(IMPLEMENTATION_LIMIT, () -> new AirJson().encode(publication(copy(i, i.target(), external(i), bound, i.outcomes(), i.contract()))));
         }
-        for (Scopes.ControlScope scope : List.of(new Scopes.LabelsControl(List.of(END)), new Scopes.ControlUnion(List.of(new Scopes.AllControl(PUB))))) {
+        for (Scopes.ControlScope scope : List.of(new Scopes.ControlUnion(List.of(new Scopes.AllControl(PUB))))) {
             var outcomes = new Control.InvocationOutcomes(i.outcomes().known(), new Scopes.WithinControl(scope));
             failure(IMPLEMENTATION_LIMIT, () -> new AirJson().encode(publication(copy(i, i.target(), external(i), i.effectBound(), outcomes, i.contract()))));
         }

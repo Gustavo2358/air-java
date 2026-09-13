@@ -35,6 +35,7 @@ public final class CodecSuite {
         check("CORE-SIZE exact UTF-8 byte budgets", JsonCapacityChecks::byteBudgets);
         check("CORE-SIZE JSON independent cardinality series", JsonCapacityChecks::series);
         check("CORE-SIZE codec operational result remains explicit", JsonCapacityChecks::validationBudget);
+        check("conservative havoc and opaque multiplicity and envelopes", ConservativeChecks::roundTrips);
         check("manual AIR oracle valid and complete", () -> {
             equal(ValidationResult.Status.STRUCTURALLY_VALID, AirValidator.validate(EXPECTED).status());
             equal(2, EXPECTED.artifacts().size()); equal(8, EXPECTED.origins().size()); equal(5, EXPECTED.uncertainties().size());

@@ -1,5 +1,11 @@
 {
-  "active": [],
+  "active": [
+    {
+      "id": "WORK-AIR-JSON-005",
+      "status": "IN_PROGRESS",
+      "path": "docs/work/active/WORK-AIR-JSON-005.yaml"
+    }
+  ],
   "history": [
     {
       "id": "WORK-AIR-HARNESS-001",
