@@ -171,6 +171,7 @@ final class ReferenceChecks {
                 boolean profile=capability.name().startsWith("AIR-");
                 if(profile) c.obligation("profile",c.index.publication.id(),
                         "declared profile requires separate oracle evidence: "+capability);
+                else if(c.namePolicies.contains(capability)) c.obligation("I-43",c.index.publication.id(),"name interpretation requires the declared external policy; structural validation does not interpret it: "+capability);
                 else if(!standard && c.required.contains(capability))
                     c.unsupported("I-43",c.index.publication.id(),
                             "extension semantic contract is not implemented by this validator: "+capability);
@@ -274,7 +275,7 @@ final class ReferenceChecks {
 
     void namePolicy(Interactions.NamePolicy policy,Id owner) {
         if(policy instanceof Interactions.ExtensionName extension)
-            c.capability(new Capabilities.Capability(extension.name(),extension.version()),owner);
+            c.declaredCapability(new Capabilities.Capability(extension.name(),extension.version()),owner);
         if(policy instanceof Interactions.UnknownName unknown)
             c.uncertainty(unknown.uncertainty(),null,owner);
     }

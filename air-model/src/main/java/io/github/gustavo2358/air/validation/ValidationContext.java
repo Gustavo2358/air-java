@@ -12,7 +12,8 @@ final class ValidationContext {
     final Map<ValidationIssue.Kind,Long> issueCounts=new EnumMap<>(ValidationIssue.Kind.class);
     boolean traversalCompleted=true;
     final Set<Capabilities.Capability> required;
-    ValidationContext(Publication p,ValidationOptions options) { this.options=options; this.index=new PublicationIndex(p,this); this.required=new HashSet<>(p.capabilities().required()); }
+    final Set<Capabilities.Capability> namePolicies;
+    ValidationContext(Publication p,ValidationOptions options) { this.options=options; this.index=new PublicationIndex(p,this); this.required=new HashSet<>(p.capabilities().required()); this.namePolicies=NamePolicies.extensions(p); }
     void depth(long depth) { if(depth>options.maximumNesting()) throw new Limit("nesting limit"); }
     void error(String rule,Id id,String message) { issue(ValidationIssue.Kind.INVALID_IR,rule,id,message); }
     void obligation(String rule,Id id,String message) { issue(ValidationIssue.Kind.SEMANTIC_OBLIGATION,rule,id,message); }
@@ -62,6 +63,10 @@ final class ValidationContext {
         }
     }
     void capability(Capabilities.Capability required,Id owner) {
+        if(namePolicies.contains(required)) unsupported("I-43",owner,"name-policy capability cannot supply another extension surface: "+required);
+        declaredCapability(required,owner);
+    }
+    void declaredCapability(Capabilities.Capability required,Id owner) {
         if(!this.required.contains(required))
             error("I-43",owner,"used capability missing from required manifest: "+required);
     }

@@ -1,0 +1,5 @@
+id: CICS-PROGRAM-CONTROL
+title: CICS LINK and XCTL program dependencies
+status: IN_PROGRESS
+scope:
+  - Existing opaque name-policy and control-union transport/validation

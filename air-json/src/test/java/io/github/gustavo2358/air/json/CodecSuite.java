@@ -537,6 +537,7 @@ public final class CodecSuite {
                     // Actual target name fields are AIR data; Enum.name remains forbidden token authority.
                     if (name.equals("name")) require(
                             (owner.equals("io/github/gustavo2358/air/model/Interactions$LiteralTarget") && descriptor.equals("()Ljava/lang/String;"))
+                            || (owner.equals("io/github/gustavo2358/air/model/Interactions$ExtensionName") && descriptor.equals("()Ljava/lang/String;"))
                             || (owner.equals("io/github/gustavo2358/air/model/Capabilities$Capability") && descriptor.equals("()Ljava/lang/String;"))
                             || (owner.equals("io/github/gustavo2358/air/model/Memory$ExtensionCodec") && descriptor.equals("()Ljava/lang/String;"))
                             || (owner.equals("io/github/gustavo2358/air/model/Interactions$ComputedTarget") && descriptor.equals("()Lio/github/gustavo2358/air/model/Expression;")),
