@@ -373,6 +373,7 @@ final class OperationChecks {
             }
 
         Map<StorageId,Values.LiteralValue> exactSeeds=new HashMap<>();
+        var regionalSeeds=new HashMap<StorageId,List<InitialBytes>>();
         for(Entries.InitialCondition seed:entry.state().conditions()) {
             DomainSubject destination=new OperandDomain(seed.place().header().id());
             switch(seed.value()) {
@@ -386,22 +387,61 @@ final class OperationChecks {
                             c.error("I-17",entry.id(),
                                     "conflicting literal initializers for the same cell/alias");
                     } else if(codec(seed.place())!=null) {
-                        limit(entry.id(),
-                                "overlapping region initializers require byte/codec consistency checks outside this validator slice");
+                        codecWrite(seed.place(),literal.value(),entry.id());
+                        var bytes=initialBytes(seed.place(),literal.value().value());
+                        if(bytes.isPresent())regionalSeeds.computeIfAbsent(bytes.get().region(),ignored->new ArrayList<>()).add(bytes.get());
+                        else limit(entry.id(),"regional initial consistency needs a bounded literal encoding");
                     }
                 }
                 case Entries.ParameterInitial parameter -> same(destination,
                         new ParameterDomain(entry.id(),parameter.position()),site,entry.id());
                 case Entries.Preserve ignored -> {
-                    StorageId cell=exactCell(seed.place());
+                    StorageId cell=storageLocation(seed.place());
                     if(cell!=null && c.index.storage.get(cell).header().lifetime()==Memory.Lifetime.ACTIVATION)
                         c.error("I-17",entry.id(),
-                                "preserve is not initialization of a new activation cell");
+                                "preserve is not initialization of a new activation allocation");
                 }
                 case Entries.ExternalUnknown ignored -> { }
                 case Entries.Uninitialized ignored -> { }
             }
         }
+        for(var ranges:regionalSeeds.values()) {
+            ranges.sort(Comparator.comparing(InitialBytes::offset));InitialBytes active=null;
+            for(var next:ranges) {
+                if(active!=null&&next.offset().compareTo(active.end())<0) {
+                    int length=active.end().min(next.end()).subtract(next.offset()).intValueExact();
+                    int at=next.offset().subtract(active.offset()).intValueExact();
+                    if(!active.bytes().subList(at,at+length).equals(next.bytes().subList(0,length)))
+                        c.error("I-17",entry.id(),"contradictory literal bytes in overlapping initial conditions");
+                }
+                if(active==null||next.end().compareTo(active.end())>0)active=next;
+            }
+        }
+    }
+    private record InitialBytes(StorageId region,BigInteger offset,List<Integer> bytes) {
+        BigInteger end() {return offset.add(BigInteger.valueOf(bytes.size()));}
+    }
+    private StorageId storageLocation(Place place) {
+        if(place instanceof Places.RegionSlice slice)return slice.region();
+        if(place instanceof Places.ObjectPlace object) {
+            var binding=resolvedBinding(object.object());
+            if(binding instanceof Memory.ViewBinding view)return view.region();
+            if(binding instanceof Memory.CellBinding cell)return cell.storage();
+        }
+        return null;
+    }
+    private Optional<InitialBytes> initialBytes(Place place,Values.LiteralValue value) {
+        var length=extent(place);var region=storageLocation(place);BigInteger offset=null;
+        if(place instanceof Places.RegionSlice slice)offset=integer(slice.offset()).orElse(null);
+        if(place instanceof Places.ObjectPlace object&&resolvedBinding(object.object()) instanceof Memory.ViewBinding view)offset=view.offset();
+        if(length.isEmpty()||offset==null||region==null)return Optional.empty();
+        List<Integer> bytes=null;
+        if(codec(place) instanceof Memory.IdentityBytes&&value instanceof Values.BytesValue v&&length.get().equals(BigInteger.valueOf(v.octets().size())))bytes=v.octets();
+        if(value instanceof Values.TextValue text) {
+            var encoded=MemoryCodecs.encodeText(codec(place),text,length.get());
+            if(encoded.status()==MemoryCodecs.Status.EXACT)bytes=encoded.value().orElseThrow().octets();
+        }
+        return bytes==null?Optional.empty():Optional.of(new InitialBytes(region,offset,bytes));
     }
 
     private void same(DomainSubject left,DomainSubject right,ProofSite site,Id owner) {
@@ -437,11 +477,20 @@ final class OperationChecks {
             c.error("I-11",operand.header().id(),"expected role "+role+", got "+operand.header().role());
     }
 
-    private void codecWrite(Place place,Expression value,OperationId id) {
+    private void codecWrite(Place place,Expression value,Id id) {
         viewBounds(place,id);
         Memory.Codec codec=codec(place); if(codec==null) return;
         Optional<BigInteger> extent=extent(place);
         boolean discharged=false;
+        // A total decode through this bijective single-byte codec restricts every
+        // source scalar to its repertoire. FitText preserves that repertoire when
+        // its single pad scalar is representable and fixes the exact output size.
+        // Range/read obligations are checked independently for the source place.
+        if (value instanceof Expressions.FitText fit && fit.value() instanceof Expressions.Read read
+                && MemoryCodecs.isIbm1047(codec) && MemoryCodecs.isIbm1047(codec(read.place()))
+                && extent.filter(fit.length()::equals).isPresent()
+                && MemoryCodecs.encodeText(codec,new Values.TextValue(fit.pad()),BigInteger.ONE).status()==MemoryCodecs.Status.EXACT)
+            discharged=true;
         if(value instanceof Expressions.Literal literal && extent.isPresent()) {
             BigInteger size=extent.get();
             if(codec instanceof Memory.IdentityBytes

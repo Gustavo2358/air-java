@@ -2,6 +2,8 @@
   "baseline_commit": "6a4091e5394fc22b3d2ada9abbdb530eb3572a58",
   "source": "src/test/java/io/github/gustavo2358/air/validation/ContractSuite.java",
   "checks": [
+    "ST-W6 bounded regional fit codec proof",
+    "ST-W7 simultaneous regional initial state",
     "ST-W1 explicit text codec byte oracles and missing profile",
     "ST-W1 binary slice width matches physical extent",
     "ST-W1 pure view access requires established region bounds",

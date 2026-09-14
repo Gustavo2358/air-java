@@ -148,9 +148,24 @@ final class BindingReader {
     }
     private Entries.Entry entry(At a) {
         a.fields("id", "initialLabel", "signature", "state", "origin");
-        var s = a.child("state").fields("conditions", "uncertainties"); s.child("conditions").empty();
+        var s = a.child("state").fields("conditions", "uncertainties");
         return new Entries.Entry(entryId(a.child("id")), a.child("initialLabel").optional(this::labelId), signature(a.child("signature")),
-                new Entries.EntryState(List.of(), s.child("uncertainties").list(this::uncertaintyId)), originId(a.child("origin")));
+                new Entries.EntryState(s.child("conditions").list(this::initialCondition), s.child("uncertainties").list(this::uncertaintyId)), originId(a.child("origin")));
+    }
+    private Entries.InitialCondition initialCondition(At a) {
+        a.fields("place","value","origin","premises");
+        return new Entries.InitialCondition(place(a.child("place")),initialValue(a.child("value")),originId(a.child("origin")),a.child("premises").list(v -> typedId(v,PremiseId.class)));
+    }
+    private Entries.InitialValue initialValue(At a) {
+        return switch(a.kind()) {
+            case "literal"->{a.fields("kind","value");var e=expression(a.child("value"));
+                if(!(e instanceof Expressions.Literal literal))throw Json.input(a.path(),"Initial literal requires LiteralExpression");yield new Entries.LiteralInitial(literal);}
+            case "parameter"->{a.fields("kind","position");yield new Entries.ParameterInitial(natural(a.child("position")));}
+            case "preserve"->{a.fields("kind");yield Entries.Preserve.INSTANCE;}
+            case "external_unknown"->{a.fields("kind","reason");yield new Entries.ExternalUnknown(uncertaintyId(a.child("reason")));}
+            case "uninitialized"->{a.fields("kind","reason");yield new Entries.Uninitialized(uncertaintyId(a.child("reason")));}
+            default->throw Json.input(a.path(),"Unknown InitialValue kind");
+        };
     }
     private Interactions.Signature signature(At a) {
         a.fields("parameters", "results", "origin");
@@ -293,7 +308,23 @@ final class BindingReader {
             default -> throw Json.input(a.path(), "Unknown MemoryBound kind");
         };
     }
-    private Scopes.MemoryScope memoryScope(At a) {
+    private static final class MemoryScopeFrame {
+        final At at;final List<At> children;final List<Scopes.MemoryScope> members=new ArrayList<>();int next;
+        MemoryScopeFrame(At at) {
+            this.at=at;children=at.kind().equals("union")?at.fields("kind","members").child("members").elements():List.of();
+            if(at.kind().equals("union")&&children.isEmpty())throw at.representability("MemoryUnion requires nonempty members in air-java");
+        }
+    }
+    private Scopes.MemoryScope memoryScope(At at) {
+        var stack=new ArrayDeque<MemoryScopeFrame>();stack.push(new MemoryScopeFrame(at));
+        while(true) {
+            var frame=stack.peek();
+            if(frame.next<frame.children.size()){stack.push(new MemoryScopeFrame(frame.children.get(frame.next++)));continue;}
+            var scope=frame.at.kind().equals("union")?new Scopes.MemoryUnion(frame.members):memoryScopeLeaf(frame.at);
+            stack.pop();if(stack.isEmpty())return scope;stack.peek().members.add(scope);
+        }
+    }
+    private Scopes.MemoryScope memoryScopeLeaf(At a) {
         return switch (a.kind()) {
             case "visible" -> {
                 a.fields("kind", "unit", "includingExternal");
@@ -305,7 +336,6 @@ final class BindingReader {
             }
             case "objects" -> { a.fields("kind", "objects"); yield new Scopes.ObjectsMemory(a.child("objects").list(this::objectId)); }
             case "storage" -> { a.fields("kind", "storage"); yield new Scopes.StorageMemory(a.child("storage").list(this::storageId)); }
-            case "union" -> throw a.unsupported("MemoryScope " + a.kind());
             default -> throw Json.input(a.path(), "Unknown MemoryScope kind");
         };
     }
@@ -390,7 +420,7 @@ final class BindingReader {
                 }
                 yield Types.known(switch(type.kind()){case "bool"->Types.Builtin.BOOL;case "int"->Types.Builtin.INT;case "bytes"->Types.Builtin.BYTES;default->Types.Builtin.TEXT;});
             }
-            case "unknown_type" -> throw a.unsupported("TypeRef.unknown_type");
+            case "unknown_type" -> { a.fields("kind", "uncertainty"); yield new Types.UnknownType(uncertaintyId(a.child("uncertainty"))); }
             default -> throw Json.input(a.path(), "Unknown TypeRef kind");
         };
     }
@@ -404,7 +434,8 @@ final class BindingReader {
                 yield new Memory.ViewBinding(storageId(a.child("region")), natural(a.child("offset")), natural(a.child("extent")), codec(a.child("codec")));
             }
             case "alias" -> { a.fields("kind", "object"); yield new Memory.AliasBinding(objectId(a.child("object"))); }
-            case "alternatives", "unknown" -> throw a.unsupported("StorageBinding " + a.kind());
+            case "unknown" -> { a.fields("kind", "scope", "reason"); yield new Memory.UnknownBinding(memoryScope(a.child("scope")),uncertaintyId(a.child("reason"))); }
+            case "alternatives" -> throw a.unsupported("StorageBinding alternatives");
             default -> throw Json.input(a.path(), "Unknown StorageBinding kind");
         };
     }
@@ -495,7 +526,7 @@ final class BindingReader {
             this.at = at;
             dependencies = at.kind().equals("unknown")
                     ? at.fields("kind", "header", "typeRef", "dependencies", "remainingReads", "reason").child("dependencies").elements()
-                    : List.of();
+                    : at.kind().equals("fit_text") ? List.of(at.fields("kind","header","value","length","pad").child("value")) : List.of();
         }
     }
     private Expression expression(At root) {
@@ -516,7 +547,12 @@ final class BindingReader {
                 }
                 case "unknown" -> new Expressions.Unknown(operandHeader(a.child("header")), typeRef(a.child("typeRef")),
                         frame.values, memoryBound(a.child("remainingReads")), uncertaintyId(a.child("reason")));
-                case "unary", "binary", "quantize", "fit_text", "slice_text", "trim_right" ->
+                case "fit_text" -> {
+                    String pad=a.child("pad").text();
+                    if(pad.codePointCount(0,pad.length())!=1)throw Json.input(a.child("pad").path(),"fit pad requires exactly one scalar");
+                    yield new Expressions.FitText(operandHeader(a.child("header")),frame.values.getFirst(),natural(a.child("length")),pad);
+                }
+                case "unary", "binary", "quantize", "slice_text", "trim_right" ->
                         throw a.unsupported("Expression " + a.kind());
                 default -> throw Json.input(a.path(), "Unknown Expression kind");
             };

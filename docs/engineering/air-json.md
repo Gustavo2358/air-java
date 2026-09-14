@@ -469,3 +469,11 @@ REDs preservados na campanha: manifesto regional bloqueado; IBM1047 sem suporte;
 slice de um octeto indevidamente aceita com codec de 16 bits; acesso puro sem
 limites de região demonstrados. Correções passaram no FAST cumulativo. O caso de
 extensão desconhecida sem acesso continua no golden regional, com seu UncertaintyId.
+
+### ST-W6 — fit_text existente
+
+Transporte da forma normativa `fit_text(value,length,pad)` do binding1.0 no
+pin31893d1f4d203d19a61a750e2c4220120d9dab84. Natural permanece string canônica
+e pad um escalar Unicode. Reader/writer usam frames iterativos, incluindo
+fit aninhado; campos desconhecidos, length negativo/não canônico e pad inválido
+são INPUT_ERROR. Modelo/semântica/versão AIR não mudam.

@@ -56,8 +56,20 @@ final class BindingWriter {
     private Value entry(Entries.Entry e) {
         return object("id", id(e.id()), "initialLabel", optional(e.initialLabel(), this::id),
                 "signature", signature(e.signature()), "state", object(
-                "conditions", empty(e.state().conditions(), "$.publication.units.entries.state.conditions"),
+                "conditions", array(e.state().conditions(),this::initialCondition),
                 "uncertainties", array(e.state().uncertainties(), this::id)), "origin", id(e.origin()));
+    }
+    private Value initialCondition(Entries.InitialCondition c) {
+        return object("place",place(c.place()),"value",initialValue(c.value()),"origin",id(c.origin()),"premises",array(c.premises(),this::id));
+    }
+    private Value initialValue(Entries.InitialValue value) {
+        return switch(value) {
+            case Entries.LiteralInitial v->object("kind","literal","value",expression(v.value()));
+            case Entries.ParameterInitial v->object("kind","parameter","position",v.position().toString());
+            case Entries.Preserve ignored->object("kind","preserve");
+            case Entries.ExternalUnknown v->object("kind","external_unknown","reason",id(v.reason()));
+            case Entries.Uninitialized v->object("kind","uninitialized","reason",id(v.reason()));
+        };
     }
     private Value signature(Interactions.Signature s) {
         return object("parameters", object("known", empty(s.parameters().known(), "$.signature.parameters.known"),
@@ -124,14 +136,26 @@ final class BindingWriter {
             case Scopes.WithinMemory w -> object("kind", "within", "scope", memoryScope(w.scope()));
         };
     }
-    private Value memoryScope(Scopes.MemoryScope s) {
-        return switch (s) {
-            case Scopes.VisibleMemory v -> object("kind", "visible", "unit", id(v.unit()), "includingExternal", v.includingExternal());
-            case Scopes.AllMemory a -> object("kind", "all", "publication", id(a.publication()), "includingEnvironment", a.includingEnvironment());
-            case Scopes.ObjectsMemory o -> object("kind", "objects", "objects", array(o.objects(), this::id));
-            case Scopes.StorageMemory o -> object("kind", "storage", "storage", array(o.storage(), this::id));
-            default -> throw limit("$.memory.scope", "Only visible/all MemoryScope implemented");
-        };
+    private static final class MemoryScopeFrame {
+        final Scopes.MemoryScope scope;final List<Value> members=new ArrayList<>();int next;
+        MemoryScopeFrame(Scopes.MemoryScope scope) {this.scope=scope;}
+    }
+    private Value memoryScope(Scopes.MemoryScope scope) {
+        var stack=new ArrayDeque<MemoryScopeFrame>();stack.push(new MemoryScopeFrame(scope));
+        while(true) {
+            var frame=stack.peek();Value value;
+            if(frame.scope instanceof Scopes.MemoryUnion union) {
+                if(frame.next<union.members().size()) {stack.push(new MemoryScopeFrame(union.members().get(frame.next++)));continue;}
+                value=object("kind","union","members",array(frame.members,v->v));
+            } else value=switch(frame.scope) {
+                case Scopes.VisibleMemory v->object("kind","visible","unit",id(v.unit()),"includingExternal",v.includingExternal());
+                case Scopes.AllMemory v->object("kind","all","publication",id(v.publication()),"includingEnvironment",v.includingEnvironment());
+                case Scopes.ObjectsMemory v->object("kind","objects","objects",array(v.objects(),this::id));
+                case Scopes.StorageMemory v->object("kind","storage","storage",array(v.storage(),this::id));
+                case Scopes.MemoryUnion ignored->throw new IllegalStateException("union frame already handled");
+            };
+            stack.pop();if(stack.isEmpty())return value;stack.peek().members.add(value);
+        }
     }
     private Value outcomes(Control.InvocationOutcomes o) {
         return object("known", array(o.known(), this::alternative), "remainder", controlBound(o.remainder()));
@@ -183,6 +207,7 @@ final class BindingWriter {
                 "coverage", coverageStatus(o.coverage()), "precision", precision(o.precision()));
     }
     private Value typeRef(Types.TypeRef t) {
+        if (t instanceof Types.UnknownType u) return object("kind", "unknown_type", "uncertainty", id(u.uncertainty()));
         if (!(t instanceof Types.Known k)) throw limit("$.typeRef", "Only known(text/bool/int) implemented");
         String kind;
         if (k.type() == Types.Builtin.TEXT) kind = "text";
@@ -196,7 +221,8 @@ final class BindingWriter {
         if (b instanceof Memory.CellBinding c) return object("kind", "cell", "storage", id(c.storage()));
         if (b instanceof Memory.ViewBinding v) return object("kind", "view", "region", id(v.region()), "offset", v.offset().toString(), "extent", v.extent().toString(), "codec", codec(v.codec()));
         if (b instanceof Memory.AliasBinding a) return object("kind", "alias", "object", id(a.object()));
-        throw limit("$.object.storage", "StorageBinding outside cell/view/exact alias profile");
+        if (b instanceof Memory.UnknownBinding u) return object("kind", "unknown", "scope", memoryScope(u.scope()), "reason", id(u.reason()));
+        throw limit("$.object.storage", "StorageBinding alternatives outside implemented profile");
     }
     private Value storage(Memory.Storage s) {
         return switch (s) {
@@ -256,8 +282,13 @@ final class BindingWriter {
             if (e instanceof Expressions.Unknown u && frame.next < u.dependencies().size()) {
                 stack.push(new ExpressionFrame(u.dependencies().get(frame.next++))); continue;
             }
+            if(e instanceof Expressions.FitText f && frame.next++==0) {
+                stack.push(new ExpressionFrame(f.value()));continue;
+            }
             Value result;
-            if (e instanceof Expressions.Unknown u)
+            if(e instanceof Expressions.FitText f)
+                result=object("kind","fit_text","header",operandHeader(f.header()),"value",frame.dependencies.getFirst(),"length",f.length().toString(),"pad",f.pad());
+            else if (e instanceof Expressions.Unknown u)
                 result = object("kind", "unknown", "header", operandHeader(u.header()), "typeRef", typeRef(u.typeRef()),
                         "dependencies", new Arr(frame.dependencies), "remainingReads", memoryBound(u.remainingReads()), "reason", id(u.reason()));
             else if (e instanceof Expressions.Read r)

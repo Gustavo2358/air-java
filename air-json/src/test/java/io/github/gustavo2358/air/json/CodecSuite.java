@@ -35,6 +35,10 @@ public final class CodecSuite {
         check("CORE-SIZE exact UTF-8 byte budgets", JsonCapacityChecks::byteBudgets);
         check("CORE-SIZE JSON independent cardinality series", JsonCapacityChecks::series);
         check("CORE-SIZE codec operational result remains explicit", JsonCapacityChecks::validationBudget);
+        check("ST-W6 generic fit_text transport", FitTextChecks::run);
+        check("ST-W7 initial state transport", InitialStateChecks::run);
+        check("ST-W7 memory scope union transport", MemoryScopeChecks::run);
+        check("ST-W7 unknown mixed storage transport", MixedStorageChecks::run);
         check("ST-W1 explicit IBM1047 total read and exact literal write", RegionalChecks::ibmProfile);
         check("ST-W1 regional bytes, ranges, capability and copy transport", RegionalChecks::roundTrip);
         check("known integer cells, reads and unknown values round trip", IntegerTypeChecks::roundTrip);
@@ -650,9 +654,11 @@ public final class CodecSuite {
         // Nonempty containers never become empty successful Publications, regardless of deferred element form.
         for(String path:List.of("publication.resources","publication.artifactRelations",
                 "publication.units.0.visibleObjects","publication.units.0.completionPorts",
-                "publication.units.0.entries.0.state.conditions","publication.units.0.entries.0.signature.parameters.known",
+                "publication.units.0.entries.0.signature.parameters.known",
                 "publication.units.0.sequences.0.terminator.values"))
             fails(IMPLEMENTATION_LIMIT,changed(path,new Json.Arr(List.of(Json.object("kind","deferred-element")))));
+        // InitialCondition is now transported with a closed structure, never a deferred element.
+        fails(INPUT_ERROR,changed("publication.units.0.entries.0.state.conditions",new Json.Arr(List.of(Json.object("kind","deferred-element")))));
         var w=(Origins.Written)EXPECTED.origins().get(0);
         var p=withFirstWritten(Optional.of(new Origins.Offsets(BigInteger.ZERO,BigInteger.TEN,"octet",true)),List.of(),true);
         failure(IMPLEMENTATION_LIMIT,()->CODEC.encode(p)); equal(w,EXPECTED.origins().get(0));

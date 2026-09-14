@@ -1,0 +1,14 @@
+{
+  "id": "WORK-STORAGE-W6-W8",
+  "title": "Discharge bounded codec fits and regional entry seeds",
+  "status": "IN_PROGRESS",
+  "scope": "Authorized ST-W6..W8 campaign; generic AIR validation only, no new source-language rules",
+  "authority": "analysis-ir@31893d1f4d203d19a61a750e2c4220120d9dab84 especificacao/02-tipos-valores-e-operandos.md fit_text and I-46 codec exact write",
+  "rule": "fit_text produces exactly n characters; IBM1047 Read yields only scalars in its bijective 256-scalar repertoire. Fitting with a representable one-scalar pad preserves that repertoire, so a destination with the same codec and extent n accepts all possible results.",
+  "algorithm": "Check direct FitText over Read once per write; compare declared source codec and destination extent, encode single pad. O(1) in inventory cardinality; no value-flow execution, recursion or byte allocation proportional to n.",
+  "premises": "Normative FitText length and explicit codec identity; no corpus assumptions. Existing range and read checks remain in force.",
+  "oracle": "A two-byte IBM1047 read fitted to four bytes is total; truncating to one is total. Unrepresentable pad, unknown/ascii source codec and mismatched result extent do not discharge this proof.",
+  "qualification": "W6 12/12 G2 PASS; W7 12/12 G2 PASS; W8 technical G3 PASS (composed unchanged evidence + affected RC3 requalification).",
+  "review": "READY_FOR_HUMAN_REVIEW; no merge/auto-merge; lifecycle status remains IN_PROGRESS until merge",
+  "qualification_document": "docs/engineering/storage-w8-qualification.md"
+}
