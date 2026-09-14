@@ -1,5 +1,7 @@
 # Trabalho atual
 
+[WORK-STORAGE-AIR-001 — Storage Semantics ST-W0..ST-W5](active/WORK-STORAGE-AIR-001.yaml): IN_PROGRESS. Contrato regional existente reutilizado; transporte e codec IBM1047 qualificados em W1, revisão humana após W5.
+
 | Item | Estado | Escopo |
 | --- | --- | --- |
 | [WORK-AIR-JSON-004](history/WORK-AIR-JSON-004.md) | completed | CP6 W2C: Branch/Jump/Unknown BOOL/DisjointStorage transport |

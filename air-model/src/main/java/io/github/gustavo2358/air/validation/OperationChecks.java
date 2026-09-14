@@ -66,9 +66,15 @@ final class OperationChecks {
             types.expect(types.type(region.offset()),Builtin.INT,id);
             types.expect(types.type(region.length()),Builtin.INT,id);
             checkRange(region.region(),region.offset(),region.length(),id);
+            if(region.codec() instanceof Memory.BinaryCodec binary)
+                integer(region.length()).ifPresent(length -> {
+                    if(!length.equals(binary.width().divide(BigInteger.valueOf(8))))
+                        c.error("I-13",id,"binary codec width differs from slice extent");
+                });
         } else if(operand instanceof Expressions.Read read) {
+            viewBounds(read.place(),id);
             Memory.Codec codec=codec(read.place());
-            if(codec instanceof Memory.UnknownCodec || codec instanceof Memory.ExtensionCodec
+            if(codec instanceof Memory.UnknownCodec || codec instanceof Memory.ExtensionCodec && !MemoryCodecs.isIbm1047(codec)
                     || codec instanceof Memory.AsciiText)
                 limit(id,"read totality for ASCII/unknown/extension codec is a producer obligation not proven by this validator");
         } else if(operand instanceof Expressions.Binary binary
@@ -432,6 +438,7 @@ final class OperationChecks {
     }
 
     private void codecWrite(Place place,Expression value,OperationId id) {
+        viewBounds(place,id);
         Memory.Codec codec=codec(place); if(codec==null) return;
         Optional<BigInteger> extent=extent(place);
         boolean discharged=false;
@@ -442,12 +449,11 @@ final class OperationChecks {
                 discharged=true;
                 if(!size.equals(BigInteger.valueOf(bytes.octets().size())))
                     c.error("I-46",id,"bytes value length differs from view extent");
-            } else if(codec instanceof Memory.AsciiText
+            } else if((codec instanceof Memory.AsciiText || MemoryCodecs.isIbm1047(codec))
                     && literal.value() instanceof Values.TextValue text) {
                 discharged=true;
-                if(!size.equals(BigInteger.valueOf(text.value().codePointCount(0,text.value().length())))
-                        || text.value().codePoints().anyMatch(codePoint -> codePoint>127))
-                    c.error("I-46",id,"text value does not fit exact ASCII view");
+                if(MemoryCodecs.encodeText(codec,text,size).status()!=MemoryCodecs.Status.EXACT)
+                    c.error("I-46",id,"text value does not fit exact declared codec view");
             } else if(codec instanceof Memory.BinaryCodec binary
                     && literal.value() instanceof Values.IntValue integer) {
                 discharged=true;
@@ -460,6 +466,14 @@ final class OperationChecks {
         }
         if(!discharged)
             limit(id,"codec write preconditions cannot be discharged for this nonliteral or unsupported view");
+    }
+
+    private void viewBounds(Place place,Id owner) {
+        if(place instanceof Places.ObjectPlace object
+                && resolvedBinding(object.object()) instanceof Memory.ViewBinding view
+                && c.index.storage.get(view.region()) instanceof Memory.Region region
+                && region.extent().isEmpty())
+            limit(owner,"pure view access bounds cannot be discharged against unknown region extent");
     }
 
     private void checkRange(StorageId region,Expression offset,Expression extent,Id owner) {

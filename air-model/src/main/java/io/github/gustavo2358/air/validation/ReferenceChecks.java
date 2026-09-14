@@ -167,7 +167,7 @@ final class ReferenceChecks {
                     c.error("I-43",c.index.publication.id(),
                             "duplicate capability name: "+capability.name());
                 boolean standard=List.of(Capabilities.MEMORY_REGIONS,Capabilities.LOCAL_CONTROL,
-                        Capabilities.INDIRECT_CONTROL).contains(capability);
+                        Capabilities.INDIRECT_CONTROL,Capabilities.IBM1047).contains(capability);
                 boolean profile=capability.name().startsWith("AIR-");
                 if(profile) c.obligation("profile",c.index.publication.id(),
                         "declared profile requires separate oracle evidence: "+capability);
@@ -609,6 +609,11 @@ final class ReferenceChecks {
             case Memory.BinaryCodec ignored -> new Types.Known(Types.Builtin.INT);
             case Memory.ExtensionCodec extension -> {
                 c.capability(new Capabilities.Capability(extension.name(),extension.version()),owner);
+                if(MemoryCodecs.isIbm1047Identity(extension)) {
+                    if(!extension.logicalType().equals(Types.known(Types.Builtin.TEXT)))
+                        c.error("I-49",owner,"IBM1047 codec requires known(text)");
+                    yield Types.known(Types.Builtin.TEXT);
+                }
                 yield extension.logicalType();
             }
             case Memory.UnknownCodec unknown -> {

@@ -115,11 +115,14 @@ final class BindingReader {
     }
     private Capabilities.Manifest manifest(At a) {
         a.fields("required", "provided");
-        for (String name : List.of("required", "provided"))
-            for (At c : a.child(name).elements()) { c.fields("name", "version"); c.child("name").text(); c.child("version").text(); }
-        if (!a.child("required").elements().isEmpty() || !a.child("provided").elements().isEmpty())
-            throw new AirJsonException(UNSUPPORTED_CAPABILITY, a.path(), "1A implements the empty capability manifest");
-        return new Capabilities.Manifest(List.of(), List.of());
+        return new Capabilities.Manifest(a.child("required").list(this::capability), a.child("provided").list(this::capability));
+    }
+    private Capabilities.Capability capability(At a) {
+        a.fields("name", "version");
+        var result = new Capabilities.Capability(a.child("name").modelText(), a.child("version").modelText());
+        if (!List.of(Capabilities.MEMORY_REGIONS, Capabilities.IBM1047).contains(result))
+            throw new AirJsonException(UNSUPPORTED_CAPABILITY, a.path(), "Capability outside implemented transport profile");
+        return result;
     }
     private Origins.Artifact artifact(At a) {
         a.fields("id", "logicalName", "contentDigest");
@@ -177,6 +180,8 @@ final class BindingReader {
             throw a.invalid("I-04", "AIR 01 §3: terminator in instructions");
         if (kind.equals("havoc.must")) return new Operations.HavocMust(header(a.child("header")), place(a.child("destination")), uncertaintyId(a.child("reason")));
         if (kind.equals("havoc.may")) return new Operations.HavocMay(header(a.child("header")), memoryScope(a.child("scope")), uncertaintyId(a.child("reason")));
+        if (kind.equals("copy_bytes")) return new Operations.CopyBytes(header(a.child("header")),
+                byteRange(a.child("destination")), byteRange(a.child("source")), natural(a.child("length")), conservativeEnvelope(a.child("fallback")));
         if (!kind.equals("assign")) throw a.unsupported("Instruction " + kind);
         return new Operations.Assign(header(a.child("header")), place(a.child("destination")), expression(a.child("value")));
     }
@@ -215,7 +220,7 @@ final class BindingReader {
                     effects(a.child("effectBound")), outcomes(a.child("outcomes")), contract(a.child("contract")));
         }
         if (kind.equals("opaque")) return new Operations.Opaque(header(a.child("header")), a.child("observedKind").modelText(),
-            a.child("knownOperands").list(v -> v.kind().equals("object") ? place(v) : expression(v)),
+            a.child("knownOperands").list(v -> Set.of("object", "region_slice", "choice").contains(v.kind()) ? place(v) : expression(v)),
             a.child("valueResults").list(this::operandId), conservativeEnvelope(a.child("envelope")));
         if (!kind.equals("return")) throw a.unsupported("Operation " + kind);
         a.child("values").empty(); return new Operations.Return(header(a.child("header")), List.of());
@@ -379,11 +384,11 @@ final class BindingReader {
             case "known" -> {
                 a.fields("kind", "type"); var type = a.child("type");
                 switch (type.kind()) {
-                    case "text", "bool", "int" -> type.fields("kind");
-                    case "decimal", "bytes", "opaque_type", "label" -> throw type.unsupported("Type " + type.kind());
+                    case "text", "bool", "int", "bytes" -> type.fields("kind");
+                    case "decimal", "opaque_type", "label" -> throw type.unsupported("Type " + type.kind());
                     default -> throw Json.input(type.path(), "Unknown Type kind");
                 }
-                yield Types.known(switch(type.kind()){case "bool"->Types.Builtin.BOOL;case "int"->Types.Builtin.INT;default->Types.Builtin.TEXT;});
+                yield Types.known(switch(type.kind()){case "bool"->Types.Builtin.BOOL;case "int"->Types.Builtin.INT;case "bytes"->Types.Builtin.BYTES;default->Types.Builtin.TEXT;});
             }
             case "unknown_type" -> throw a.unsupported("TypeRef.unknown_type");
             default -> throw Json.input(a.path(), "Unknown TypeRef kind");
@@ -394,7 +399,12 @@ final class BindingReader {
             case "cell" -> {
                 a.fields("kind", "storage"); yield new Memory.CellBinding(storageId(a.child("storage")));
             }
-            case "view", "alias", "alternatives", "unknown" -> throw a.unsupported("StorageBinding " + a.kind());
+            case "view" -> {
+                a.fields("kind", "region", "offset", "extent", "codec");
+                yield new Memory.ViewBinding(storageId(a.child("region")), natural(a.child("offset")), natural(a.child("extent")), codec(a.child("codec")));
+            }
+            case "alias" -> { a.fields("kind", "object"); yield new Memory.AliasBinding(objectId(a.child("object"))); }
+            case "alternatives", "unknown" -> throw a.unsupported("StorageBinding " + a.kind());
             default -> throw Json.input(a.path(), "Unknown StorageBinding kind");
         };
     }
@@ -404,9 +414,49 @@ final class BindingReader {
                 a.fields("kind", "header", "typeRef");
                 yield new Memory.Cell(storageHeader(a.child("header")), typeRef(a.child("typeRef")));
             }
-            case "region" -> throw a.unsupported("Storage.region");
+            case "region" -> {
+                a.fields("kind", "header", "extent"); var extent = a.child("extent");
+                yield switch (extent.kind()) {
+                    case "known" -> { extent.fields("kind", "value"); yield new Memory.Region(storageHeader(a.child("header")), Optional.of(natural(extent.child("value"))), Optional.empty()); }
+                    case "unknown" -> { extent.fields("kind", "uncertainty"); yield new Memory.Region(storageHeader(a.child("header")), Optional.empty(), Optional.of(uncertaintyId(extent.child("uncertainty")))); }
+                    default -> throw Json.input(extent.path(), "Unknown ExtentKnowledge kind");
+                };
+            }
             default -> throw Json.input(a.path(), "Unknown Storage kind");
         };
+    }
+    private Memory.Codec codec(At a) {
+        return switch (a.kind()) {
+            case "bytes.identity" -> { a.fields("kind"); yield Memory.IdentityBytes.INSTANCE; }
+            case "text.ascii" -> { a.fields("kind"); yield Memory.AsciiText.INSTANCE; }
+            case "unsigned.binary", "signed.twos_complement" -> {
+                a.fields("kind", "width", "order"); var width = natural(a.child("width"));
+                if (width.signum() == 0 || width.mod(BigInteger.valueOf(8)).signum() != 0)
+                    throw a.child("width").invalid("I-46", "Binary width must be positive and divisible by eight");
+                var order = switch (a.child("order").text()) {
+                    case "LITTLE" -> Memory.ByteOrder.LITTLE; case "BIG" -> Memory.ByteOrder.BIG;
+                    default -> throw Json.input(a.child("order").path(), "Unknown ByteOrder token");
+                };
+                yield new Memory.BinaryCodec(a.kind().equals("signed.twos_complement"), width, order);
+            }
+            case "extension" -> {
+                a.fields("kind", "name", "version", "logicalType");
+                yield new Memory.ExtensionCodec(a.child("name").modelText(), a.child("version").modelText(), typeRef(a.child("logicalType")));
+            }
+            case "unknown" -> {
+                a.fields("kind", "logicalType", "reason"); yield new Memory.UnknownCodec(typeRef(a.child("logicalType")), uncertaintyId(a.child("reason")));
+            }
+            default -> throw Json.input(a.path(), "Unknown Codec kind");
+        };
+    }
+    /** Constant-range profile: reject calculated bounds before recursive Place/Expression descent. */
+    private Expression rangeExpression(At a) {
+        if (!a.kind().equals("literal")) throw a.unsupported("Calculated physical bound");
+        return expression(a);
+    }
+    private Memory.ByteRange byteRange(At a) {
+        a.fields("region", "offset", "extent");
+        return new Memory.ByteRange(storageId(a.child("region")), rangeExpression(a.child("offset")), rangeExpression(a.child("extent")));
     }
     private Memory.StorageHeader storageHeader(At a) {
         a.fields("id", "owner", "lifetime", "visibility", "origin");
@@ -427,7 +477,12 @@ final class BindingReader {
                 a.fields("kind", "header", "object");
                 yield new Places.ObjectPlace(operandHeader(a.child("header")), objectId(a.child("object")));
             }
-            case "choice", "region_slice" -> throw a.unsupported("Place " + a.kind());
+            case "region_slice" -> {
+                a.fields("kind", "header", "region", "offset", "length", "codec", "typeRef");
+                yield new Places.RegionSlice(operandHeader(a.child("header")), storageId(a.child("region")),
+                        rangeExpression(a.child("offset")), rangeExpression(a.child("length")), codec(a.child("codec")), typeRef(a.child("typeRef")));
+            }
+            case "choice" -> throw a.unsupported("Place " + a.kind());
             default -> throw Json.input(a.path(), "Unknown Place kind");
         };
     }
@@ -476,7 +531,21 @@ final class BindingReader {
             case "text" -> {
                 a.fields("kind", "value"); yield new Values.TextValue(a.child("value").text());
             }
-            case "bool", "int", "decimal", "bytes", "label" -> throw a.unsupported("LiteralValue " + a.kind());
+            case "int" -> {
+                a.fields("kind", "value"); var text = a.child("value").text();
+                if (!text.matches("0|-?[1-9][0-9]*")) throw Json.input(a.child("value").path(), "Expected canonical Integer string");
+                yield new Values.IntValue(new BigInteger(text));
+            }
+            case "bytes" -> {
+                a.fields("kind", "base64"); String text = a.child("base64").text();
+                if (!text.matches("(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?"))
+                    throw Json.input(a.child("base64").path(), "Expected canonical padded base64");
+                byte[] bytes = java.util.Base64.getDecoder().decode(text);
+                if (!java.util.Base64.getEncoder().encodeToString(bytes).equals(text))
+                    throw Json.input(a.child("base64").path(), "Nonzero base64 padding bits");
+                yield Values.BytesValue.of(bytes);
+            }
+            case "bool", "decimal", "label" -> throw a.unsupported("LiteralValue " + a.kind());
             default -> throw Json.input(a.path(), "Unknown LiteralValue kind");
         };
     }

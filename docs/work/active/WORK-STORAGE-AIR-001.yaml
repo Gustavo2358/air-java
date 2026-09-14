@@ -1,0 +1,17 @@
+id: WORK-STORAGE-AIR-001
+title: Storage Semantics campaign — ST-W0..ST-W5
+status: IN_PROGRESS
+scope:
+  - ST-W0 baseline and contract reconciliation; existing regional model is reused.
+  - ST-W1 regional manifest, Region/View/Slice, bytes, CopyBytes, codec profile and strict validator/JSON qualification.
+  - ST-W3/W4/W5 integration, cumulative scalar compatibility and explicit unsupported forms.
+  - AIR authority remains analysis-ir; IBM1047 requires a named normative codec contract before implementation.
+  - No COBOL interpretation, dataflow algorithms, W6-W8 features, merge or auto-merge.
+notes: User authorized one persistent campaign draft PR; review after W5. Existing model/codec work is not reimplemented.
+design:
+  authority: AIR 03 sections 4-6/9, AIR 04 copy_bytes, binding 5-7/10 at 51b4d9; IBM1047 extension at a928791.
+  inputs: Constant arbitrary-precision octet ranges, unknown declared region extent, literal bytes/text, explicit codec/capability.
+  proof: Exact field mappings; total IBM1047 decoding by bijection, literal encoding by representability and exact extent. Unknown codecs never certify decoding.
+  algorithm: Linear traversal and constant codec lookup; no storage resolution, dataflow, charset default or narrowing BigInteger.
+  negatives: Missing/wrong capability, dangling reference, alias cycle, malformed bytes, invalid interval, unknown extent and unsupported codec remain distinct.
+  oracle: Hand-authored AIR facts and octets; independent wire facts and IBM table; cumulative scalar goldens remain unchanged.
