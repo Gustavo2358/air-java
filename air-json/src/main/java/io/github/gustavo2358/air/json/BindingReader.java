@@ -420,7 +420,7 @@ final class BindingReader {
                 }
                 yield Types.known(switch(type.kind()){case "bool"->Types.Builtin.BOOL;case "int"->Types.Builtin.INT;case "bytes"->Types.Builtin.BYTES;default->Types.Builtin.TEXT;});
             }
-            case "unknown_type" -> throw a.unsupported("TypeRef.unknown_type");
+            case "unknown_type" -> { a.fields("kind", "uncertainty"); yield new Types.UnknownType(uncertaintyId(a.child("uncertainty"))); }
             default -> throw Json.input(a.path(), "Unknown TypeRef kind");
         };
     }
@@ -434,7 +434,8 @@ final class BindingReader {
                 yield new Memory.ViewBinding(storageId(a.child("region")), natural(a.child("offset")), natural(a.child("extent")), codec(a.child("codec")));
             }
             case "alias" -> { a.fields("kind", "object"); yield new Memory.AliasBinding(objectId(a.child("object"))); }
-            case "alternatives", "unknown" -> throw a.unsupported("StorageBinding " + a.kind());
+            case "unknown" -> { a.fields("kind", "scope", "reason"); yield new Memory.UnknownBinding(memoryScope(a.child("scope")),uncertaintyId(a.child("reason"))); }
+            case "alternatives" -> throw a.unsupported("StorageBinding alternatives");
             default -> throw Json.input(a.path(), "Unknown StorageBinding kind");
         };
     }

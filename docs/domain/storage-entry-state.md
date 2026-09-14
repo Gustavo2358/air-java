@@ -23,3 +23,9 @@ including WithinMemory in effect bounds. No new AIR variant or external effect
 model. Writer/reader use iterative scope frames, preserving members/order,
 including repeated scopes; empty bounds use NoMemory. O(nodes) work, O(depth) frame stack;
 no recursive Java scope serialization. Unknown/extra/missing fields reject.
+
+W7.3 fecha os transportes normativos `TypeRef.unknown_type(uncertainty)` e
+`StorageBinding.unknown(scope,reason)` (AIR JSON 1.0, tabelas TypeRef/StorageBinding).
+Tipos ausentes não adquirem tipo TEXT. As associações desconhecidas preservam scope
+e razão, sem fabricar vista exata. `TYPE_UNKNOWN` segue a validação I-49 existente;
+associação e tipo mantêm razões próprias. AlternativesBinding continua fora do codec.

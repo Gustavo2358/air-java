@@ -207,6 +207,7 @@ final class BindingWriter {
                 "coverage", coverageStatus(o.coverage()), "precision", precision(o.precision()));
     }
     private Value typeRef(Types.TypeRef t) {
+        if (t instanceof Types.UnknownType u) return object("kind", "unknown_type", "uncertainty", id(u.uncertainty()));
         if (!(t instanceof Types.Known k)) throw limit("$.typeRef", "Only known(text/bool/int) implemented");
         String kind;
         if (k.type() == Types.Builtin.TEXT) kind = "text";
@@ -220,7 +221,8 @@ final class BindingWriter {
         if (b instanceof Memory.CellBinding c) return object("kind", "cell", "storage", id(c.storage()));
         if (b instanceof Memory.ViewBinding v) return object("kind", "view", "region", id(v.region()), "offset", v.offset().toString(), "extent", v.extent().toString(), "codec", codec(v.codec()));
         if (b instanceof Memory.AliasBinding a) return object("kind", "alias", "object", id(a.object()));
-        throw limit("$.object.storage", "StorageBinding outside cell/view/exact alias profile");
+        if (b instanceof Memory.UnknownBinding u) return object("kind", "unknown", "scope", memoryScope(u.scope()), "reason", id(u.reason()));
+        throw limit("$.object.storage", "StorageBinding alternatives outside implemented profile");
     }
     private Value storage(Memory.Storage s) {
         return switch (s) {

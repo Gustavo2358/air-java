@@ -169,11 +169,11 @@ final class ScalarAssignChecks {
         failsAt(IMPLEMENTATION_LIMIT, OP, changed(OP, Json.object("kind", "nop", "header", at(OP + ".header"))));
         for (String kind : List.of("decimal", "opaque_type", "label"))
             failsAt(IMPLEMENTATION_LIMIT, OBJECT_PATH + ".typeRef.type", changed(OBJECT_PATH + ".typeRef.type.kind", Json.value(kind)));
-        failsAt(IMPLEMENTATION_LIMIT, OBJECT_PATH + ".typeRef", changed(OBJECT_PATH + ".typeRef", Json.object("kind", "unknown_type", "uncertainty", at("publication.uncertainties.0.id"))));
-        for (String kind : List.of("alternatives", "unknown"))
+        failure(INVALID_IR, () -> CODEC.decode(changed(OBJECT_PATH + ".typeRef", Json.object("kind", "unknown_type", "uncertainty", at("publication.uncertainties.0.id")))));
+        for (String kind : List.of("alternatives"))
             failsAt(IMPLEMENTATION_LIMIT, OBJECT_PATH + ".storage", changed(OBJECT_PATH + ".storage.kind", Json.value(kind)));
         // Newly transported forms reject the old cell/object shape, with its forbidden fields.
-        for (String kind : List.of("view", "alias"))
+        for (String kind : List.of("view", "alias", "unknown"))
             failsAt(INPUT_ERROR, OBJECT_PATH + ".storage.storage", changed(OBJECT_PATH + ".storage.kind", Json.value(kind)));
         failsAt(INPUT_ERROR, CELL_PATH + ".typeRef", changed(CELL_PATH + ".kind", Json.value("region")));
         failsAt(INPUT_ERROR, DEST + ".object", changed(DEST + ".kind", Json.value("region_slice")));

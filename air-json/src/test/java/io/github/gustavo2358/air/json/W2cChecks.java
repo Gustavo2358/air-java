@@ -144,7 +144,7 @@ final class W2cChecks {
             invalid(edit(full, site + ".header.id.owner.localId", Json.value("then")), "I-11");
         var assignment = W2cWireOracle.document("unknown");
         invalid(edit(assignment, "publication.units.0.sequences.0.instructions.0.value.header.role", Json.value("CALL_TARGET")), "I-11");
-        reject(edit(full, PRED + ".typeRef", object("kind", "unknown_type", "uncertainty", W2cWireOracle.global("uncertainty", "facts"))), IMPLEMENTATION_LIMIT, null);
+        invalid(edit(full, PRED + ".typeRef", object("kind", "unknown_type", "uncertainty", W2cWireOracle.global("uncertainty", "facts"))), "I-49");
         reject(edit(full, PRED + ".kind", Json.value("future.unknown")), INPUT_ERROR, null);
         reject(edit(full, PRED + ".dependencies.0", object("kind", "unary", "header", at(full, PRED + ".header"), "operator", "not", "operand", at(full, PRED + ".dependencies.0"))), IMPLEMENTATION_LIMIT, null);
         for (String field : List.of("dependencies", "remainingReads", "reason")) {
@@ -157,7 +157,7 @@ final class W2cChecks {
         var p = publication("full"); var u = (Expressions.Unknown)((Operations.Branch)p.units().get(0).sequences().get(0).terminator()).predicate();
         var invalidModel = predicate(p, new Expressions.Unknown(u.header(), new Types.UnknownType(gap("facts")), u.dependencies(), u.remainingReads(), u.reason()));
         require(AirValidator.validate(invalidModel).issues().stream().anyMatch(i -> i.rule().equals("I-08")), "unknown_type cannot satisfy BOOL");
-        failure(IMPLEMENTATION_LIMIT, () -> new AirJson().encode(invalidModel));
+        failure(INVALID_IR, () -> new AirJson().encode(invalidModel));
         System.out.println("W2C NEGATIVE unknown cases=" + (negatives - start));
     }
     static Json.Value sameDomainWire() {
