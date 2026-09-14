@@ -148,9 +148,24 @@ final class BindingReader {
     }
     private Entries.Entry entry(At a) {
         a.fields("id", "initialLabel", "signature", "state", "origin");
-        var s = a.child("state").fields("conditions", "uncertainties"); s.child("conditions").empty();
+        var s = a.child("state").fields("conditions", "uncertainties");
         return new Entries.Entry(entryId(a.child("id")), a.child("initialLabel").optional(this::labelId), signature(a.child("signature")),
-                new Entries.EntryState(List.of(), s.child("uncertainties").list(this::uncertaintyId)), originId(a.child("origin")));
+                new Entries.EntryState(s.child("conditions").list(this::initialCondition), s.child("uncertainties").list(this::uncertaintyId)), originId(a.child("origin")));
+    }
+    private Entries.InitialCondition initialCondition(At a) {
+        a.fields("place","value","origin","premises");
+        return new Entries.InitialCondition(place(a.child("place")),initialValue(a.child("value")),originId(a.child("origin")),a.child("premises").list(v -> typedId(v,PremiseId.class)));
+    }
+    private Entries.InitialValue initialValue(At a) {
+        return switch(a.kind()) {
+            case "literal"->{a.fields("kind","value");var e=expression(a.child("value"));
+                if(!(e instanceof Expressions.Literal literal))throw Json.input(a.path(),"Initial literal requires LiteralExpression");yield new Entries.LiteralInitial(literal);}
+            case "parameter"->{a.fields("kind","position");yield new Entries.ParameterInitial(natural(a.child("position")));}
+            case "preserve"->{a.fields("kind");yield Entries.Preserve.INSTANCE;}
+            case "external_unknown"->{a.fields("kind","reason");yield new Entries.ExternalUnknown(uncertaintyId(a.child("reason")));}
+            case "uninitialized"->{a.fields("kind","reason");yield new Entries.Uninitialized(uncertaintyId(a.child("reason")));}
+            default->throw Json.input(a.path(),"Unknown InitialValue kind");
+        };
     }
     private Interactions.Signature signature(At a) {
         a.fields("parameters", "results", "origin");

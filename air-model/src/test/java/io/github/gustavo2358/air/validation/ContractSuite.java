@@ -15,6 +15,7 @@ public final class ContractSuite {
     private ContractSuite() {}
     public static void main(String[] args) throws Exception {
         test("ST-W6 bounded regional fit codec proof",RegionalFitChecks::run);
+        test("ST-W7 simultaneous regional initial state",RegionalInitialChecks::run);
         test("ST-W1 explicit text codec byte oracles and missing profile",RuntimeCodecChecks::run);
         test("ST-W1 binary slice width matches physical extent",RegionalValidationChecks::binarySliceWidth);
         test("ST-W1 pure view access requires established region bounds",RegionalValidationChecks::unknownExtentAccess);

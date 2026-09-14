@@ -56,8 +56,20 @@ final class BindingWriter {
     private Value entry(Entries.Entry e) {
         return object("id", id(e.id()), "initialLabel", optional(e.initialLabel(), this::id),
                 "signature", signature(e.signature()), "state", object(
-                "conditions", empty(e.state().conditions(), "$.publication.units.entries.state.conditions"),
+                "conditions", array(e.state().conditions(),this::initialCondition),
                 "uncertainties", array(e.state().uncertainties(), this::id)), "origin", id(e.origin()));
+    }
+    private Value initialCondition(Entries.InitialCondition c) {
+        return object("place",place(c.place()),"value",initialValue(c.value()),"origin",id(c.origin()),"premises",array(c.premises(),this::id));
+    }
+    private Value initialValue(Entries.InitialValue value) {
+        return switch(value) {
+            case Entries.LiteralInitial v->object("kind","literal","value",expression(v.value()));
+            case Entries.ParameterInitial v->object("kind","parameter","position",v.position().toString());
+            case Entries.Preserve ignored->object("kind","preserve");
+            case Entries.ExternalUnknown v->object("kind","external_unknown","reason",id(v.reason()));
+            case Entries.Uninitialized v->object("kind","uninitialized","reason",id(v.reason()));
+        };
     }
     private Value signature(Interactions.Signature s) {
         return object("parameters", object("known", empty(s.parameters().known(), "$.signature.parameters.known"),
