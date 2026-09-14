@@ -282,7 +282,7 @@ final class InvokeChecks {
         for (Scopes.MemoryScope scope : List.of(new Scopes.MemoryUnion(List.of(new Scopes.AllMemory(PUB, true))))) {
             var bound = new Interactions.EffectBound(new Interactions.ForeignEffects(new Scopes.WithinMemory(scope),
                     i.effectBound().otherwise().writes(), List.of()), List.of());
-            failure(IMPLEMENTATION_LIMIT, () -> new AirJson().encode(publication(copy(i, i.target(), external(i), bound, i.outcomes(), i.contract()))));
+            roundTrip(publication(copy(i,i.target(),external(i),bound,i.outcomes(),i.contract())));
         }
         for (Scopes.ControlScope scope : List.of(new Scopes.ControlUnion(List.of(new Scopes.AllControl(PUB))))) {
             var outcomes = new Control.InvocationOutcomes(i.outcomes().known(), new Scopes.WithinControl(scope));
