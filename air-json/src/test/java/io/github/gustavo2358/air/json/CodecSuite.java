@@ -38,6 +38,7 @@ public final class CodecSuite {
         check("ST-W6 generic fit_text transport", FitTextChecks::run);
         check("ST-W7 initial state transport", InitialStateChecks::run);
         check("RF-W1 possible entry candidates and required remainder", PossibleInitialChecks::run);
+        check("RF-W3 invocation arguments and results", InvocationOperandsChecks::run);
         check("ST-W7 memory scope union transport", MemoryScopeChecks::run);
         check("ST-W7 unknown mixed storage transport", MixedStorageChecks::run);
         check("ST-W1 explicit IBM1047 total read and exact literal write", RegionalChecks::ibmProfile);
