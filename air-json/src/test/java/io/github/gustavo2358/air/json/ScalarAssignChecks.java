@@ -182,7 +182,9 @@ final class ScalarAssignChecks {
         failsAt(INPUT_ERROR, VALUE + ".value", changed(VALUE + ".kind", Json.value("read")));
         // Unknown now has a closed shape: the old Literal value field is invalid.
         failsAt(INPUT_ERROR, VALUE + ".value", changed(VALUE + ".kind", Json.value("unknown")));
-        for (String kind : List.of("unary", "binary", "quantize", "fit_text", "slice_text", "trim_right"))
+        // FitText is mapped: an old Literal shape lacks its required exact length.
+        failsAt(INPUT_ERROR, VALUE + ".length", changed(VALUE + ".kind", Json.value("fit_text")));
+        for (String kind : List.of("unary", "binary", "quantize", "slice_text", "trim_right"))
             failsAt(IMPLEMENTATION_LIMIT, VALUE, changed(VALUE + ".kind", Json.value(kind)));
         failsAt(INPUT_ERROR, VALUE + ".value.value", changed(VALUE + ".value.kind", Json.value("int")));
         failsAt(INPUT_ERROR, VALUE + ".value.value", changed(VALUE + ".value.kind", Json.value("bytes")));

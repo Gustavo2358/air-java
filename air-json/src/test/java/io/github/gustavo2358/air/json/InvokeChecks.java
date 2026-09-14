@@ -263,10 +263,11 @@ final class InvokeChecks {
                 new Object[]{"signature", object("kind", "entry", "entry", ownedId("entry", "entry"))},
                 new Object[]{"target.namePolicy", object("kind", "extension", "name", "fixture.policy", "version", "1")},
                 new Object[]{"target.name.kind", Json.value("trim_right")},
-                new Object[]{"target.name.kind", Json.value("fit_text")},
                 new Object[]{"target.name.place.kind", Json.value("choice")},
                 new Object[]{"effectBound.otherwise.reads.scope", object("kind", "union", "members", new Json.Arr(List.of()))},
                 new Object[]{"outcomes.remainder.scope", object("kind", "union", "members", new Json.Arr(List.of()))});
+        // FitText is implemented; replacing a Read tag leaves a malformed FitText shape.
+        failure(INPUT_ERROR, () -> new AirJson().decode(wire(edit(t, OP + ".target.name.kind", Json.value("fit_text")))));
         for (Object[] pair : pairs)
             failure(IMPLEMENTATION_LIMIT, () -> new AirJson().decode(wire(edit(t, OP + "." + pair[0], (Json.Value)pair[1]))));
         for (String inventory : List.of("arguments", "results", "signature.signature.parameters.known", "signature.signature.results.known", "effectBound.perOutcome"))
