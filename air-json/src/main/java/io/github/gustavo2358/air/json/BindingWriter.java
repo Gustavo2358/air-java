@@ -256,8 +256,13 @@ final class BindingWriter {
             if (e instanceof Expressions.Unknown u && frame.next < u.dependencies().size()) {
                 stack.push(new ExpressionFrame(u.dependencies().get(frame.next++))); continue;
             }
+            if(e instanceof Expressions.FitText f && frame.next++==0) {
+                stack.push(new ExpressionFrame(f.value()));continue;
+            }
             Value result;
-            if (e instanceof Expressions.Unknown u)
+            if(e instanceof Expressions.FitText f)
+                result=object("kind","fit_text","header",operandHeader(f.header()),"value",frame.dependencies.getFirst(),"length",f.length().toString(),"pad",f.pad());
+            else if (e instanceof Expressions.Unknown u)
                 result = object("kind", "unknown", "header", operandHeader(u.header()), "typeRef", typeRef(u.typeRef()),
                         "dependencies", new Arr(frame.dependencies), "remainingReads", memoryBound(u.remainingReads()), "reason", id(u.reason()));
             else if (e instanceof Expressions.Read r)

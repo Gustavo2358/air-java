@@ -442,6 +442,15 @@ final class OperationChecks {
         Memory.Codec codec=codec(place); if(codec==null) return;
         Optional<BigInteger> extent=extent(place);
         boolean discharged=false;
+        // A total decode through this bijective single-byte codec restricts every
+        // source scalar to its repertoire. FitText preserves that repertoire when
+        // its single pad scalar is representable and fixes the exact output size.
+        // Range/read obligations are checked independently for the source place.
+        if (value instanceof Expressions.FitText fit && fit.value() instanceof Expressions.Read read
+                && MemoryCodecs.isIbm1047(codec) && MemoryCodecs.isIbm1047(codec(read.place()))
+                && extent.filter(fit.length()::equals).isPresent()
+                && MemoryCodecs.encodeText(codec,new Values.TextValue(fit.pad()),BigInteger.ONE).status()==MemoryCodecs.Status.EXACT)
+            discharged=true;
         if(value instanceof Expressions.Literal literal && extent.isPresent()) {
             BigInteger size=extent.get();
             if(codec instanceof Memory.IdentityBytes

@@ -495,7 +495,7 @@ final class BindingReader {
             this.at = at;
             dependencies = at.kind().equals("unknown")
                     ? at.fields("kind", "header", "typeRef", "dependencies", "remainingReads", "reason").child("dependencies").elements()
-                    : List.of();
+                    : at.kind().equals("fit_text") ? List.of(at.fields("kind","header","value","length","pad").child("value")) : List.of();
         }
     }
     private Expression expression(At root) {
@@ -516,7 +516,12 @@ final class BindingReader {
                 }
                 case "unknown" -> new Expressions.Unknown(operandHeader(a.child("header")), typeRef(a.child("typeRef")),
                         frame.values, memoryBound(a.child("remainingReads")), uncertaintyId(a.child("reason")));
-                case "unary", "binary", "quantize", "fit_text", "slice_text", "trim_right" ->
+                case "fit_text" -> {
+                    String pad=a.child("pad").text();
+                    if(pad.codePointCount(0,pad.length())!=1)throw Json.input(a.child("pad").path(),"fit pad requires exactly one scalar");
+                    yield new Expressions.FitText(operandHeader(a.child("header")),frame.values.getFirst(),natural(a.child("length")),pad);
+                }
+                case "unary", "binary", "quantize", "slice_text", "trim_right" ->
                         throw a.unsupported("Expression " + a.kind());
                 default -> throw Json.input(a.path(), "Unknown Expression kind");
             };

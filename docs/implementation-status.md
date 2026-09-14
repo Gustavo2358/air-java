@@ -164,3 +164,7 @@ Impacto: APIs aditivas; correções do Validator podem rejeitar como INVALID_IR 
 binárias contraditórias ou limitar acessos antes aceitos sem prova suficiente.
 Contratos anteriores escalares e seus goldens permanecem. Nenhuma promoção de
 SEMANTIC_OBLIGATION/VALIDATION_LIMIT ou alteração das versões AIR/binding.
+
+ST-W6: codec write proof additionally discharges direct `FitText(Read(IBM1047), n, pad)`
+when pad encodes exactly and destination codec/extent agree. Other nonliteral
+codec writes retain PRECONDITION_NOT_DISCHARGED; this does not execute value flow.
