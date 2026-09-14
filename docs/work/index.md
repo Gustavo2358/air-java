@@ -1,5 +1,7 @@
 # Trabalho atual
 
+[WORK-STORAGE-W6-W8](WORK-STORAGE-W6-W8.json): W6/W7 G2 and W8 G3 qualified; IN_PROGRESS pending human review/merge. Extends the accepted W0–W5 work item without reopening it.
+
 [WORK-STORAGE-AIR-001 — Storage Semantics ST-W0..ST-W5](active/WORK-STORAGE-AIR-001.yaml): IN_PROGRESS. Contrato regional existente reutilizado; transporte e codec IBM1047 qualificados em W1, revisão humana após W5.
 
 | Item | Estado | Escopo |

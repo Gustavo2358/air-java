@@ -168,3 +168,5 @@ SEMANTIC_OBLIGATION/VALIDATION_LIMIT ou alteração das versões AIR/binding.
 ST-W6: codec write proof additionally discharges direct `FitText(Read(IBM1047), n, pad)`
 when pad encodes exactly and destination codec/extent agree. Other nonliteral
 codec writes retain PRECONDITION_NOT_DISCHARGED; this does not execute value flow.
+
+Storage W6–W8 qualified locally; see [qualification and capability limits](engineering/storage-w8-qualification.md). Model/transport/validation support does not certify producer truth or downstream interpretation. Human review pending.
