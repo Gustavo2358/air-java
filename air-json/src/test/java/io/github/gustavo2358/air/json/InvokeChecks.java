@@ -261,11 +261,11 @@ final class InvokeChecks {
         var pairs = List.of(
                 new Object[]{"target", object("kind", "internal", "entry", ownedId("entry", "entry"))},
                 new Object[]{"signature", object("kind", "entry", "entry", ownedId("entry", "entry"))},
-                new Object[]{"target.namePolicy", object("kind", "extension", "name", "fixture.policy", "version", "1")},
                 new Object[]{"target.name.kind", Json.value("trim_right")},
                 new Object[]{"target.name.place.kind", Json.value("choice")},
-                new Object[]{"effectBound.otherwise.reads.scope", object("kind", "union", "members", new Json.Arr(List.of()))},
-                new Object[]{"outcomes.remainder.scope", object("kind", "union", "members", new Json.Arr(List.of()))});
+                new Object[]{"effectBound.otherwise.reads.scope", object("kind", "union", "members", new Json.Arr(List.of()))});
+        failure(INVALID_IR, () -> new AirJson().decode(wire(edit(t, OP + ".target.namePolicy", object("kind","extension","name","fixture.policy","version","1")))));
+        failure(INPUT_ERROR, () -> new AirJson().decode(wire(edit(t, OP + ".outcomes.remainder.scope", object("kind","union")))));
         // FitText is implemented; replacing a Read tag leaves a malformed FitText shape.
         failure(INPUT_ERROR, () -> new AirJson().decode(wire(edit(t, OP + ".target.name.kind", Json.value("fit_text")))));
         for (Object[] pair : pairs)
@@ -286,10 +286,12 @@ final class InvokeChecks {
         }
         for (Scopes.ControlScope scope : List.of(new Scopes.ControlUnion(List.of(new Scopes.AllControl(PUB))))) {
             var outcomes = new Control.InvocationOutcomes(i.outcomes().known(), new Scopes.WithinControl(scope));
-            failure(IMPLEMENTATION_LIMIT, () -> new AirJson().encode(publication(copy(i, i.target(), external(i), i.effectBound(), outcomes, i.contract()))));
+            roundTrip(publication(copy(i, i.target(), external(i), i.effectBound(), outcomes, i.contract())));
         }
         var extension = new Interactions.LiteralTarget("program", "fixture.resources", "name", new Interactions.ExtensionName("fixture.policy", "1"), origin("target"));
-        failure(IMPLEMENTATION_LIMIT, () -> new AirJson().encode(publication(copy(i, extension, external(i), i.effectBound(), i.outcomes(), i.contract()))));
+        var extended=publication(copy(i, extension, external(i), i.effectBound(), i.outcomes(), i.contract()));
+        extended=new Publication(extended.id(),extended.airVersion(),new Capabilities.Manifest(List.of(new Capabilities.Capability("fixture.policy","1")),List.of()),extended.artifacts(),extended.units(),extended.storage(),extended.resources(),extended.artifactRelations(),extended.origins(),extended.coverage(),extended.uncertainties(),extended.premises());
+        roundTrip(extended);
         var internalSignature = new Operations.Invoke(i.header(), i.action(), i.target(), i.arguments(), i.results(),
                 new Interactions.EntrySignature(new EntryId(UNIT, "entry")), i.effectOperands(), i.effectBound(), i.outcomes(), i.contract());
         failure(IMPLEMENTATION_LIMIT, () -> new AirJson().encode(publication(internalSignature)));

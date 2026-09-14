@@ -45,6 +45,12 @@ public final class AirJson {
         Objects.requireNonNull(bytes, "bytes");
         Json.Value wire = Json.parse(bytes, limits);
         Publication publication = new BindingReader().envelope(wire);
+        // Validate capability use only after the complete typed payload is available.
+        var names = io.github.gustavo2358.air.model.NamePolicies.extensions(publication);
+        for (var capabilities : java.util.List.of(publication.capabilities().required(), publication.capabilities().provided()))
+            for (var capability : capabilities)
+                if (!java.util.List.of(io.github.gustavo2358.air.model.Capabilities.MEMORY_REGIONS, io.github.gustavo2358.air.model.Capabilities.IBM1047).contains(capability) && !names.contains(capability))
+                    throw new AirJsonException(UNSUPPORTED_CAPABILITY,"$.publication.capabilities","Capability outside implemented transport profile");
         validate(publication);
         return publication;
     }

@@ -477,3 +477,15 @@ pin31893d1f4d203d19a61a750e2c4220120d9dab84. Natural permanece string canônica
 e pad um escalar Unicode. Reader/writer usam frames iterativos, incluindo
 fit aninhado; campos desconhecidos, length negativo/não canônico e pad inválido
 são INPUT_ERROR. Modelo/semântica/versão AIR não mudam.
+
+## CICS campaign: existing name policies and control unions
+
+AIR 2.0.0 / JSON 1.0.0 remain unchanged. `NamePolicy.extension(name,version)`
+and `ControlScope.union(members)` are transported without interpreting names.
+The required capability must match the policy identity. The validator checks
+this closed structural shape and retains an I-43 semantic obligation for the
+external interpretation. A capability used by a name policy cannot authorize
+an opaque type, codec or operation. Other unknown capabilities remain unsupported.
+The CFG may project control independently; a dependency consumer must explicitly
+interpret the policy or keep a name remainder. Neither transport nor validation
+certifies runtime resource lookup. See CICS-W0 route probes in analysis-cfg.

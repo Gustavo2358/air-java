@@ -14,7 +14,9 @@ final class BindingWriter {
         if (!items.isEmpty()) throw limit(path, "Binding form outside implemented 1A/4B coverage");
         return new Arr(List.of());
     }
+    private java.util.Set<Capabilities.Capability> namePolicies = java.util.Set.of();
     Value envelope(Publication p) {
+        namePolicies = NamePolicies.extensions(p);
         return object("binding", "analysis-ir-json", "bindingVersion", "1.0.0", "airVersion", "2.0.0",
                 "publication", object("id", id(p.id()), "capabilities", manifest(p.capabilities()),
                 "artifacts", array(p.artifacts(), this::artifact), "units", array(p.units(), this::unit),
@@ -35,7 +37,7 @@ final class BindingWriter {
         return object("required", array(manifest.required(), this::capability), "provided", array(manifest.provided(), this::capability));
     }
     private Value capability(Capabilities.Capability capability) {
-        if (!List.of(Capabilities.MEMORY_REGIONS, Capabilities.IBM1047).contains(capability))
+        if (!List.of(Capabilities.MEMORY_REGIONS, Capabilities.IBM1047).contains(capability) && !namePolicies.contains(capability))
             throw new AirJsonException(AirJsonException.Code.UNSUPPORTED_CAPABILITY,
                     "$.publication.capabilities", "Capability outside implemented transport profile");
         return object("name", capability.name(), "version", capability.version());
@@ -118,7 +120,7 @@ final class BindingWriter {
         return switch (p) {
             case Interactions.ExactName ignored -> object("kind", "exact");
             case Interactions.UnknownName u -> object("kind", "unknown", "uncertainty", id(u.uncertainty()));
-            case Interactions.ExtensionName ignored -> throw limit("$.target.namePolicy", "NamePolicy.extension not implemented");
+            case Interactions.ExtensionName e -> object("kind", "extension", "name", e.name(), "version", e.version());
         };
     }
     private Value invocationSignature(Interactions.InvocationSignature s) {
@@ -187,7 +189,7 @@ final class BindingWriter {
                     "exceptionalExit", u.exceptionalExit(), "halt", u.halt(), "diverge", u.diverge(), "externalControl", u.externalControl());
             case Scopes.AllControl a -> object("kind", "all", "publication", id(a.publication()));
             case Scopes.LabelsControl l -> object("kind", "labels", "labels", array(l.labels(), this::id));
-            default -> throw limit("$.control.scope", "Only unit/all ControlScope implemented");
+            case Scopes.ControlUnion u -> object("kind", "union", "members", array(u.members(), this::controlScope));
         };
     }
     private Value contract(Interactions.ContractKnowledge k) {

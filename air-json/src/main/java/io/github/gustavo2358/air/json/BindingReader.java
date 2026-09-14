@@ -120,8 +120,6 @@ final class BindingReader {
     private Capabilities.Capability capability(At a) {
         a.fields("name", "version");
         var result = new Capabilities.Capability(a.child("name").modelText(), a.child("version").modelText());
-        if (!List.of(Capabilities.MEMORY_REGIONS, Capabilities.IBM1047).contains(result))
-            throw new AirJsonException(UNSUPPORTED_CAPABILITY, a.path(), "Capability outside implemented transport profile");
         return result;
     }
     private Origins.Artifact artifact(At a) {
@@ -258,7 +256,7 @@ final class BindingReader {
             case "unknown" -> {
                 a.fields("kind", "uncertainty"); yield new Interactions.UnknownName(uncertaintyId(a.child("uncertainty")));
             }
-            case "extension" -> { a.fields("kind", "name", "version"); throw a.unsupported("NamePolicy.extension"); }
+            case "extension" -> { a.fields("kind", "name", "version"); yield new Interactions.ExtensionName(a.child("name").text(), a.child("version").text()); }
             default -> throw Json.input(a.path(), "Unknown NamePolicy kind");
         };
     }
@@ -382,7 +380,7 @@ final class BindingReader {
             }
             case "all" -> { a.fields("kind", "publication"); yield new Scopes.AllControl(publicationId(a.child("publication"))); }
             case "labels" -> { a.fields("kind", "labels"); yield new Scopes.LabelsControl(a.child("labels").list(this::labelId)); }
-            case "union" -> throw a.unsupported("ControlScope " + a.kind());
+            case "union" -> { a.fields("kind", "members"); yield new Scopes.ControlUnion(a.child("members").list(this::controlScope)); }
             default -> throw Json.input(a.path(), "Unknown ControlScope kind");
         };
     }
