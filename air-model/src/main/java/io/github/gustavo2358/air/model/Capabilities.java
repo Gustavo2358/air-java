@@ -23,6 +23,7 @@ public final class Capabilities {
         }
 
     }
+    public static final Capability ENTRY_POSSIBILITIES = new Capability("entry.possibilities","1");
     public static final Capability MEMORY_REGIONS = new Capability("memory.regions","1");
     public static final Capability IBM1047 = new Capability("text.ebcdic.ibm1047","1");
     public static final Capability LOCAL_CONTROL = new Capability("control.local","1");

@@ -12,6 +12,7 @@
     "CORE-SIZE codec operational result remains explicit",
     "ST-W6 generic fit_text transport",
     "ST-W7 initial state transport",
+    "RF-W1 possible entry candidates and required remainder",
     "ST-W7 memory scope union transport",
     "ST-W7 unknown mixed storage transport",
     "ST-W1 explicit IBM1047 total read and exact literal write",

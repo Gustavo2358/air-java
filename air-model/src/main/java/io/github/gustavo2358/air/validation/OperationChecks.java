@@ -393,6 +393,12 @@ final class OperationChecks {
                         else limit(entry.id(),"regional initial consistency needs a bounded literal encoding");
                     }
                 }
+                case Entries.PossibleLiterals possible -> {
+                    for(var literal:possible.candidates()) {
+                        same(destination,new OperandDomain(literal.header().id()),site,entry.id());
+                        if(codec(seed.place())!=null)codecWrite(seed.place(),literal,entry.id());
+                    }
+                }
                 case Entries.ParameterInitial parameter -> same(destination,
                         new ParameterDomain(entry.id(),parameter.position()),site,entry.id());
                 case Entries.Preserve ignored -> {
@@ -405,6 +411,7 @@ final class OperationChecks {
                 case Entries.Uninitialized ignored -> { }
             }
         }
+        possibleEntrySeparation(entry);
         for(var ranges:regionalSeeds.values()) {
             ranges.sort(Comparator.comparing(InitialBytes::offset));InitialBytes active=null;
             for(var next:ranges) {
@@ -420,6 +427,48 @@ final class OperationChecks {
     }
     private record InitialBytes(StorageId region,BigInteger offset,List<Integer> bytes) {
         BigInteger end() {return offset.add(BigInteger.valueOf(bytes.size()));}
+    }
+    private record InitialFootprint(StorageId base,BigInteger start,BigInteger end,boolean possible) { }
+    private void possibleEntrySeparation(Entries.Entry entry) {
+        if(entry.state().conditions().stream().noneMatch(s->s.value() instanceof Entries.PossibleLiterals))return;
+        var byBase=new HashMap<StorageId,List<InitialFootprint>>();var possibleBases=new HashSet<StorageId>();
+        for(var seed:entry.state().conditions()) {
+            boolean possible=seed.value() instanceof Entries.PossibleLiterals;
+            var base=storageLocation(seed.place());var cell=exactCell(seed.place());
+            BigInteger start=null,end=null;
+            if(cell!=null){start=BigInteger.ZERO;end=BigInteger.ONE;}
+            else {
+                if(seed.place() instanceof Places.RegionSlice slice)start=integer(slice.offset()).orElse(null);
+                if(seed.place() instanceof Places.ObjectPlace object&&resolvedBinding(object.object()) instanceof Memory.ViewBinding view)start=view.offset();
+                var length=extent(seed.place());if(start!=null&&length.isPresent())end=start.add(length.get());
+            }
+            if(base==null||start==null||end==null) {limit(entry.id(),"possible entry disjunction needs exact storage for every simultaneous condition");continue;}
+            if(possible)possibleBases.add(base);
+            byBase.computeIfAbsent(base,ignored->new ArrayList<>()).add(new InitialFootprint(base,start,end,possible));
+        }
+        for(var spans:byBase.values()) {
+            spans.sort(Comparator.comparing(InitialFootprint::start));BigInteger anyEnd=null,possibleEnd=null;
+            for(var span:spans) {
+                if(span.end().equals(span.start()))continue;
+                if(span.possible()&&anyEnd!=null&&anyEnd.compareTo(span.start())>0||possibleEnd!=null&&possibleEnd.compareTo(span.start())>0)
+                    c.error("I-17",entry.id(),"possible entry condition overlaps another simultaneous condition");
+                anyEnd=anyEnd==null?span.end():anyEnd.max(span.end());
+                if(span.possible())possibleEnd=possibleEnd==null?span.end():possibleEnd.max(span.end());
+            }
+        }
+        if(byBase.size()<2)return;
+        // Index explicit separation groups once, with the common whole-group proof fast path.
+        var groups=new HashMap<StorageId,List<Set<StorageId>>>();
+        for(var premise:c.index.premises.values())if(premise.assertion() instanceof DisjointStorage separated) {
+            var members=new HashSet<>(separated.storage());
+            if(members.containsAll(byBase.keySet()))return;
+            for(var base:members)if(possibleBases.contains(base))groups.computeIfAbsent(base,ignored->new ArrayList<>()).add(members);
+        }
+        for(var base:possibleBases) {
+            var proven=new HashSet<StorageId>();proven.add(base);
+            for(var members:groups.getOrDefault(base,List.of()))proven.addAll(members);
+            if(!proven.containsAll(byBase.keySet()))limit(entry.id(),"different entry bases lack an explicit physical separation proof");
+        }
     }
     private StorageId storageLocation(Place place) {
         if(place instanceof Places.RegionSlice slice)return slice.region();

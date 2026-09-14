@@ -489,3 +489,16 @@ an opaque type, codec or operation. Other unknown capabilities remain unsupporte
 The CFG may project control independently; a dependency consumer must explicitly
 interpret the policy or keep a name remainder. Neither transport nor validation
 certifies runtime resource lookup. See CICS-W0 route probes in analysis-cfg.
+
+## RF-W1 — entry.possibilities@1
+
+O codec transporta InitialValue `possible_literals` com lista não vazia de
+LiteralExpression e UncertaintyId obrigatório. Capability requerida, ownership,
+domínio, codec, escopo do remainder e disjunção das condições são validados;
+nenhum candidato é convertido em literal forte. Campos extras/ausentes e lista
+vazia falham como INPUT_ERROR. Modelo e wire anteriores mantêm seu significado.
+Norma: §13 no pin atualizado de sources.lock.json; AIR 2.0.0 em fechamento,
+binding 1.0.0 DRAFT. API sealed adicionada exige recompilação/reconciliação dos
+consumers; não se promete leitura da tag por codecs antigos.
+
+G1: PossibleEntryChecks, PossibleInitialChecks, RegionalInitialChecks.

@@ -37,7 +37,7 @@ final class BindingWriter {
         return object("required", array(manifest.required(), this::capability), "provided", array(manifest.provided(), this::capability));
     }
     private Value capability(Capabilities.Capability capability) {
-        if (!List.of(Capabilities.MEMORY_REGIONS, Capabilities.IBM1047).contains(capability) && !namePolicies.contains(capability))
+        if (!List.of(Capabilities.MEMORY_REGIONS, Capabilities.IBM1047, Capabilities.ENTRY_POSSIBILITIES).contains(capability) && !namePolicies.contains(capability))
             throw new AirJsonException(AirJsonException.Code.UNSUPPORTED_CAPABILITY,
                     "$.publication.capabilities", "Capability outside implemented transport profile");
         return object("name", capability.name(), "version", capability.version());
@@ -67,6 +67,7 @@ final class BindingWriter {
     private Value initialValue(Entries.InitialValue value) {
         return switch(value) {
             case Entries.LiteralInitial v->object("kind","literal","value",expression(v.value()));
+            case Entries.PossibleLiterals v->object("kind","possible_literals","candidates",array(v.candidates(),this::expression),"remainder",id(v.remainder()));
             case Entries.ParameterInitial v->object("kind","parameter","position",v.position().toString());
             case Entries.Preserve ignored->object("kind","preserve");
             case Entries.ExternalUnknown v->object("kind","external_unknown","reason",id(v.reason()));

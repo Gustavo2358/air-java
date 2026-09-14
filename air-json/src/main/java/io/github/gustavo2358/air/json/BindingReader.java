@@ -158,6 +158,12 @@ final class BindingReader {
         return switch(a.kind()) {
             case "literal"->{a.fields("kind","value");var e=expression(a.child("value"));
                 if(!(e instanceof Expressions.Literal literal))throw Json.input(a.path(),"Initial literal requires LiteralExpression");yield new Entries.LiteralInitial(literal);}
+            case "possible_literals"->{a.fields("kind","candidates","remainder");
+                var candidates=a.child("candidates").list(v->{
+                    var e=expression(v);if(!(e instanceof Expressions.Literal literal))throw Json.input(v.path(),"Entry candidate requires LiteralExpression");return literal;
+                });
+                if(candidates.isEmpty())throw Json.input(a.child("candidates").path(),"Entry candidates must not be empty");
+                yield new Entries.PossibleLiterals(candidates,uncertaintyId(a.child("remainder")));}
             case "parameter"->{a.fields("kind","position");yield new Entries.ParameterInitial(natural(a.child("position")));}
             case "preserve"->{a.fields("kind");yield Entries.Preserve.INSTANCE;}
             case "external_unknown"->{a.fields("kind","reason");yield new Entries.ExternalUnknown(uncertaintyId(a.child("reason")));}

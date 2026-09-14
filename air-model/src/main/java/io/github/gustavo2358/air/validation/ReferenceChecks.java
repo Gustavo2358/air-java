@@ -115,6 +115,20 @@ final class ReferenceChecks {
                     if(seed.value() instanceof Entries.ParameterInitial parameter
                             && !parameters.contains(parameter.position()))
                         c.error("I-02",entry.id(),"entry state references a parameter position not materialized in the signature");
+                    if(seed.value() instanceof Entries.PossibleLiterals possible) {
+                        c.capability(Capabilities.ENTRY_POSSIBILITIES,entry.id());
+                        c.uncertainty(possible.remainder(),null,entry.id());
+                        var reason=c.index.uncertainties.get(possible.remainder());
+                        if(reason!=null) {
+                            boolean applies=switch(reason.scope()) {
+                                case Scopes.PublicationScope p -> p.publication().equals(entry.id().publication());
+                                case Scopes.UnitScope u -> u.unit().equals(entry.id().unit());
+                                case Scopes.EntityScope e -> e.entities().contains(entry.id())||e.entities().contains(seed.place().header().id());
+                            };
+                            if(!reason.dimensions().contains(Evidence.Dimension.VALUES)||!applies)
+                                c.error("I-17",entry.id(),"possible entry remainder must cover values at this entry");
+                        }
+                    }
                     if(seed.value() instanceof Entries.ExternalUnknown external)
                         c.uncertainty(external.reason(),null,entry.id());
                     if(seed.value() instanceof Entries.Uninitialized uninitialized)
@@ -167,7 +181,7 @@ final class ReferenceChecks {
                     c.error("I-43",c.index.publication.id(),
                             "duplicate capability name: "+capability.name());
                 boolean standard=List.of(Capabilities.MEMORY_REGIONS,Capabilities.LOCAL_CONTROL,
-                        Capabilities.INDIRECT_CONTROL,Capabilities.IBM1047).contains(capability);
+                        Capabilities.INDIRECT_CONTROL,Capabilities.IBM1047,Capabilities.ENTRY_POSSIBILITIES).contains(capability);
                 boolean profile=capability.name().startsWith("AIR-");
                 if(profile) c.obligation("profile",c.index.publication.id(),
                         "declared profile requires separate oracle evidence: "+capability);

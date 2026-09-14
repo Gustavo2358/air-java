@@ -45,6 +45,8 @@ final class PublicationIndex {
                     operand(seed.place(),new EntryOwner(e.id()),0);
                     if(seed.value() instanceof Entries.LiteralInitial literal)
                         operand(literal.value(),new EntryOwner(e.id()),0);
+                    if(seed.value() instanceof Entries.PossibleLiterals possible)
+                        for(var literal:possible.candidates())operand(literal,new EntryOwner(e.id()),0);
                 }
             }
             for(Sequence s:u.sequences()) {
