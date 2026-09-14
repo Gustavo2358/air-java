@@ -136,14 +136,26 @@ final class BindingWriter {
             case Scopes.WithinMemory w -> object("kind", "within", "scope", memoryScope(w.scope()));
         };
     }
-    private Value memoryScope(Scopes.MemoryScope s) {
-        return switch (s) {
-            case Scopes.VisibleMemory v -> object("kind", "visible", "unit", id(v.unit()), "includingExternal", v.includingExternal());
-            case Scopes.AllMemory a -> object("kind", "all", "publication", id(a.publication()), "includingEnvironment", a.includingEnvironment());
-            case Scopes.ObjectsMemory o -> object("kind", "objects", "objects", array(o.objects(), this::id));
-            case Scopes.StorageMemory o -> object("kind", "storage", "storage", array(o.storage(), this::id));
-            default -> throw limit("$.memory.scope", "Only visible/all MemoryScope implemented");
-        };
+    private static final class MemoryScopeFrame {
+        final Scopes.MemoryScope scope;final List<Value> members=new ArrayList<>();int next;
+        MemoryScopeFrame(Scopes.MemoryScope scope) {this.scope=scope;}
+    }
+    private Value memoryScope(Scopes.MemoryScope scope) {
+        var stack=new ArrayDeque<MemoryScopeFrame>();stack.push(new MemoryScopeFrame(scope));
+        while(true) {
+            var frame=stack.peek();Value value;
+            if(frame.scope instanceof Scopes.MemoryUnion union) {
+                if(frame.next<union.members().size()) {stack.push(new MemoryScopeFrame(union.members().get(frame.next++)));continue;}
+                value=object("kind","union","members",array(frame.members,v->v));
+            } else value=switch(frame.scope) {
+                case Scopes.VisibleMemory v->object("kind","visible","unit",id(v.unit()),"includingExternal",v.includingExternal());
+                case Scopes.AllMemory v->object("kind","all","publication",id(v.publication()),"includingEnvironment",v.includingEnvironment());
+                case Scopes.ObjectsMemory v->object("kind","objects","objects",array(v.objects(),this::id));
+                case Scopes.StorageMemory v->object("kind","storage","storage",array(v.storage(),this::id));
+                case Scopes.MemoryUnion ignored->throw new IllegalStateException("union frame already handled");
+            };
+            stack.pop();if(stack.isEmpty())return value;stack.peek().members.add(value);
+        }
     }
     private Value outcomes(Control.InvocationOutcomes o) {
         return object("known", array(o.known(), this::alternative), "remainder", controlBound(o.remainder()));

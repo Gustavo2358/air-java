@@ -17,3 +17,9 @@ consistency, not execution of initial state or producer-premise certification.
 
 Focal oracles: same/partial/nested overlap, contradictory bytes, permutation,
 encoding/extent failure, activation preserve; codec closed shapes and roundtrip.
+
+W7.2 completes existing MemoryScope.union JSON1 representation (members array),
+including WithinMemory in effect bounds. No new AIR variant or external effect
+model. Writer/reader use iterative scope frames, preserving members/order,
+including repeated scopes; empty bounds use NoMemory. O(nodes) work, O(depth) frame stack;
+no recursive Java scope serialization. Unknown/extra/missing fields reject.

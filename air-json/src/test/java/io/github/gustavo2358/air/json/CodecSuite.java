@@ -37,6 +37,7 @@ public final class CodecSuite {
         check("CORE-SIZE codec operational result remains explicit", JsonCapacityChecks::validationBudget);
         check("ST-W6 generic fit_text transport", FitTextChecks::run);
         check("ST-W7 initial state transport", InitialStateChecks::run);
+        check("ST-W7 memory scope union transport", MemoryScopeChecks::run);
         check("ST-W1 explicit IBM1047 total read and exact literal write", RegionalChecks::ibmProfile);
         check("ST-W1 regional bytes, ranges, capability and copy transport", RegionalChecks::roundTrip);
         check("known integer cells, reads and unknown values round trip", IntegerTypeChecks::roundTrip);

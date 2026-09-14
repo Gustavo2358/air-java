@@ -308,7 +308,23 @@ final class BindingReader {
             default -> throw Json.input(a.path(), "Unknown MemoryBound kind");
         };
     }
-    private Scopes.MemoryScope memoryScope(At a) {
+    private static final class MemoryScopeFrame {
+        final At at;final List<At> children;final List<Scopes.MemoryScope> members=new ArrayList<>();int next;
+        MemoryScopeFrame(At at) {
+            this.at=at;children=at.kind().equals("union")?at.fields("kind","members").child("members").elements():List.of();
+            if(at.kind().equals("union")&&children.isEmpty())throw at.representability("MemoryUnion requires nonempty members in air-java");
+        }
+    }
+    private Scopes.MemoryScope memoryScope(At at) {
+        var stack=new ArrayDeque<MemoryScopeFrame>();stack.push(new MemoryScopeFrame(at));
+        while(true) {
+            var frame=stack.peek();
+            if(frame.next<frame.children.size()){stack.push(new MemoryScopeFrame(frame.children.get(frame.next++)));continue;}
+            var scope=frame.at.kind().equals("union")?new Scopes.MemoryUnion(frame.members):memoryScopeLeaf(frame.at);
+            stack.pop();if(stack.isEmpty())return scope;stack.peek().members.add(scope);
+        }
+    }
+    private Scopes.MemoryScope memoryScopeLeaf(At a) {
         return switch (a.kind()) {
             case "visible" -> {
                 a.fields("kind", "unit", "includingExternal");
@@ -320,7 +336,6 @@ final class BindingReader {
             }
             case "objects" -> { a.fields("kind", "objects"); yield new Scopes.ObjectsMemory(a.child("objects").list(this::objectId)); }
             case "storage" -> { a.fields("kind", "storage"); yield new Scopes.StorageMemory(a.child("storage").list(this::storageId)); }
-            case "union" -> throw a.unsupported("MemoryScope " + a.kind());
             default -> throw Json.input(a.path(), "Unknown MemoryScope kind");
         };
     }
