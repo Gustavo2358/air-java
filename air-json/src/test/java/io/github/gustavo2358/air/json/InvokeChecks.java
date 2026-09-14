@@ -270,13 +270,13 @@ final class InvokeChecks {
         failure(INPUT_ERROR, () -> new AirJson().decode(wire(edit(t, OP + ".target.name.kind", Json.value("fit_text")))));
         for (Object[] pair : pairs)
             failure(IMPLEMENTATION_LIMIT, () -> new AirJson().decode(wire(edit(t, OP + "." + pair[0], (Json.Value)pair[1]))));
-        for (String inventory : List.of("arguments", "results", "signature.signature.parameters.known", "signature.signature.results.known", "effectBound.perOutcome"))
+        for (String inventory : List.of("signature.signature.parameters.known", "signature.signature.results.known", "effectBound.perOutcome"))
             failure(IMPLEMENTATION_LIMIT, () -> new AirJson().decode(wire(edit(t, OP + "." + inventory, new Json.Arr(List.of(object("kind", "unimplemented")))))));
         var i = invoke(true, true);
         var externalTarget = new Interactions.InternalTarget(new EntryId(UNIT, "entry"));
         failure(IMPLEMENTATION_LIMIT, () -> new AirJson().encode(publication(copy(i, externalTarget, external(i), i.effectBound(), i.outcomes(), i.contract()))));
         var args = new Operations.Invoke(i.header(), i.action(), i.target(), List.of(new Interactions.ReferenceArgument(effectPlace())), i.results(), i.signature(), i.effectOperands(), i.effectBound(), i.outcomes(), i.contract());
-        failure(IMPLEMENTATION_LIMIT, () -> new AirJson().encode(publication(args)));
+        failure(INVALID_IR, () -> new AirJson().encode(publication(args))); // duplicate occurrence / wrong role remains invalid
         var effects = new Interactions.EffectBound(i.effectBound().otherwise(), List.of(new Interactions.OutcomeEffects(Control.NormalOutcome.INSTANCE, i.effectBound().otherwise())));
         failure(IMPLEMENTATION_LIMIT, () -> new AirJson().encode(publication(copy(i, i.target(), external(i), effects, i.outcomes(), i.contract()))));
         for (Scopes.MemoryScope scope : List.of(new Scopes.MemoryUnion(List.of(new Scopes.AllMemory(PUB, true))))) {
@@ -297,7 +297,7 @@ final class InvokeChecks {
         failure(IMPLEMENTATION_LIMIT, () -> new AirJson().encode(publication(internalSignature)));
         var results = new Operations.Invoke(i.header(), i.action(), i.target(), i.arguments(), List.of(effectPlace()), i.signature(),
                 i.effectOperands(), i.effectBound(), i.outcomes(), i.contract());
-        failure(IMPLEMENTATION_LIMIT, () -> new AirJson().encode(publication(results)));
+        failure(INVALID_IR, () -> new AirJson().encode(publication(results))); // result occurrence cannot reuse an effect ID
     }
     static void scale() {
         long previousBytes = 0;

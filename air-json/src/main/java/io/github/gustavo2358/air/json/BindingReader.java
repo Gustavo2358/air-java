@@ -233,9 +233,8 @@ final class BindingReader {
         if (kind.equals("branch")) return new Operations.Branch(header(a.child("header")), expression(a.child("predicate")),
                 labelId(a.child("trueDestination")), labelId(a.child("falseDestination")));
         if (kind.equals("invoke")) {
-            a.child("arguments").empty(); a.child("results").empty();
             return new Operations.Invoke(header(a.child("header")), a.child("action").modelText(), target(a.child("target")),
-                    List.of(), List.of(), invocationSignature(a.child("signature")), a.child("effectOperands").list(this::place),
+                    a.child("arguments").list(this::argument), a.child("results").list(this::place), invocationSignature(a.child("signature")), a.child("effectOperands").list(this::place),
                     effects(a.child("effectBound")), outcomes(a.child("outcomes")), contract(a.child("contract")));
         }
         if (kind.equals("opaque")) return new Operations.Opaque(header(a.child("header")), a.child("observedKind").modelText(),
@@ -243,6 +242,14 @@ final class BindingReader {
             a.child("valueResults").list(this::operandId), conservativeEnvelope(a.child("envelope")));
         if (!kind.equals("return")) throw a.unsupported("Operation " + kind);
         a.child("values").empty(); return new Operations.Return(header(a.child("header")), List.of());
+    }
+    private Interactions.Argument argument(At a) {
+        return switch (a.kind()) {
+            case "value" -> { a.fields("kind", "value"); yield new Interactions.ValueArgument(expression(a.child("value"))); }
+            case "copy" -> { a.fields("kind", "value"); yield new Interactions.CopyArgument(expression(a.child("value"))); }
+            case "reference" -> { a.fields("kind", "place"); yield new Interactions.ReferenceArgument(place(a.child("place"))); }
+            default -> throw Json.input(a.path(), "Unknown Argument kind");
+        };
     }
     private Interactions.Target target(At a) {
         switch (a.kind()) {

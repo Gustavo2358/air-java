@@ -305,7 +305,7 @@ O formato continua binding 1.0.0 DRAFT / AIR 2.0.0; model e Validator não mudar
 | ComputedTarget | mesmos campos; Expression Literal(TextValue) ou Read(ObjectPlace) |
 | NamePolicy | ExactName ou UnknownName(UncertaintyId); ExtensionName não coberto |
 | Operand e Place | Header com OperandId/owner/role/origin; ObjectPlace(ObjectId). Read não duplica TypeRef: conhecido text vem do Object/Cell |
-| arguments / results | listas vazias; modos de argumentos e resultados com conteúdo não cobertos |
+| arguments / results | Argument value/copy/reference e results Place[]; preserva ocorrências, roles, ordem, regiões e bindings desconhecidos nas formas de expressão/place suportadas |
 | ExternalSignature | Signature com parameters.known e results.known vazios; cada remainder NoRemainder ou UnknownRemainder, origem própria. Closed vazio significa zero aridade; unknown vazio não significa zero aridade |
 | effectOperands | lista ordenada de ObjectPlace; ocorrências identificadas usadas por mustOverwrite |
 | EffectBound | otherwise ForeignEffects; perOutcome vazio. reads/writes NoMemory ou WithinMemory; mustOverwrite OperandId[] preservado |
@@ -316,7 +316,7 @@ O formato continua binding 1.0.0 DRAFT / AIR 2.0.0; model e Validator não mudar
 | Evidência | Written/Derived origins, IDs completos, uncertainties, cobertura/PARTIAL e precisão já suportados; não substituir origens específicas pela origem da operação |
 
 **Não cobertos:** InternalTarget, EntrySignature, ExtensionName, qualquer Argument,
-results não vazios, Parameter/ResultSlot, efeitos perOutcome, ObjectsMemory,
+Parameter/ResultSlot, efeitos perOutcome, ObjectsMemory,
 StorageMemory, MemoryUnion, LabelsControl, ControlUnion, TrimRight, FitText,
 expressões/places adicionais e origens Contractual/Unavailable. W2C acrescenta Unknown
 e Premise(DisjointStorage), conforme o perfil abaixo.
@@ -502,3 +502,12 @@ binding 1.0.0 DRAFT. API sealed adicionada exige recompilação/reconciliação 
 consumers; não se promete leitura da tag por codecs antigos.
 
 G1: PossibleEntryChecks, PossibleInitialChecks, RegionalInitialChecks.
+
+### RF-W3 — invocation operands
+
+Binding §9 already defines value/copy/reference arguments and Place results. The codec
+now transports these existing forms; no AIR/binding version change. Unknown expressions
+and ObjectPlace with UnknownBinding retain their bounds/reasons. Choice and calculated
+physical bounds remain explicit implementation limits; no container is silently emptied.
+Known signature slot inventories remain outside this codec slice; open signatures are
+transported independently. InvocationOperandsChecks is the bilateral wire/role oracle.

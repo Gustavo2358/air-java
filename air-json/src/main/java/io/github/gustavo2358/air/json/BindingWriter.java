@@ -98,7 +98,7 @@ final class BindingWriter {
                     "trueDestination", id(b.trueDestination()), "falseDestination", id(b.falseDestination()));
         if (t instanceof Operations.Invoke i)
             return object("kind", "invoke", "header", header(i.header()), "action", i.action(), "target", target(i.target()),
-                    "arguments", empty(i.arguments(), "$.invoke.arguments"), "results", empty(i.results(), "$.invoke.results"),
+                    "arguments", array(i.arguments(), this::argument), "results", array(i.results(), this::place),
                     "signature", invocationSignature(i.signature()), "effectOperands", array(i.effectOperands(), this::place),
                     "effectBound", effects(i.effectBound()), "outcomes", outcomes(i.outcomes()), "contract", contract(i.contract()));
         if (t instanceof Operations.Opaque o)
@@ -107,6 +107,13 @@ final class BindingWriter {
                 "valueResults", array(o.valueResults(), this::id), "envelope", conservativeEnvelope(o.envelope()));
         if (!(t instanceof Operations.Return r)) throw limit("$.sequence.terminator", "Operation " + t.kind() + " not implemented");
         return object("kind", "return", "header", header(r.header()), "values", empty(r.values(), "$.return.values"));
+    }
+    private Value argument(Interactions.Argument argument) {
+        return switch (argument) {
+            case Interactions.ValueArgument a -> object("kind", "value", "value", expression(a.value()));
+            case Interactions.CopyArgument a -> object("kind", "copy", "value", expression(a.value()));
+            case Interactions.ReferenceArgument a -> object("kind", "reference", "place", place(a.place()));
+        };
     }
     private Value target(Interactions.Target t) {
         return switch (t) {
