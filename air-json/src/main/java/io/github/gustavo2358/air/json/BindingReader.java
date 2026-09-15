@@ -513,20 +513,28 @@ final class BindingReader {
         a.fields("id", "role", "origin");
         return new Operand.Header(operandId(a.child("id")), role(a.child("role")), originId(a.child("origin")));
     }
-    private Place place(At a) {
-        return switch (a.kind()) {
-            case "object" -> {
-                a.fields("kind", "header", "object");
-                yield new Places.ObjectPlace(operandHeader(a.child("header")), objectId(a.child("object")));
-            }
-            case "region_slice" -> {
-                a.fields("kind", "header", "region", "offset", "length", "codec", "typeRef");
-                yield new Places.RegionSlice(operandHeader(a.child("header")), storageId(a.child("region")),
-                        rangeExpression(a.child("offset")), rangeExpression(a.child("length")), codec(a.child("codec")), typeRef(a.child("typeRef")));
-            }
-            case "choice" -> throw a.unsupported("Place " + a.kind());
-            default -> throw Json.input(a.path(), "Unknown Place kind");
-        };
+    private static final class PlaceFrame {
+        final At at; final List<At> candidates; final List<Place> values=new ArrayList<>();int next;
+        PlaceFrame(At at){this.at=at;candidates=at.kind().equals("choice")
+            ?at.fields("kind","header","candidates","remainder","typeRef").child("candidates").elements():List.of();}
+    }
+    private Place place(At root) {
+        var stack=new ArrayDeque<PlaceFrame>();stack.push(new PlaceFrame(root));
+        while(!stack.isEmpty()) {
+            var frame=stack.peek();var a=frame.at;
+            if(frame.next<frame.candidates.size()){stack.push(new PlaceFrame(frame.candidates.get(frame.next++)));continue;}
+            Place result=switch(a.kind()) {
+                case "object" -> {a.fields("kind","header","object");yield new Places.ObjectPlace(operandHeader(a.child("header")),objectId(a.child("object")));}
+                case "region_slice" -> {
+                    a.fields("kind","header","region","offset","length","codec","typeRef");
+                    yield new Places.RegionSlice(operandHeader(a.child("header")),storageId(a.child("region")),rangeExpression(a.child("offset")),rangeExpression(a.child("length")),codec(a.child("codec")),typeRef(a.child("typeRef")));
+                }
+                case "choice" -> new Places.Choice(operandHeader(a.child("header")),frame.values,memoryBound(a.child("remainder")),typeRef(a.child("typeRef")));
+                default -> throw Json.input(a.path(),"Unknown Place kind");
+            };
+            stack.pop();if(stack.isEmpty())return result;stack.peek().values.add(result);
+        }
+        throw new IllegalStateException("Place frame invariant");
     }
     private static final class ExpressionFrame {
         final At at;

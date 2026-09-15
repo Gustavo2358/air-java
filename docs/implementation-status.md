@@ -172,3 +172,5 @@ codec writes retain PRECONDITION_NOT_DISCHARGED; this does not execute value flo
 Storage W6–W8 qualified locally; see [qualification and capability limits](engineering/storage-w8-qualification.md). Model/transport/validation support does not certify producer truth or downstream interpretation. Human review pending.
 
 RF-W1: `entry.possibilities@1` implementa candidatos possíveis com remainder obrigatório. Consulte [contrato JSON](engineering/air-json.md); a nova forma não altera literal forte.
+
+RF-W4 adds `target.possibilities@1` and iterative Place.Choice JSON transport; see the contract rationale and limitations in [air-json](engineering/air-json.md).

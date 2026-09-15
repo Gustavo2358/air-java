@@ -3,7 +3,7 @@
   "bindingVersion": "1.0.0",
   "airVersion": "2.0.0",
   "status": "DRAFT",
-  "analysis_ir_pin": "a9287917241a70665ad8d3d32d974928690e69f3",
+  "analysis_ir_pin": "50f9a7fdeb292a5ae01dabd28cb40b9e3d7321f5",
   "external_dependencies": [],
   "checks": [
     "CORE-SIZE physical JSON stack and malformed distinction",
@@ -12,6 +12,7 @@
     "CORE-SIZE codec operational result remains explicit",
     "ST-W6 generic fit_text transport",
     "ST-W7 initial state transport",
+    "RF-W4 partial target domain and physical choices",
     "RF-W1 possible entry candidates and required remainder",
     "RF-W3 invocation arguments and results",
     "ST-W7 memory scope union transport",

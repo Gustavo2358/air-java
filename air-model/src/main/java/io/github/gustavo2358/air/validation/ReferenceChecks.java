@@ -181,7 +181,7 @@ final class ReferenceChecks {
                     c.error("I-43",c.index.publication.id(),
                             "duplicate capability name: "+capability.name());
                 boolean standard=List.of(Capabilities.MEMORY_REGIONS,Capabilities.LOCAL_CONTROL,
-                        Capabilities.INDIRECT_CONTROL,Capabilities.IBM1047,Capabilities.ENTRY_POSSIBILITIES).contains(capability);
+                        Capabilities.INDIRECT_CONTROL,Capabilities.IBM1047,Capabilities.ENTRY_POSSIBILITIES,Capabilities.TARGET_POSSIBILITIES).contains(capability);
                 boolean profile=capability.name().startsWith("AIR-");
                 if(profile) c.obligation("profile",c.index.publication.id(),
                         "declared profile requires separate oracle evidence: "+capability);

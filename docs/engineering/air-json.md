@@ -511,3 +511,21 @@ and ObjectPlace with UnknownBinding retain their bounds/reasons. Choice and calc
 physical bounds remain explicit implementation limits; no container is silently emptied.
 Known signature slot inventories remain outside this codec slice; open signatures are
 transported independently. InvocationOperandsChecks is the bilateral wire/role oracle.
+
+
+## RF-W4 — partial target domain and Place.Choice
+
+The explicit normative target.possibilities@1 capability permits ComputedTarget with
+unknown_type(TYPE_UNKNOWN), preserving independently supported TEXT alternatives and
+an open interpretation remainder. Known(TEXT) core cases retain their prior checks;
+unknown domain without the required capability is invalid. The reason for extending
+the contract is the source/SP oracle with two known text views and an open remaining
+memory domain: claiming known(TEXT) for that remainder would be unproved.
+
+The existing binding Place.Choice fields are now transported with iterative frames,
+including candidates, remainder and typeRef. No candidate is selected or discarded.
+ChoiceTargetChecks covers model/wire round-trip, missing capability, and empty open
+choice; malformed old object fields remain INPUT_ERROR. StorageBinding.alternatives,
+calculated physical bounds and known signature slot inventories retain their explicit
+IMPLEMENTATION_LIMIT. AIR stays 2.0.0 and binding stays DRAFT 1.0.0 under snapshot closure;
+consumers must support the new required capability or reject it explicitly.
