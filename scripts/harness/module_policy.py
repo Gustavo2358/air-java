@@ -214,7 +214,7 @@ def inspect_topology(root):
     policy = read_json(root / 'docs/evals/transport-checks.json')
     require(policy.get('binding') == 'analysis-ir-json' and policy.get('bindingVersion') == '1.0.0'
             and policy.get('airVersion') == '2.0.0' and policy.get('status') == 'DRAFT'
-            and policy.get('analysis_ir_pin') == 'a9287917241a70665ad8d3d32d974928690e69f3'
+            and policy.get('analysis_ir_pin') == '50f9a7fdeb292a5ae01dabd28cb40b9e3d7321f5'
             and policy.get('external_dependencies') == [] and policy.get('checks'), 'Invalid JSON suite/dependency policy')
     return version
 

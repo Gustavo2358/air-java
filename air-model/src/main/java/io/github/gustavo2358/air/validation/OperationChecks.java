@@ -228,7 +228,8 @@ final class OperationChecks {
             c.error("I-08",id,"results require an explicit normal invocation outcome");
         if(invoke.target() instanceof Interactions.ComputedTarget target) {
             role(target.name(),Operand.Role.CALL_TARGET);
-            if(types.type(target.name()).filter(Types.UnknownType.class::isInstance).isPresent())
+            if(types.type(target.name()).filter(Types.UnknownType.class::isInstance).isPresent()
+                &&c.index.publication.capabilities().required().contains(Capabilities.TARGET_POSSIBILITIES))
                 c.capability(Capabilities.TARGET_POSSIBILITIES,id);
             else types.expect(types.type(target.name()),Builtin.TEXT,id);
         }
