@@ -305,7 +305,7 @@ O formato continua binding 1.0.0 DRAFT / AIR 2.0.0; model e Validator não mudar
 | ComputedTarget | mesmos campos; Expression Literal(TextValue) ou Read(ObjectPlace) |
 | NamePolicy | ExactName ou UnknownName(UncertaintyId); ExtensionName não coberto |
 | Operand e Place | Header com OperandId/owner/role/origin; ObjectPlace(ObjectId). Read não duplica TypeRef: conhecido text vem do Object/Cell |
-| arguments / results | listas vazias; modos de argumentos e resultados com conteúdo não cobertos |
+| arguments / results | Argument value/copy/reference e results Place[]; preserva ocorrências, roles, ordem, regiões e bindings desconhecidos nas formas de expressão/place suportadas |
 | ExternalSignature | Signature com parameters.known e results.known vazios; cada remainder NoRemainder ou UnknownRemainder, origem própria. Closed vazio significa zero aridade; unknown vazio não significa zero aridade |
 | effectOperands | lista ordenada de ObjectPlace; ocorrências identificadas usadas por mustOverwrite |
 | EffectBound | otherwise ForeignEffects; perOutcome vazio. reads/writes NoMemory ou WithinMemory; mustOverwrite OperandId[] preservado |
@@ -316,7 +316,7 @@ O formato continua binding 1.0.0 DRAFT / AIR 2.0.0; model e Validator não mudar
 | Evidência | Written/Derived origins, IDs completos, uncertainties, cobertura/PARTIAL e precisão já suportados; não substituir origens específicas pela origem da operação |
 
 **Não cobertos:** InternalTarget, EntrySignature, ExtensionName, qualquer Argument,
-results não vazios, Parameter/ResultSlot, efeitos perOutcome, ObjectsMemory,
+Parameter/ResultSlot, efeitos perOutcome, ObjectsMemory,
 StorageMemory, MemoryUnion, LabelsControl, ControlUnion, TrimRight, FitText,
 expressões/places adicionais e origens Contractual/Unavailable. W2C acrescenta Unknown
 e Premise(DisjointStorage), conforme o perfil abaixo.
@@ -489,3 +489,43 @@ an opaque type, codec or operation. Other unknown capabilities remain unsupporte
 The CFG may project control independently; a dependency consumer must explicitly
 interpret the policy or keep a name remainder. Neither transport nor validation
 certifies runtime resource lookup. See CICS-W0 route probes in analysis-cfg.
+
+## RF-W1 — entry.possibilities@1
+
+O codec transporta InitialValue `possible_literals` com lista não vazia de
+LiteralExpression e UncertaintyId obrigatório. Capability requerida, ownership,
+domínio, codec, escopo do remainder e disjunção das condições são validados;
+nenhum candidato é convertido em literal forte. Campos extras/ausentes e lista
+vazia falham como INPUT_ERROR. Modelo e wire anteriores mantêm seu significado.
+Norma: §13 no pin atualizado de sources.lock.json; AIR 2.0.0 em fechamento,
+binding 1.0.0 DRAFT. API sealed adicionada exige recompilação/reconciliação dos
+consumers; não se promete leitura da tag por codecs antigos.
+
+G1: PossibleEntryChecks, PossibleInitialChecks, RegionalInitialChecks.
+
+### RF-W3 — invocation operands
+
+Binding §9 already defines value/copy/reference arguments and Place results. The codec
+now transports these existing forms; no AIR/binding version change. Unknown expressions
+and ObjectPlace with UnknownBinding retain their bounds/reasons. Choice and calculated
+physical bounds remain explicit implementation limits; no container is silently emptied.
+Known signature slot inventories remain outside this codec slice; open signatures are
+transported independently. InvocationOperandsChecks is the bilateral wire/role oracle.
+
+
+## RF-W4 — partial target domain and Place.Choice
+
+The explicit normative target.possibilities@1 capability permits ComputedTarget with
+unknown_type(TYPE_UNKNOWN), preserving independently supported TEXT alternatives and
+an open interpretation remainder. Known(TEXT) core cases retain their prior checks;
+unknown domain without the required capability is invalid. The reason for extending
+the contract is the source/SP oracle with two known text views and an open remaining
+memory domain: claiming known(TEXT) for that remainder would be unproved.
+
+The existing binding Place.Choice fields are now transported with iterative frames,
+including candidates, remainder and typeRef. No candidate is selected or discarded.
+ChoiceTargetChecks covers model/wire round-trip, missing capability, and empty open
+choice; malformed old object fields remain INPUT_ERROR. StorageBinding.alternatives,
+calculated physical bounds and known signature slot inventories retain their explicit
+IMPLEMENTATION_LIMIT. AIR stays 2.0.0 and binding stays DRAFT 1.0.0 under snapshot closure;
+consumers must support the new required capability or reject it explicitly.

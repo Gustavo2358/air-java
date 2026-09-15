@@ -158,6 +158,12 @@ final class BindingReader {
         return switch(a.kind()) {
             case "literal"->{a.fields("kind","value");var e=expression(a.child("value"));
                 if(!(e instanceof Expressions.Literal literal))throw Json.input(a.path(),"Initial literal requires LiteralExpression");yield new Entries.LiteralInitial(literal);}
+            case "possible_literals"->{a.fields("kind","candidates","remainder");
+                var candidates=a.child("candidates").list(v->{
+                    var e=expression(v);if(!(e instanceof Expressions.Literal literal))throw Json.input(v.path(),"Entry candidate requires LiteralExpression");return literal;
+                });
+                if(candidates.isEmpty())throw Json.input(a.child("candidates").path(),"Entry candidates must not be empty");
+                yield new Entries.PossibleLiterals(candidates,uncertaintyId(a.child("remainder")));}
             case "parameter"->{a.fields("kind","position");yield new Entries.ParameterInitial(natural(a.child("position")));}
             case "preserve"->{a.fields("kind");yield Entries.Preserve.INSTANCE;}
             case "external_unknown"->{a.fields("kind","reason");yield new Entries.ExternalUnknown(uncertaintyId(a.child("reason")));}
@@ -227,9 +233,8 @@ final class BindingReader {
         if (kind.equals("branch")) return new Operations.Branch(header(a.child("header")), expression(a.child("predicate")),
                 labelId(a.child("trueDestination")), labelId(a.child("falseDestination")));
         if (kind.equals("invoke")) {
-            a.child("arguments").empty(); a.child("results").empty();
             return new Operations.Invoke(header(a.child("header")), a.child("action").modelText(), target(a.child("target")),
-                    List.of(), List.of(), invocationSignature(a.child("signature")), a.child("effectOperands").list(this::place),
+                    a.child("arguments").list(this::argument), a.child("results").list(this::place), invocationSignature(a.child("signature")), a.child("effectOperands").list(this::place),
                     effects(a.child("effectBound")), outcomes(a.child("outcomes")), contract(a.child("contract")));
         }
         if (kind.equals("opaque")) return new Operations.Opaque(header(a.child("header")), a.child("observedKind").modelText(),
@@ -237,6 +242,14 @@ final class BindingReader {
             a.child("valueResults").list(this::operandId), conservativeEnvelope(a.child("envelope")));
         if (!kind.equals("return")) throw a.unsupported("Operation " + kind);
         a.child("values").empty(); return new Operations.Return(header(a.child("header")), List.of());
+    }
+    private Interactions.Argument argument(At a) {
+        return switch (a.kind()) {
+            case "value" -> { a.fields("kind", "value"); yield new Interactions.ValueArgument(expression(a.child("value"))); }
+            case "copy" -> { a.fields("kind", "value"); yield new Interactions.CopyArgument(expression(a.child("value"))); }
+            case "reference" -> { a.fields("kind", "place"); yield new Interactions.ReferenceArgument(place(a.child("place"))); }
+            default -> throw Json.input(a.path(), "Unknown Argument kind");
+        };
     }
     private Interactions.Target target(At a) {
         switch (a.kind()) {
@@ -500,20 +513,28 @@ final class BindingReader {
         a.fields("id", "role", "origin");
         return new Operand.Header(operandId(a.child("id")), role(a.child("role")), originId(a.child("origin")));
     }
-    private Place place(At a) {
-        return switch (a.kind()) {
-            case "object" -> {
-                a.fields("kind", "header", "object");
-                yield new Places.ObjectPlace(operandHeader(a.child("header")), objectId(a.child("object")));
-            }
-            case "region_slice" -> {
-                a.fields("kind", "header", "region", "offset", "length", "codec", "typeRef");
-                yield new Places.RegionSlice(operandHeader(a.child("header")), storageId(a.child("region")),
-                        rangeExpression(a.child("offset")), rangeExpression(a.child("length")), codec(a.child("codec")), typeRef(a.child("typeRef")));
-            }
-            case "choice" -> throw a.unsupported("Place " + a.kind());
-            default -> throw Json.input(a.path(), "Unknown Place kind");
-        };
+    private static final class PlaceFrame {
+        final At at; final List<At> candidates; final List<Place> values=new ArrayList<>();int next;
+        PlaceFrame(At at){this.at=at;candidates=at.kind().equals("choice")
+            ?at.fields("kind","header","candidates","remainder","typeRef").child("candidates").elements():List.of();}
+    }
+    private Place place(At root) {
+        var stack=new ArrayDeque<PlaceFrame>();stack.push(new PlaceFrame(root));
+        while(!stack.isEmpty()) {
+            var frame=stack.peek();var a=frame.at;
+            if(frame.next<frame.candidates.size()){stack.push(new PlaceFrame(frame.candidates.get(frame.next++)));continue;}
+            Place result=switch(a.kind()) {
+                case "object" -> {a.fields("kind","header","object");yield new Places.ObjectPlace(operandHeader(a.child("header")),objectId(a.child("object")));}
+                case "region_slice" -> {
+                    a.fields("kind","header","region","offset","length","codec","typeRef");
+                    yield new Places.RegionSlice(operandHeader(a.child("header")),storageId(a.child("region")),rangeExpression(a.child("offset")),rangeExpression(a.child("length")),codec(a.child("codec")),typeRef(a.child("typeRef")));
+                }
+                case "choice" -> new Places.Choice(operandHeader(a.child("header")),frame.values,memoryBound(a.child("remainder")),typeRef(a.child("typeRef")));
+                default -> throw Json.input(a.path(),"Unknown Place kind");
+            };
+            stack.pop();if(stack.isEmpty())return result;stack.peek().values.add(result);
+        }
+        throw new IllegalStateException("Place frame invariant");
     }
     private static final class ExpressionFrame {
         final At at;

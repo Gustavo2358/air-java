@@ -177,7 +177,7 @@ final class ScalarAssignChecks {
             failsAt(INPUT_ERROR, OBJECT_PATH + ".storage.storage", changed(OBJECT_PATH + ".storage.kind", Json.value(kind)));
         failsAt(INPUT_ERROR, CELL_PATH + ".typeRef", changed(CELL_PATH + ".kind", Json.value("region")));
         failsAt(INPUT_ERROR, DEST + ".object", changed(DEST + ".kind", Json.value("region_slice")));
-        failsAt(IMPLEMENTATION_LIMIT, DEST, changed(DEST + ".kind", Json.value("choice")));
+        failsAt(INPUT_ERROR, DEST + ".object", changed(DEST + ".kind", Json.value("choice")));
         // Read is now mapped: the former Literal shape must be rejected for its unexpected value field.
         failsAt(INPUT_ERROR, VALUE + ".value", changed(VALUE + ".kind", Json.value("read")));
         // Unknown now has a closed shape: the old Literal value field is invalid.

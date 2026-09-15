@@ -1,7 +1,7 @@
 {
   "analysis_ir": {
     "repository": "Gustavo2358/analysis-ir",
-    "ref": "31893d1f4d203d19a61a750e2c4220120d9dab84",
+    "ref": "d9a1b28378ae0d948e18aba30b9355a3ec33a967",
     "semantic_version": "2.0.0",
     "role": "normative",
     "normative_sections": [
@@ -18,7 +18,9 @@
       "especificacao/11-rastreabilidade-bilateral.md",
       "conformidade/01-invariantes.md",
       "conformidade/02-oraculos.md",
-      "especificacao/12-codec-ibm1047.md"
+      "especificacao/12-codec-ibm1047.md",
+      "especificacao/13-possibilidades-de-entrada.md",
+      "especificacao/14-possibilidades-de-target.md"
     ],
     "implementation_handoff": "bindings/revisao-json-v1.md",
     "consulted_draft_transport": "bindings/json-v1.md"

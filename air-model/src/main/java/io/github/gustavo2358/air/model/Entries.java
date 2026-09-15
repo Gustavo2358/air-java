@@ -16,7 +16,7 @@ public final class Entries {
         }
 
     }
-    public sealed interface InitialValue permits LiteralInitial, ParameterInitial, Preserve, ExternalUnknown, Uninitialized {}
+    public sealed interface InitialValue permits LiteralInitial, PossibleLiterals, ParameterInitial, Preserve, ExternalUnknown, Uninitialized {}
     public enum Preserve implements InitialValue { INSTANCE }
     public record LiteralInitial(Expressions.Literal value) implements InitialValue {
         public LiteralInitial {
@@ -24,6 +24,14 @@ public final class Entries {
             
         }
 
+    }
+    /** Enumerated entry possibilities with a mandatory, non-exhaustive value remainder. */
+    public record PossibleLiterals(List<Expressions.Literal> candidates, UncertaintyId remainder) implements InitialValue {
+        public PossibleLiterals {
+            candidates = List.copyOf(candidates);
+            if (candidates.isEmpty()) throw new IllegalArgumentException("entry candidates must not be empty");
+            remainder = Objects.requireNonNull(remainder, "remainder");
+        }
     }
     public record ParameterInitial(BigInteger position) implements InitialValue {
         public ParameterInitial {
