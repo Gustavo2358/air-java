@@ -1,7 +1,7 @@
 # FILE-DEPENDENCIES — contrato/codec a qualificar em W1
 
 FD-H0–H4 é somente harness. [Campanha/brief](https://github.com/Gustavo2358/analysis-cfg/blob/feat/file-dependencies/docs/product/file-dependencies/README.md)
-e [provas A1–A6/O1–O5](https://github.com/Gustavo2358/analysis-cfg/blob/feat/file-dependencies/docs/product/file-dependencies/contracts.md)
+e [provas core A1–A4/A6/O1–O5](https://github.com/Gustavo2358/analysis-cfg/blob/feat/file-dependencies/docs/product/file-dependencies/contracts.md)
 são canônicos (workspace: `../analysis-cfg/docs/product/file-dependencies/`).
 
 ## Gap verificado, sem mudança normativa preventiva
@@ -13,7 +13,8 @@ Logo o modelo não basta para transportar inventário declarativo. W1 precisa de
 codec/validator/traversal/catalog coverage, mesmo se não criar novo tipo AIR.
 
 Owner/conector/registro/uso ainda requer desenho bilateral D-AIR. A associação
-tipada deve permitir responder A1–A6 sem ler COBOL, SP, localId ou texto de origem.
+tipada deve permitir responder A1–A4/A6 sem ler COBOL, SP, localId ou texto de origem.
+A5 pertence à extensão D/W10 posterior, sem antecipar norma AIR no core N+C.
 Antes de criar tipos, confirmar insuficiência das relações atuais e, se preciso,
 alterar a autoridade analysis-ir em PR próprio. Gap de codec não autoriza inventar
 conceitos normativos. Núcleo continua independente de COBOL/CFG/solver.
@@ -21,6 +22,7 @@ conceitos normativos. Núcleo continua independente de COBOL/CFG/solver.
 | Teste futuro de W1 | Obrigação independente |
 | --- | --- |
 | declaração sem uso | transporte não exige invoke fictício; recurso/owner/origens preservados |
+| nome externo conhecido | transportar o namespace source-level fornecido pelo produtor; não promover assignment-name a mecanismo DD nem adicionar bindingMechanism UNKNOWN; sem regra COBOL no core AIR |
 | mesmo alvo, owners diferentes | identidade completa, sem fusão por grafia |
 | recurso computado/unknown | referência/uncertainty íntegra, nunca target vazio exato |
 | recursos e relações não vazios | encode→decode + consumer; negativos de refs/owners/capability |
