@@ -539,3 +539,15 @@ promove INCOMPLETE_VALIDATION a validade. Erros estruturais, limites operacionai
 capabilities desconhecidas e diagnósticos insuficientes continuam rejeitados.
 `decode` e `encode` estritos preservam suas obrigações; o binding e bytes não mudam.
 O consumidor opt-in deve ampliar incerteza e negar kill às operações do escopo.
+
+### EP scoped partial analysis transport
+
+`decodeForPartialAnalysis` and `encodeForPartialAnalysis` are explicit opt-in
+consumer/producer counterparts for normative `EVIDENCE_PRESERVING_PARTIAL@1`.
+They retain the actual `ValidationResult`. Only a complete traversal whose sole
+remaining obligations are operation-owned PRECONDITION_NOT_DISCHARGED issues is
+eligible. INVALID_IR, resource limits, unknown capability and incomplete diagnostic
+scope still refuse. `INCOMPLETE_VALIDATION` never becomes structural validity.
+Strict `encode`/`decode` keep their existing behavior. PartialOutput defensively
+copies canonical bytes. AIR 2.0 and JSON binding 1.0 are unchanged; supported model
+forms and capability negotiation still govern the wire.

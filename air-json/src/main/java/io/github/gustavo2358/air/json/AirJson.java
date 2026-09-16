@@ -12,7 +12,7 @@ import static io.github.gustavo2358.air.json.AirJsonException.Code.*;
 /**
  * Shared codec for analysis-ir-json 1.0.0 / AIR 2.0.0, DRAFT pin 122ce54e.
  * Implements the forms documented in docs/engineering/air-json.md; other forms fail explicitly.
- * Stateless and thread safe. Neither method exposes partial facts/bytes on failure.
+ * Stateless and thread safe. No method exposes facts/bytes on failure. Partial transport is explicitly opt-in.
  */
 public final class AirJson {
     /** Operational bounds, not AIR cardinality or integer validity rules. */
@@ -31,14 +31,21 @@ public final class AirJson {
         this.validationOptions = Objects.requireNonNull(validationOptions);
     }
     /** Canonical UTF-8 bytes after structural validation. Outstanding semantic obligations are not discharged. */
-    public byte[] encode(Publication publication) {
+    public byte[] encode(Publication publication) { return encode(publication,false).bytes(); }
+    /** Canonical bytes and unchanged validation status; the byte array is defensively owned. */
+    public record PartialOutput(byte[] bytes,ValidationResult validation) {
+        public PartialOutput { bytes=bytes.clone();Objects.requireNonNull(validation); }
+        @Override public byte[] bytes() { return bytes.clone(); }
+    }
+    public PartialOutput encodeForPartialAnalysis(Publication publication) { return encode(publication,true); }
+    private PartialOutput encode(Publication publication,boolean partialAnalysis) {
         Objects.requireNonNull(publication, "publication");
         if (!publication.airVersion().equals(SemanticVersion.AIR_2_0_0))
             throw new AirJsonException(VERSION_MISMATCH, "$.airVersion", "Expected AIR 2.0.0");
         // Map coverage first so an unimplemented valid form is never blamed on the Validator.
         Json.Value wire = new BindingWriter().envelope(publication);
-        validate(publication);
-        return Json.write(wire, limits);
+        var validation=validate(publication,partialAnalysis);
+        return new PartialOutput(Json.write(wire, limits),validation);
     }
     /** Decode exact facts, then check AIR closure. Throws a typed failure, never a partial Publication. */
     public Publication decode(byte[] bytes) { return decode(bytes,false).publication(); }

@@ -18,7 +18,10 @@ public final class PartialAnalysisChecks {
         var codec=new AirJson();var tree=new BindingWriter().envelope(p);var bytes=Json.write(tree,AirJson.Limits.defaults());
         try{codec.decode(bytes);throw new AssertionError("strict decode accepted incomplete input");}catch(AirJsonException e){if(e.code()!=AirJsonException.Code.INCOMPLETE_VALIDATION)throw e;}
         try{codec.encode(p);throw new AssertionError("strict writer certified incomplete input");}catch(AirJsonException e){if(e.code()!=AirJsonException.Code.INCOMPLETE_VALIDATION)throw e;}
-        var partial=codec.decodeForPartialAnalysis(bytes);
+        var output=codec.encodeForPartialAnalysis(p);
+        if(!Arrays.equals(bytes,output.bytes())||output.validation().status()!=ValidationResult.Status.INCOMPLETE_VALIDATION)throw new AssertionError("partial encoder changes facts/status");
+        var altered=output.bytes();altered[0]=0;if(!Arrays.equals(bytes,output.bytes()))throw new AssertionError("mutable partial output");
+        var partial=codec.decodeForPartialAnalysis(output.bytes());
         if(!p.equals(partial.publication())||partial.validation().status()!=ValidationResult.Status.INCOMPLETE_VALIDATION||!partial.validation().unprovedOperationPreconditions().orElseThrow().equals(Set.of(assignment.header().id())))throw new AssertionError("partial decode changes facts, status or scope");
         var bad=RegionalChecks.set(tree,"publication.units.0.objects.0.storage.region.localId",Json.value("missing"));
         try{codec.decodeForPartialAnalysis(Json.write(bad,AirJson.Limits.defaults()));throw new AssertionError("partial admission ignored structural invalidity");}catch(AirJsonException e){if(e.code()!=AirJsonException.Code.INVALID_IR)throw e;}
