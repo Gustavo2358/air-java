@@ -24,6 +24,7 @@ public final class Capabilities {
 
     }
     public static final Capability TARGET_POSSIBILITIES = new Capability("target.possibilities","1");
+    public static final Capability ENTRY_POSSIBILITIES_V2 = new Capability("entry.possibilities","2");
     public static final Capability ENTRY_POSSIBILITIES = new Capability("entry.possibilities","1");
     public static final Capability MEMORY_REGIONS = new Capability("memory.regions","1");
     public static final Capability IBM1047 = new Capability("text.ebcdic.ibm1047","1");

@@ -116,7 +116,8 @@ final class ReferenceChecks {
                             && !parameters.contains(parameter.position()))
                         c.error("I-02",entry.id(),"entry state references a parameter position not materialized in the signature");
                     if(seed.value() instanceof Entries.PossibleLiterals possible) {
-                        c.capability(Capabilities.ENTRY_POSSIBILITIES,entry.id());
+                        c.capability(c.required.contains(Capabilities.ENTRY_POSSIBILITIES_V2)
+                            ?Capabilities.ENTRY_POSSIBILITIES_V2:Capabilities.ENTRY_POSSIBILITIES,entry.id());
                         c.uncertainty(possible.remainder(),null,entry.id());
                         var reason=c.index.uncertainties.get(possible.remainder());
                         if(reason!=null) {
@@ -181,7 +182,7 @@ final class ReferenceChecks {
                     c.error("I-43",c.index.publication.id(),
                             "duplicate capability name: "+capability.name());
                 boolean standard=List.of(Capabilities.MEMORY_REGIONS,Capabilities.LOCAL_CONTROL,
-                        Capabilities.INDIRECT_CONTROL,Capabilities.IBM1047,Capabilities.ENTRY_POSSIBILITIES,Capabilities.TARGET_POSSIBILITIES).contains(capability);
+                        Capabilities.INDIRECT_CONTROL,Capabilities.IBM1047,Capabilities.ENTRY_POSSIBILITIES,Capabilities.ENTRY_POSSIBILITIES_V2,Capabilities.TARGET_POSSIBILITIES).contains(capability);
                 boolean profile=capability.name().startsWith("AIR-");
                 if(profile) c.obligation("profile",c.index.publication.id(),
                         "declared profile requires separate oracle evidence: "+capability);

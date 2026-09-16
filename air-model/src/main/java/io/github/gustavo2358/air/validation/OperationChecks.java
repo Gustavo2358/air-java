@@ -433,6 +433,9 @@ final class OperationChecks {
     }
     private record InitialFootprint(StorageId base,BigInteger start,BigInteger end,boolean possible) { }
     private void possibleEntrySeparation(Entries.Entry entry) {
+        // @2 contributes supported alternatives, not simultaneous exact assignments.
+        // Type/reference/codec checks above and strong-literal consistency still apply.
+        if(c.required.contains(Capabilities.ENTRY_POSSIBILITIES_V2))return;
         if(entry.state().conditions().stream().noneMatch(s->s.value() instanceof Entries.PossibleLiterals))return;
         var byBase=new HashMap<StorageId,List<InitialFootprint>>();var possibleBases=new HashSet<StorageId>();
         for(var seed:entry.state().conditions()) {

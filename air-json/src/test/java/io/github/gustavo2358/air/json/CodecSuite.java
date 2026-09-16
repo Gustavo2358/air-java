@@ -39,6 +39,7 @@ public final class CodecSuite {
         check("ST-W7 initial state transport", InitialStateChecks::run);
         check("RF-W4 partial target domain and physical choices", ChoiceTargetChecks::run);
         check("RF-W1 possible entry candidates and required remainder", PossibleInitialChecks::run);
+        check("EP-W1 v2 possible entry coexistence and explicit version negotiation", EvidencePreservingInitialChecks::run);
         check("RF-W3 invocation arguments and results", InvocationOperandsChecks::run);
         check("ST-W7 memory scope union transport", MemoryScopeChecks::run);
         check("ST-W7 unknown mixed storage transport", MixedStorageChecks::run);
