@@ -1,5 +1,7 @@
 # Índice de conhecimento
 
+[FILE-DEPENDENCIES — FD-H0–H4 / waves futuras](domain/file-dependencies.md): preparação source-only; STOP humano antes de W0.
+
 [AGENTS](../AGENTS.md) roteia o trabalho; [trabalho atual](work/index.md) delimita execução.
 
 | Família | Documento canônico |

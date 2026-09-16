@@ -1,5 +1,7 @@
 # Trabalho atual
 
+[FILE-DEPENDENCIES — FD-H0–H4 / waves futuras](../domain/file-dependencies.md): preparação source-only; STOP humano antes de W0.
+
 [WORK-STORAGE-W6-W8](WORK-STORAGE-W6-W8.json): W6/W7 G2 and W8 G3 qualified; IN_PROGRESS pending human review/merge. Extends the accepted W0–W5 work item without reopening it.
 
 [WORK-STORAGE-AIR-001 — Storage Semantics ST-W0..ST-W5](active/WORK-STORAGE-AIR-001.yaml): IN_PROGRESS. Contrato regional existente reutilizado; transporte e codec IBM1047 qualificados em W1, revisão humana após W5.
@@ -25,3 +27,5 @@ W2C APPROVED / MERGED / CLOSED; [closeout e baseline congelado](history/WORK-AIR
 Nenhum item ativo. W2B NOT_STARTED / NOT_AUTHORIZED. W2D NOT_STARTED / NOT_AUTHORIZED.
 
 - [WORK-AIR-JSON-005 — conservative operation transport](active/WORK-AIR-JSON-005.yaml): IN_PROGRESS / Draft review.
+
+[WORK-FD-HARNESS](active/WORK-FD-HARNESS.json): IN_PROGRESS; preparação para revisão, sem merge.
