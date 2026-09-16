@@ -15,6 +15,7 @@
     "RF-W4 partial target domain and physical choices",
     "RF-W1 possible entry candidates and required remainder",
     "EP-W1 v2 possible entry coexistence and explicit version negotiation",
+    "EP explicit partial decode preserves incomplete validation and rejects invalidity",
     "RF-W3 invocation arguments and results",
     "ST-W7 memory scope union transport",
     "ST-W7 unknown mixed storage transport",

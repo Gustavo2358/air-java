@@ -529,3 +529,13 @@ choice; malformed old object fields remain INPUT_ERROR. StorageBinding.alternati
 calculated physical bounds and known signature slot inventories retain their explicit
 IMPLEMENTATION_LIMIT. AIR stays 2.0.0 and binding stays DRAFT 1.0.0 under snapshot closure;
 consumers must support the new required capability or reject it explicitly.
+
+## EP-W5 — leitura explícita para análise parcial
+
+`AirJson.decodeForPartialAnalysis` retorna `PartialInput(publication, validation)`
+com os fatos originais e o resultado real do Validator. Pode aceitar somente o
+escopo completo de precondições de operações admitido por AIR 08 §9. Isso não
+promove INCOMPLETE_VALIDATION a validade. Erros estruturais, limites operacionais,
+capabilities desconhecidas e diagnósticos insuficientes continuam rejeitados.
+`decode` e `encode` estritos preservam suas obrigações; o binding e bytes não mudam.
+O consumidor opt-in deve ampliar incerteza e negar kill às operações do escopo.
