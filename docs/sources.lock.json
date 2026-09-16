@@ -1,7 +1,7 @@
 {
   "analysis_ir": {
     "repository": "Gustavo2358/analysis-ir",
-    "ref": "d9a1b28378ae0d948e18aba30b9355a3ec33a967",
+    "ref": "6b8ce96f5b1020199e3fcceedf81d931a3b8d2ff",
     "semantic_version": "2.0.0",
     "role": "normative",
     "normative_sections": [
@@ -13,6 +13,7 @@
       "especificacao/05-controle-e-invocacoes.md",
       "especificacao/06-incompletude-e-proveniencia.md",
       "especificacao/07-contrato-de-produtores.md",
+      "especificacao/08-contrato-de-consumidores.md",
       "especificacao/09-extensibilidade-e-compatibilidade.md",
       "especificacao/10-perfis-de-conformidade.md",
       "especificacao/11-rastreabilidade-bilateral.md",

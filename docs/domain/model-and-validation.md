@@ -31,3 +31,13 @@ Limite operacional não modifica cardinalidade semântica.
 O [status existente](../implementation-status.md) é a fonte de cobertura local;
 contracasos não equivalem à certificação de todos os perfis AIR. Testar com
 expectations vindas da regra, nunca corrigir a AIR a partir da conveniência Java.
+
+## EP-W5 — escopo completo de precondições abertas
+
+`ValidationResult.unprovedOperationPreconditions()` fornece uma permissão restrita
+para a política AIR 08 §9. Exige travessia concluída, ausência de INVALID_IR,
+RESOURCE_LIMIT e UNSUPPORTED_CAPABILITY nos totais, retenção de todos os limites,
+regra PRECONDITION_NOT_DISCHARGED e proprietário OperationId (direto ou via OperandId).
+Retorna conjunto imutável; entry forte e limite sem escopo não são admitidos.
+O status de validação não muda. O consumidor deve manter esses motivos e usar
+atualização fraca nas operações afetadas. A biblioteca não executa essa análise.
