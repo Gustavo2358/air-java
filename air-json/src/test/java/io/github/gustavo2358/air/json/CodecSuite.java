@@ -44,6 +44,7 @@ public final class CodecSuite {
         check("RF-W3 invocation arguments and results", InvocationOperandsChecks::run);
         check("FD-W8 known external signature parameters", SignatureParameterChecks::run);
         check("FD-W8 outcome-specific effects and closed outcome keys", OutcomeEffectsChecks::run);
+        check("FD-W9 explicit visible objects and cross-unit bindings", UnitVisibilityChecks::run);
         check("ST-W7 memory scope union transport", MemoryScopeChecks::run);
         check("ST-W7 unknown mixed storage transport", MixedStorageChecks::run);
         check("ST-W1 explicit IBM1047 total read and exact literal write", RegionalChecks::ibmProfile);
@@ -666,10 +667,11 @@ public final class CodecSuite {
         // W1B maps UnknownBound.unknown; its independent preservation and limit tests live in InvokeChecks.
         // Nonempty containers never become empty successful Publications, regardless of deferred element form.
         for(String path:List.of("publication.artifactRelations",
-                "publication.units.0.visibleObjects","publication.units.0.completionPorts",
+                "publication.units.0.completionPorts",
                 "publication.units.0.sequences.0.terminator.values"))
             fails(IMPLEMENTATION_LIMIT,changed(path,new Json.Arr(List.of(Json.object("kind","deferred-element")))));
         fails(INPUT_ERROR,changed("publication.units.0.entries.0.signature.parameters.known",new Json.Arr(List.of(Json.object("kind","deferred-element")))));
+        fails(INPUT_ERROR,changed("publication.units.0.visibleObjects",new Json.Arr(List.of(Json.object("kind","deferred-element")))));
         fails(INPUT_ERROR,changed("publication.resources",new Json.Arr(List.of(Json.object("kind","deferred-element")))));
         // InitialCondition is now transported with a closed structure, never a deferred element.
         fails(INPUT_ERROR,changed("publication.units.0.entries.0.state.conditions",new Json.Arr(List.of(Json.object("kind","deferred-element")))));

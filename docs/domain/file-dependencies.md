@@ -78,3 +78,18 @@ W8 revelou ainda `EffectBound.perOutcome` não transportado (`memory-1.log` lowe
 O modelo/binding já cobrem o fato: extensão mínima do codec e oracle independente,
 sem alterar norma/modelo/validator. ForeignEffects/default e cinco chaves preservados;
 nenhuma semântica CICS entra nesta biblioteca. Focal codec126 PASS.
+
+## FD-W9 — visibilidade entre unidades
+
+Modelo/Validator e norma fb153ae já representam containingUnit, visibleObjects e
+AliasBinding. Oráculo UnitVisibilityChecks prova pai/filho, alias e uso de recurso
+do pai por operação do filho. Codec recusava visibleObjects não vazio: RED real
+em fd-w9/codec-red-2.log. Writer/reader agora transportam a lista de ObjectId
+segundo binding §10.1, com shape fechado e validação de refs/ciclos existentes.
+Sem mudança normativa ou semântica do modelo. Negativo de ciclo usa I-01 conforme
+AIR; descriptor malformado de visibleObjects passa a INPUT_ERROR, não limite de
+forma ainda não implementada. Evidências/falhas anteriores preservadas.
+
+W9 codec QUALIFIED_LOCAL: FAST exit0, 187 model +127 codec +40 harness checks;
+`.harness-results/fd-w9/fast-4.log`. Qualification-local NOT_RUN nesta etapa:
+delta focal de transporte, sem mudança do modelo/Validator. Integração W9 pendente.

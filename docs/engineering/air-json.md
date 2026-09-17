@@ -96,7 +96,7 @@ esta implementação aceita; GOBACK é testemunho, não perfil nem restrição n
 | Envelope, Publication, SemanticVersion | versões exatas e todos os contêineres | publicação completa; ambos os round-trips |
 | Manifest | required/provided vazios | ambos presentes; conteúdo dá UNSUPPORTED_CAPABILITY |
 | Artifact | id/logicalName/contentDigest nullable | dois artifacts; nomes Unicode/digest vazio em variação |
-| Unit, BodyKnowledge | available; containingUnit nullable | Unit com Entry/Sequence; inventários múltiplos em variação |
+| Unit, BodyKnowledge | available; containingUnit nullable, visibleObjects referenciado | Unit com Entry/Sequence; inventários múltiplos em variação |
 | Entry, Signature | initialLabel nullable; parameters/results known vazios, remainder none/unknown | assinatura fechada, origem própria; ausência de label em available é INVALID_IR |
 | EntryState | conditions vazio; uncertainties transportadas | vazio no golden |
 | Sequence, OperationHeader, Return | instructions ordenadas de Assign; Return com values vazio | GOBACK vazio byte-identical; Assign seguido de Return |

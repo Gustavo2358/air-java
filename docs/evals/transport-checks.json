@@ -19,6 +19,7 @@
     "RF-W3 invocation arguments and results",
     "FD-W8 known external signature parameters",
     "FD-W8 outcome-specific effects and closed outcome keys",
+    "FD-W9 explicit visible objects and cross-unit bindings",
     "ST-W7 memory scope union transport",
     "ST-W7 unknown mixed storage transport",
     "ST-W1 explicit IBM1047 total read and exact literal write",

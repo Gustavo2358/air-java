@@ -72,7 +72,7 @@ final class BindingWriter {
             throw limit("$.publication.units.body", "BodyKnowledge.unavailable not implemented");
         return object("id", id(u.id()), "containingUnit", optional(u.containingUnit(), this::id),
                 "objects", array(u.objects(), this::objectDeclaration),
-                "visibleObjects", empty(u.visibleObjects(), "$.publication.units.visibleObjects"),
+                "visibleObjects", array(u.visibleObjects(), this::id),
                 "entries", array(u.entries(), this::entry), "sequences", array(u.sequences(), this::sequence),
                 "completionPorts", empty(u.completionPorts(), "$.publication.units.completionPorts"),
                 "body", object("kind", "available"), "coverage", coverage(u.coverage()), "origin", id(u.origin()));

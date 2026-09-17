@@ -1,0 +1,7 @@
+id: FD-W9
+title: Transportar objetos visíveis entre unidades AIR
+status: IN_PROGRESS
+scope: [air-json, file-dependencies]
+rule: analysis-ir fb153ae; binding json-v1 §10.1 Unit.visibleObjects e alias já normativos.
+oracle: Manual pai/filho, AliasBinding e ResourceUse com owner distinto; wire explícito e negativos.
+evidence: Lower W9 valida em memória, codec rejeita visibleObjects; sem mudança normativa/modelo/validator.

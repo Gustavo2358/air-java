@@ -158,13 +158,13 @@ final class BindingReader {
             case "unavailable" -> { body.fields("kind", "uncertainty"); throw body.unsupported("BodyKnowledge.unavailable"); }
             default -> throw Json.input(body.path(), "Unknown BodyKnowledge kind");
         }
-        var objects = a.child("objects").list(this::objectDeclaration); a.child("visibleObjects").empty(); a.child("completionPorts").empty();
+        var objects = a.child("objects").list(this::objectDeclaration); var visible=a.child("visibleObjects").list(this::objectId); a.child("completionPorts").empty();
         var id = unitId(a.child("id")); var containing = a.child("containingUnit").optional(this::unitId);
         var entries = a.child("entries").list(this::entry); var sequences = a.child("sequences").list(this::sequence);
         var coverage = coverage(a.child("coverage")); var origin = originId(a.child("origin"));
         if (entries.isEmpty()) throw a.child("entries").invalid("AIR-01 §2", "Available body requires at least one entry");
         if (sequences.isEmpty()) throw a.child("sequences").invalid("AIR-01 §3", "Available body requires at least one sequence");
-        return a.construct(() -> new Unit(id, containing, objects, List.of(), entries, sequences, List.of(),
+        return a.construct(() -> new Unit(id, containing, objects, visible, entries, sequences, List.of(),
                 Unit.BodyAvailability.AVAILABLE, Optional.empty(), coverage, origin));
     }
     private Entries.Entry entry(At a) {
