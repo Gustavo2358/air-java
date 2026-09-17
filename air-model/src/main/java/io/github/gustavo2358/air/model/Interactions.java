@@ -26,7 +26,7 @@ public final class Interactions {
     }
 
     public sealed interface Target permits InternalTarget, LiteralTarget, ComputedTarget {}
-    public sealed interface ResourceDescription permits InternalTarget, LiteralTarget, ComputedResource {}
+    public sealed interface ResourceDescription permits InternalTarget, LiteralTarget, ComputedResource, LocalResource, UnknownResource {}
 
     public record InternalTarget(EntryId entry) implements Target, ResourceDescription {
         public InternalTarget {
@@ -64,11 +64,38 @@ public final class Interactions {
             origin = Objects.requireNonNull(origin, "origin");
         }
     }
-    public record Resource(ResourceId id, ResourceDescription description, OriginId origin) {
+    /** Structural resource without an external target; never executable. */
+    public record LocalResource(String category) implements ResourceDescription {
+        public LocalResource { category=text(category,"category"); }
+    }
+    public record UnknownResource(String category, String namespace, UncertaintyId uncertainty) implements ResourceDescription {
+        public UnknownResource { category=text(category,"category"); namespace=text(namespace,"namespace"); uncertainty=Objects.requireNonNull(uncertainty,"uncertainty"); }
+    }
+    public record ResourceObject(ObjectId object, String role) {
+        public ResourceObject { object=Objects.requireNonNull(object,"object"); role=text(role,"role"); }
+    }
+    public record ResourceUse(OperationId operation, String role, OriginId origin) {
+        public ResourceUse { operation=Objects.requireNonNull(operation,"operation"); role=text(role,"role"); origin=Objects.requireNonNull(origin,"origin"); }
+    }
+    /** Neutral nominal facts. Classifications do not supply execution semantics. */
+    public record ResourceDeclaration(UnitId owner, String name, String classification, String nameSource,
+                                      List<ResourceObject> objects, List<ResourceUse> uses) {
+        public ResourceDeclaration {
+            owner=Objects.requireNonNull(owner,"owner"); name=text(name,"name");
+            classification=text(classification,"classification"); nameSource=text(nameSource,"nameSource");
+            objects=List.copyOf(objects); uses=List.copyOf(uses);
+        }
+    }
+    public record Resource(ResourceId id, ResourceDescription description, OriginId origin,
+                           Optional<ResourceDeclaration> declaration) {
+        public Resource(ResourceId id, ResourceDescription description, OriginId origin) {
+            this(id,description,origin,Optional.empty());
+        }
         public Resource {
             id = Objects.requireNonNull(id, "id");
             description = Objects.requireNonNull(description, "description");
             origin = Objects.requireNonNull(origin, "origin");
+            declaration = Objects.requireNonNull(declaration, "declaration");
         }
     }
 

@@ -96,7 +96,7 @@ esta implementação aceita; GOBACK é testemunho, não perfil nem restrição n
 | Envelope, Publication, SemanticVersion | versões exatas e todos os contêineres | publicação completa; ambos os round-trips |
 | Manifest | required/provided vazios | ambos presentes; conteúdo dá UNSUPPORTED_CAPABILITY |
 | Artifact | id/logicalName/contentDigest nullable | dois artifacts; nomes Unicode/digest vazio em variação |
-| Unit, BodyKnowledge | available; containingUnit nullable | Unit com Entry/Sequence; inventários múltiplos em variação |
+| Unit, BodyKnowledge | available; containingUnit nullable, visibleObjects referenciado | Unit com Entry/Sequence; inventários múltiplos em variação |
 | Entry, Signature | initialLabel nullable; parameters/results known vazios, remainder none/unknown | assinatura fechada, origem própria; ausência de label em available é INVALID_IR |
 | EntryState | conditions vazio; uncertainties transportadas | vazio no golden |
 | Sequence, OperationHeader, Return | instructions ordenadas de Assign; Return com values vazio | GOBACK vazio byte-identical; Assign seguido de Return |
@@ -551,3 +551,25 @@ scope still refuse. `INCOMPLETE_VALIDATION` never becomes structural validity.
 Strict `encode`/`decode` keep their existing behavior. PartialOutput defensively
 copies canonical bytes. AIR 2.0 and JSON binding 1.0 are unchanged; supported model
 forms and capability negotiation still govern the wire.
+
+## FD-W8 — parâmetros conhecidos externos
+
+No pin normativo W1 `fb153ae50f343022db45d20d627e1afac85de916`, binding§9/§10.4,
+`Signature.parameters.known` passa a transportar `Parameter` com posição Natural,
+KnownMode VALUE/REFERENCE/COPY (mappings explícitos), TypeRef já coberto,
+ExternalBinding e OriginId. Não muda modelo, bindingVersion ou analysis-ir.
+UnknownMode/bindings object/unknown e ResultSlot continuam limites explícitos.
+Campos inválidos do Parameter agora são INPUT_ERROR; não são mais um contêiner
+inteiro desconhecido. Validator mantém I-55 e I-56; roundtrip não prova contrato.
+Oráculo independente `SignatureParameterChecks`, incluindo wire manual e negativos.
+A motivação C-FC está no harness consumidor; o codec não conhece COBOL/CICS.
+
+### FD-W8 — efeitos por outcome
+
+O codec também transporta `EffectBound.perOutcome` (binding§9): cinco OutcomeKey
+fechados (`normal`, `exception(tag)`, `other_exception`, `halt`, `diverge`) e os
+ForeignEffects existentes. `otherwise` não é fundido com outcomes; ordem e MUST
+permanecem exatos. Unicidade e compatibilidade são verificadas por I-60, ownership/
+fechamento pelas regras existentes. Não há cálculo de efeitos nem delta AIR.
+`OutcomeEffectsChecks` usa wire manual, roundtrip, chaves distintas, default vazio,
+duplicata, token/campo ausente/extra, tag irrepresentável e operando pendente.

@@ -75,7 +75,12 @@ defensivamente; `Optional` é uma escolha de representação Java.
 | `Interactions.LiteralTarget` | `String category, String namespace, String name, NamePolicy namePolicy, OriginId origin` |
 | `Interactions.ComputedTarget` | `String category, String namespace, Expression name, NamePolicy namePolicy, OriginId origin` |
 | `Interactions.ComputedResource` | `String category, String namespace, OperandId name, NamePolicy namePolicy, OriginId origin` |
-| `Interactions.Resource` | `ResourceId id, ResourceDescription description, OriginId origin` |
+| `Interactions.Resource` | `ResourceId id, ResourceDescription description, OriginId origin, Optional<ResourceDeclaration> declaration` |
+| `Interactions.ResourceDeclaration` | `UnitId owner, String name, String classification, String nameSource, List<ResourceObject> objects, List<ResourceUse> uses` |
+| `Interactions.ResourceObject` | `ObjectId object, String role` |
+| `Interactions.ResourceUse` | `OperationId operation, String role, OriginId origin` |
+| `Interactions.LocalResource` | `String category` |
+| `Interactions.UnknownResource` | `String category, String namespace, UncertaintyId uncertainty` |
 | `Interactions.ValueArgument` | `Expression value` |
 | `Interactions.CopyArgument` | `Expression value` |
 | `Interactions.ReferenceArgument` | `Place place` |
@@ -238,7 +243,7 @@ defensivamente; `Optional` é uma escolha de representação Java.
 ## Somas seladas relevantes
 
 - `Target`: `InternalTarget | LiteralTarget | ComputedTarget`.
-- `ResourceDescription`: `InternalTarget | LiteralTarget | ComputedResource`.
+- `ResourceDescription`: `InternalTarget | LiteralTarget | ComputedResource | LocalResource | UnknownResource`.
 - `InvocationSignature`: `EntrySignature | ExternalSignature`.
 - `ContractKnowledge`: `KnownContract | UnknownContract`.
 - `Assertion`: `SameDomain | DisjointStorage`.

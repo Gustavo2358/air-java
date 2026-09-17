@@ -23,6 +23,7 @@ public final class Capabilities {
         }
 
     }
+    public static final Capability RESOURCE_BINDINGS = new Capability("resource.bindings","1");
     public static final Capability TARGET_POSSIBILITIES = new Capability("target.possibilities","1");
     public static final Capability ENTRY_POSSIBILITIES_V2 = new Capability("entry.possibilities","2");
     public static final Capability ENTRY_POSSIBILITIES = new Capability("entry.possibilities","1");

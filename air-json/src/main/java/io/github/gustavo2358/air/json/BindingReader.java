@@ -78,6 +78,7 @@ final class BindingReader {
             return constructor.get();
         }
     }
+    private boolean resourceBindings;
     Publication envelope(Json.Value value) {
         var e = new At(value, "$").fields("binding", "bindingVersion", "airVersion", "publication");
         version(e.child("binding"), "analysis-ir-json"); version(e.child("bindingVersion"), "1.0.0");
@@ -85,13 +86,35 @@ final class BindingReader {
         var p = e.child("publication").fields("id", "capabilities", "artifacts", "units", "storage", "resources",
                 "artifactRelations", "origins", "coverage", "uncertainties", "premises");
         var manifest = manifest(p.child("capabilities"));
-        var storage = p.child("storage").list(this::storage); p.child("resources").empty(); p.child("artifactRelations").empty();
+        resourceBindings=manifest.required().contains(Capabilities.RESOURCE_BINDINGS);
+        var storage = p.child("storage").list(this::storage); var resources=p.child("resources").list(this::resource); p.child("artifactRelations").empty();
         var premises = p.child("premises").list(this::premise);
         var id = publicationId(p.child("id")); var artifacts = p.child("artifacts").list(this::artifact);
         var units = p.child("units").list(this::unit); var origins = p.child("origins").list(this::origin);
         var coverage = coverage(p.child("coverage")); var gaps = p.child("uncertainties").list(this::uncertainty);
         return new Publication(id, SemanticVersion.AIR_2_0_0, manifest, artifacts, units,
-                storage, List.of(), List.of(), origins, coverage, gaps, premises);
+                storage, resources, List.of(), origins, coverage, gaps, premises);
+    }
+    private Interactions.Resource resource(At a) {
+        if(resourceBindings)a.fields("id","description","origin","declaration");else a.fields("id","description","origin");
+        return new Interactions.Resource(typedId(a.child("id"),ResourceId.class),resourceDescription(a.child("description")),originId(a.child("origin")),
+            resourceBindings?a.child("declaration").optional(this::resourceDeclaration):Optional.empty());
+    }
+    private Interactions.ResourceDescription resourceDescription(At a) {
+        return switch(a.kind()) {
+            case "literal" -> (Interactions.LiteralTarget)target(a);
+            case "internal" -> {a.fields("kind","entry");yield new Interactions.InternalTarget(entryId(a.child("entry")));}
+            case "computed" -> {a.fields("kind","category","namespace","name","namePolicy","origin");yield new Interactions.ComputedResource(a.child("category").modelText(),a.child("namespace").modelText(),typedId(a.child("name"),OperandId.class),namePolicy(a.child("namePolicy")),originId(a.child("origin")));}
+            case "local" -> {a.fields("kind","category");if(!resourceBindings)throw a.invalid("I-43","resource.bindings capability required");yield new Interactions.LocalResource(a.child("category").modelText());}
+            case "unknown" -> {a.fields("kind","category","namespace","uncertainty");if(!resourceBindings)throw a.invalid("I-43","resource.bindings capability required");yield new Interactions.UnknownResource(a.child("category").modelText(),a.child("namespace").modelText(),uncertaintyId(a.child("uncertainty")));}
+            default -> throw Json.input(a.path(),"Unknown ResourceDescription kind");
+        };
+    }
+    private Interactions.ResourceDeclaration resourceDeclaration(At a) {
+        a.fields("owner","name","classification","nameSource","objects","uses");
+        return new Interactions.ResourceDeclaration(unitId(a.child("owner")),a.child("name").modelText(),a.child("classification").modelText(),a.child("nameSource").modelText(),
+            a.child("objects").list(o->{o.fields("object","role");return new Interactions.ResourceObject(objectId(o.child("object")),o.child("role").modelText());}),
+            a.child("uses").list(u->{u.fields("operation","role","origin");return new Interactions.ResourceUse(operationId(u.child("operation")),u.child("role").modelText(),originId(u.child("origin")));}));
     }
     private Proofs.Premise premise(At a) {
         a.fields("id", "authority", "justification", "origin", "assertion");
@@ -135,13 +158,13 @@ final class BindingReader {
             case "unavailable" -> { body.fields("kind", "uncertainty"); throw body.unsupported("BodyKnowledge.unavailable"); }
             default -> throw Json.input(body.path(), "Unknown BodyKnowledge kind");
         }
-        var objects = a.child("objects").list(this::objectDeclaration); a.child("visibleObjects").empty(); a.child("completionPorts").empty();
+        var objects = a.child("objects").list(this::objectDeclaration); var visible=a.child("visibleObjects").list(this::objectId); a.child("completionPorts").empty();
         var id = unitId(a.child("id")); var containing = a.child("containingUnit").optional(this::unitId);
         var entries = a.child("entries").list(this::entry); var sequences = a.child("sequences").list(this::sequence);
         var coverage = coverage(a.child("coverage")); var origin = originId(a.child("origin"));
         if (entries.isEmpty()) throw a.child("entries").invalid("AIR-01 §2", "Available body requires at least one entry");
         if (sequences.isEmpty()) throw a.child("sequences").invalid("AIR-01 §3", "Available body requires at least one sequence");
-        return a.construct(() -> new Unit(id, containing, objects, List.of(), entries, sequences, List.of(),
+        return a.construct(() -> new Unit(id, containing, objects, visible, entries, sequences, List.of(),
                 Unit.BodyAvailability.AVAILABLE, Optional.empty(), coverage, origin));
     }
     private Entries.Entry entry(At a) {
@@ -173,11 +196,29 @@ final class BindingReader {
     }
     private Interactions.Signature signature(At a) {
         a.fields("parameters", "results", "origin");
-        for (String name : List.of("parameters", "results")) {
-            var inventory = a.child(name).fields("known", "remainder"); inventory.child("known").empty();
+        var parameters=a.child("parameters").fields("known","remainder");
+        var results=a.child("results").fields("known","remainder");results.child("known").empty();
+        return new Interactions.Signature(new Interactions.ParameterInventory(parameters.child("known").list(this::parameter), remainder(parameters.child("remainder"))),
+                new Interactions.ResultInventory(List.of(), remainder(results.child("remainder"))), originId(a.child("origin")));
+    }
+    private Interactions.Parameter parameter(At a) {
+        a.fields("position","mode","typeRef","objectBinding","origin");
+        var mode=a.child("mode");
+        if(mode.kind().equals("unknown")){mode.fields("kind","uncertainty");throw mode.unsupported("Unknown parameter mode");}
+        if(!mode.kind().equals("known"))throw Json.input(mode.path(),"Unknown ModeKnowledge kind");
+        mode.fields("kind","mode");
+        var passing=switch(mode.child("mode").text()) {
+            case "VALUE"->Interactions.PassingMode.VALUE;case "REFERENCE"->Interactions.PassingMode.REFERENCE;case "COPY"->Interactions.PassingMode.COPY;
+            default->throw Json.input(mode.path(),"Unknown PassingMode token");
+        };
+        var binding=a.child("objectBinding");
+        switch(binding.kind()) {
+            case "external"->binding.fields("kind");
+            case "object"->{binding.fields("kind","object");throw binding.unsupported("Entry parameter binding");}
+            case "unknown"->{binding.fields("kind","uncertainty");throw binding.unsupported("Unknown parameter binding");}
+            default->throw Json.input(binding.path(),"Unknown ParameterBinding kind");
         }
-        return new Interactions.Signature(new Interactions.ParameterInventory(List.of(), remainder(a.child("parameters").child("remainder"))),
-                new Interactions.ResultInventory(List.of(), remainder(a.child("results").child("remainder"))), originId(a.child("origin")));
+        return new Interactions.Parameter(natural(a.child("position")),new Interactions.KnownMode(passing),typeRef(a.child("typeRef")),Interactions.ExternalBinding.INSTANCE,originId(a.child("origin")));
     }
     private Interactions.UnknownBound remainder(At a) {
         return switch (a.kind()) {
@@ -281,10 +322,22 @@ final class BindingReader {
         };
     }
     private Interactions.EffectBound effects(At a) {
-        a.fields("otherwise", "perOutcome"); a.child("perOutcome").empty();
-        var f = a.child("otherwise").fields("reads", "writes", "mustOverwrite");
-        return new Interactions.EffectBound(new Interactions.ForeignEffects(memoryBound(f.child("reads")), memoryBound(f.child("writes")),
-                f.child("mustOverwrite").list(this::operandId)), List.of());
+        a.fields("otherwise", "perOutcome");
+        return new Interactions.EffectBound(foreignEffects(a.child("otherwise")),a.child("perOutcome").list(o->{o.fields("outcome","effects");return new Interactions.OutcomeEffects(outcomeKey(o.child("outcome")),foreignEffects(o.child("effects")));}));
+    }
+    private Interactions.ForeignEffects foreignEffects(At f) {
+        f.fields("reads","writes","mustOverwrite");
+        return new Interactions.ForeignEffects(memoryBound(f.child("reads")),memoryBound(f.child("writes")),f.child("mustOverwrite").list(this::operandId));
+    }
+    private Control.OutcomeKey outcomeKey(At a) {
+        return switch(a.kind()) {
+            case "normal"->{a.fields("kind");yield Control.NormalOutcome.INSTANCE;}
+            case "exception"->{a.fields("kind","tag");yield new Control.ExceptionOutcome(a.child("tag").modelText());}
+            case "other_exception"->{a.fields("kind");yield Control.OtherExceptionOutcome.INSTANCE;}
+            case "halt"->{a.fields("kind");yield Control.HaltOutcome.INSTANCE;}
+            case "diverge"->{a.fields("kind");yield Control.DivergeOutcome.INSTANCE;}
+            default->throw Json.input(a.path(),"Unknown OutcomeKey kind");
+        };
     }
     private Envelopes.Envelope conservativeEnvelope(At a) {
         a.fields("memory", "control", "dependencies");

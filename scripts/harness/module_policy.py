@@ -174,6 +174,9 @@ def inspect_topology(root):
     # Enumerate all physical inputs, including untracked owners; do not just grep imports.
     for path in root.rglob('*'):
         rel = path.relative_to(root)
+        # Raw campaign evidence is never a Maven/Javac input; do not mutate it for this gate.
+        if rel.parts[0] == '.harness-results':
+            continue
         if '.git' not in rel.parts and path.is_file() and path.suffix in {'.class', '.jar'}:
             require(len(rel.parts) > 2 and rel.parts[0] in MODULES and rel.parts[1] == 'target',
                     f'Root product or Unowned compiled artifact: {rel}')
@@ -214,7 +217,7 @@ def inspect_topology(root):
     policy = read_json(root / 'docs/evals/transport-checks.json')
     require(policy.get('binding') == 'analysis-ir-json' and policy.get('bindingVersion') == '1.0.0'
             and policy.get('airVersion') == '2.0.0' and policy.get('status') == 'DRAFT'
-            and policy.get('analysis_ir_pin') == 'd9a1b28378ae0d948e18aba30b9355a3ec33a967'
+            and policy.get('analysis_ir_pin') == 'fb153ae50f343022db45d20d627e1afac85de916'
             and policy.get('external_dependencies') == [] and policy.get('checks'), 'Invalid JSON suite/dependency policy')
     return version
 

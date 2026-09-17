@@ -6,7 +6,7 @@ A cobertura regional ST-W1 acrescenta o codec IBM1047 explícito e checks de ace
 [cobertura própria e limites explícitos](engineering/air-json.md), comprovados
 por [golden manual e suíte](quality/air-json-implementation.md).
 
-Baseline normativo: Analysis IR 2.0.0, `Gustavo2358/analysis-ir@a9287917241a70665ad8d3d32d974928690e69f3`.
+Baseline normativo: Analysis IR 2.0.0, `Gustavo2358/analysis-ir@fb153ae50f343022db45d20d627e1afac85de916`.
 A biblioteca `0.1.0-SNAPSHOT` é uma implementação Java revisável. Ela não declara
 conformidade integral de Producer, Validator ou Consumer com todos os perfis AIR.
 
@@ -174,3 +174,11 @@ Storage W6–W8 qualified locally; see [qualification and capability limits](eng
 RF-W1: `entry.possibilities@1` implementa candidatos possíveis com remainder obrigatório. Consulte [contrato JSON](engineering/air-json.md); a nova forma não altera literal forte.
 
 RF-W4 adds `target.possibilities@1` and iterative Place.Choice JSON transport; see the contract rationale and limitations in [air-json](engineering/air-json.md).
+
+## FD-W1 vínculos de recursos
+
+resource.bindings@1 acrescenta ResourceDeclaration/Object/Use e descrições
+local/unknown. Modelo, Validator (I-RB-01–03) e codec têm oráculos A1–A4/A6, wire
+independente e contracasos. Não cria operações/Target nem efeitos. Declarações
+sem uso continuam sem execução; papéis não conferem MUST. Verdade da associação
+e classificação continua obrigação semântica do produtor (I-RB-04).

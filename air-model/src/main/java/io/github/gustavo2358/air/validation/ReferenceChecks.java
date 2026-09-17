@@ -68,6 +68,7 @@ final class ReferenceChecks {
         for(Interactions.Resource resource:publication.resources()) {
             c.ref(resource.origin(),resource.id());
             resource(resource.description(),resource.id(),null);
+            resource.declaration().ifPresent(d -> declaration(resource.id(),d));
         }
         for(Artifacts.Relation relation:publication.artifactRelations()) {
             c.ref(relation.source(),relation.id()); c.ref(relation.origin(),relation.id());
@@ -182,7 +183,7 @@ final class ReferenceChecks {
                     c.error("I-43",c.index.publication.id(),
                             "duplicate capability name: "+capability.name());
                 boolean standard=List.of(Capabilities.MEMORY_REGIONS,Capabilities.LOCAL_CONTROL,
-                        Capabilities.INDIRECT_CONTROL,Capabilities.IBM1047,Capabilities.ENTRY_POSSIBILITIES,Capabilities.ENTRY_POSSIBILITIES_V2,Capabilities.TARGET_POSSIBILITIES).contains(capability);
+                        Capabilities.INDIRECT_CONTROL,Capabilities.IBM1047,Capabilities.ENTRY_POSSIBILITIES,Capabilities.ENTRY_POSSIBILITIES_V2,Capabilities.TARGET_POSSIBILITIES,Capabilities.RESOURCE_BINDINGS).contains(capability);
                 boolean profile=capability.name().startsWith("AIR-");
                 if(profile) c.obligation("profile",c.index.publication.id(),
                         "declared profile requires separate oracle evidence: "+capability);
@@ -267,9 +268,45 @@ final class ReferenceChecks {
         }
     }
 
+    private void declaration(ResourceId id,Interactions.ResourceDeclaration d) {
+        c.capability(Capabilities.RESOURCE_BINDINGS,id);
+        if(!c.index.units.containsKey(d.owner())) c.error("I-RB-01",id,"resource owner does not exist");
+        if(!qualified(d.classification())||!qualified(d.nameSource())) c.error("I-RB-03",id,"resource classification/nameSource must be qualified");
+        var seenObjects=new HashSet<Interactions.ResourceObject>();
+        for(var object:d.objects()) {
+            if(!c.index.objects.containsKey(object.object())||!visible.getOrDefault(d.owner(),Set.of()).contains(object.object()))
+                c.error("I-RB-01",id,"associated object absent or not explicitly visible to resource owner");
+            if(!seenObjects.add(object)) c.error("I-RB-02",id,"duplicate object/role association");
+        }
+        var seenUses=new HashSet<java.util.Map.Entry<OperationId,String>>();
+        for(var use:d.uses()) {
+            if(!c.index.operations.containsKey(use.operation())||!c.index.origins.containsKey(use.origin()))
+                c.error("I-RB-01",id,"resource use operation/origin does not exist");
+            if(!seenUses.add(Map.entry(use.operation(),use.role()))) c.error("I-RB-02",id,"duplicate operation/role association");
+        }
+    }
+    private static boolean qualified(String value) {int dot=value.indexOf('.');return dot>0&&dot<value.length()-1&&!value.chars().anyMatch(Character::isWhitespace);}
+
     private void resource(Interactions.ResourceDescription description,Id owner,
                           OperationId operation) {
         switch(description) {
+            case Interactions.LocalResource local -> {
+                c.capability(Capabilities.RESOURCE_BINDINGS,owner);
+                if(operation!=null)c.error("I-RB-03",owner,"local resource is declarative, not an executable envelope target");
+            }
+            case Interactions.UnknownResource unknown -> {
+                c.capability(Capabilities.RESOURCE_BINDINGS,owner);c.uncertainty(unknown.uncertainty(),null,owner);
+                if(operation!=null)c.error("I-RB-03",owner,"unknown resource is declarative, not an executable envelope target");
+                var gap=c.index.uncertainties.get(unknown.uncertainty());
+                if(gap!=null) {
+                    boolean applies=switch(gap.scope()) {
+                        case Scopes.PublicationScope p -> p.publication().equals(owner.publication());
+                        case Scopes.EntityScope e -> e.entities().contains(owner);
+                        default -> false;
+                    };
+                    if(!gap.dimensions().contains(Evidence.Dimension.DEPENDENCIES)||!applies)c.error("I-RB-03",owner,"unknown resource requires applicable DEPENDENCIES uncertainty");
+                }
+            }
             case Interactions.InternalTarget internal -> c.ref(internal.entry(),owner);
             case Interactions.LiteralTarget literal -> {
                 c.ref(literal.origin(),owner); namePolicy(literal.namePolicy(),owner);

@@ -42,6 +42,17 @@ class ModuleTests(unittest.TestCase):
     def test_authorized_json_requires_implementation_suite_policy_modules_and_edge(self):
         self.assertEqual("0.1.0-SNAPSHOT", architecture.inspect_topology(self.root))
 
+    def test_preserved_harness_evidence_is_not_a_compilation_input(self):
+        evidence = self.root / '.harness-results' / 'investigation'
+        evidence.mkdir(parents=True)
+        for name in ('Oracle.java', 'Oracle.class', 'fixture.jar', 'pom.xml'):
+            (evidence / name).write_bytes(b'preserved raw diagnostic output')
+        architecture.inspect_topology(self.root)
+        rogue = self.root / 'Oracle.java'
+        rogue.write_text('class Oracle {}')
+        with self.assertRaisesRegex(Failure, 'Unowned Java'):
+            architecture.inspect_topology(self.root)
+
     def test_missing_module(self):
         (self.root / "air-json/pom.xml").unlink()
         with self.assertRaisesRegex(Failure, "Missing module"):

@@ -3,7 +3,7 @@
   "bindingVersion": "1.0.0",
   "airVersion": "2.0.0",
   "status": "DRAFT",
-  "analysis_ir_pin": "d9a1b28378ae0d948e18aba30b9355a3ec33a967",
+  "analysis_ir_pin": "fb153ae50f343022db45d20d627e1afac85de916",
   "external_dependencies": [],
   "checks": [
     "CORE-SIZE physical JSON stack and malformed distinction",
@@ -17,6 +17,9 @@
     "EP-W1 v2 possible entry coexistence and explicit version negotiation",
     "EP explicit partial decode preserves incomplete validation and rejects invalidity",
     "RF-W3 invocation arguments and results",
+    "FD-W8 known external signature parameters",
+    "FD-W8 outcome-specific effects and closed outcome keys",
+    "FD-W9 explicit visible objects and cross-unit bindings",
     "ST-W7 memory scope union transport",
     "ST-W7 unknown mixed storage transport",
     "ST-W1 explicit IBM1047 total read and exact literal write",
@@ -126,6 +129,9 @@
     "W2C W1 Assign and Invoke composition preserves obligations",
     "W2C independent cardinality N and 2N work counts",
     "W2C nested Unknown uses iterative transport frames",
-    "W2C frozen W1 main bytes remain exact"
+    "W2C frozen W1 main bytes remain exact",
+    "FD-W1 resource bindings A1 A2 A3 A4 A6 roundtrip and closure",
+    "FD-W1 resource bindings independent wire oracle",
+    "FD-W1 resource bindings adversarial fields owners uses and unknown"
   ]
 }

@@ -1,5 +1,7 @@
 # AGENTS.md
 
+[FILE-DEPENDENCIES — CORE N+C](docs/domain/file-dependencies.md): H4 aprovado; W0–W9/W11 autorizados; closeout/merges autorizados; W10 DEFERRED/OPTIONAL.
+
 ## Política de engenharia vigente
 
 [LEAN HARNESS / GIT-IS-THE-RECORD](docs/engineering/lean-harness.md) governa o trabalho.

@@ -4,6 +4,11 @@
       "id": "WORK-AIR-JSON-005",
       "status": "IN_PROGRESS",
       "path": "docs/work/active/WORK-AIR-JSON-005.yaml"
+    },
+    {
+      "id": "WORK-FD-HARNESS",
+      "status": "IN_PROGRESS",
+      "path": "docs/work/active/WORK-FD-HARNESS.json"
     }
   ],
   "history": [

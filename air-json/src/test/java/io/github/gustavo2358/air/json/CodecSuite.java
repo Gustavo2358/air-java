@@ -42,6 +42,9 @@ public final class CodecSuite {
         check("EP-W1 v2 possible entry coexistence and explicit version negotiation", EvidencePreservingInitialChecks::run);
         check("EP explicit partial decode preserves incomplete validation and rejects invalidity", PartialAnalysisChecks::run);
         check("RF-W3 invocation arguments and results", InvocationOperandsChecks::run);
+        check("FD-W8 known external signature parameters", SignatureParameterChecks::run);
+        check("FD-W8 outcome-specific effects and closed outcome keys", OutcomeEffectsChecks::run);
+        check("FD-W9 explicit visible objects and cross-unit bindings", UnitVisibilityChecks::run);
         check("ST-W7 memory scope union transport", MemoryScopeChecks::run);
         check("ST-W7 unknown mixed storage transport", MixedStorageChecks::run);
         check("ST-W1 explicit IBM1047 total read and exact literal write", RegionalChecks::ibmProfile);
@@ -392,6 +395,9 @@ public final class CodecSuite {
         check("W2C independent cardinality N and 2N work counts", W2cChecks::scale);
         check("W2C nested Unknown uses iterative transport frames", W2cChecks::nestedUnknown);
         check("W2C frozen W1 main bytes remain exact", W2cChecks::frozenW1);
+        check("FD-W1 resource bindings A1 A2 A3 A4 A6 roundtrip and closure", ResourceBindingChecks::run);
+        check("FD-W1 resource bindings independent wire oracle", ResourceBindingChecks::wireOracle);
+        check("FD-W1 resource bindings adversarial fields owners uses and unknown", ResourceBindingChecks::adversarial);
         System.out.println("PASS: " + checks + " deterministic transport checks");
     }
     private static void check(String name, Runnable body) {
@@ -539,9 +545,11 @@ public final class CodecSuite {
                     String owner = (String)pool[(Integer)pool[ref[0]]];
                     // Canonical arbitrary-precision decimal numbers are binding data, not enum tokens.
                     require(!name.equals("toString") || (owner.equals("java/math/BigInteger") && descriptor.equals("()Ljava/lang/String;")), "Runtime token authority: " + owner + "." + name);
-                    // Actual target name fields are AIR data; Enum.name remains forbidden token authority.
+                    // Target/resource declaration name fields are AIR data; Enum.name remains forbidden token authority.
                     if (name.equals("name")) require(
                             (owner.equals("io/github/gustavo2358/air/model/Interactions$LiteralTarget") && descriptor.equals("()Ljava/lang/String;"))
+                            || (owner.equals("io/github/gustavo2358/air/model/Interactions$ResourceDeclaration") && descriptor.equals("()Ljava/lang/String;"))
+                            || (owner.equals("io/github/gustavo2358/air/model/Interactions$ComputedResource") && descriptor.equals("()Lio/github/gustavo2358/air/model/Ids$OperandId;"))
                             || (owner.equals("io/github/gustavo2358/air/model/Interactions$ExtensionName") && descriptor.equals("()Ljava/lang/String;"))
                             || (owner.equals("io/github/gustavo2358/air/model/Capabilities$Capability") && descriptor.equals("()Ljava/lang/String;"))
                             || (owner.equals("io/github/gustavo2358/air/model/Memory$ExtensionCodec") && descriptor.equals("()Ljava/lang/String;"))
@@ -658,11 +666,13 @@ public final class CodecSuite {
         fails(IMPLEMENTATION_LIMIT,changed("publication.origins.0",Json.object("kind","contractual","id",at("publication.origins.0.id"),"authority","test","version","1")));
         // W1B maps UnknownBound.unknown; its independent preservation and limit tests live in InvokeChecks.
         // Nonempty containers never become empty successful Publications, regardless of deferred element form.
-        for(String path:List.of("publication.resources","publication.artifactRelations",
-                "publication.units.0.visibleObjects","publication.units.0.completionPorts",
-                "publication.units.0.entries.0.signature.parameters.known",
+        for(String path:List.of("publication.artifactRelations",
+                "publication.units.0.completionPorts",
                 "publication.units.0.sequences.0.terminator.values"))
             fails(IMPLEMENTATION_LIMIT,changed(path,new Json.Arr(List.of(Json.object("kind","deferred-element")))));
+        fails(INPUT_ERROR,changed("publication.units.0.entries.0.signature.parameters.known",new Json.Arr(List.of(Json.object("kind","deferred-element")))));
+        fails(INPUT_ERROR,changed("publication.units.0.visibleObjects",new Json.Arr(List.of(Json.object("kind","deferred-element")))));
+        fails(INPUT_ERROR,changed("publication.resources",new Json.Arr(List.of(Json.object("kind","deferred-element")))));
         // InitialCondition is now transported with a closed structure, never a deferred element.
         fails(INPUT_ERROR,changed("publication.units.0.entries.0.state.conditions",new Json.Arr(List.of(Json.object("kind","deferred-element")))));
         var w=(Origins.Written)EXPECTED.origins().get(0);

@@ -15,17 +15,39 @@ final class BindingWriter {
         return new Arr(List.of());
     }
     private java.util.Set<Capabilities.Capability> namePolicies = java.util.Set.of();
+    private boolean resourceBindings;
     Value envelope(Publication p) {
+        resourceBindings=p.capabilities().required().contains(Capabilities.RESOURCE_BINDINGS);
         namePolicies = NamePolicies.extensions(p);
         return object("binding", "analysis-ir-json", "bindingVersion", "1.0.0", "airVersion", "2.0.0",
                 "publication", object("id", id(p.id()), "capabilities", manifest(p.capabilities()),
                 "artifacts", array(p.artifacts(), this::artifact), "units", array(p.units(), this::unit),
                 "storage", array(p.storage(), this::storage),
-                "resources", empty(p.resources(), "$.publication.resources"),
+                "resources", array(p.resources(), this::resource),
                 "artifactRelations", empty(p.artifactRelations(), "$.publication.artifactRelations"),
                 "origins", array(p.origins(), this::origin), "coverage", coverage(p.coverage()),
                 "uncertainties", array(p.uncertainties(), this::uncertainty),
                 "premises", array(p.premises(), this::premise)));
+    }
+    private Value resource(Interactions.Resource r) {
+        var fields=new java.util.LinkedHashMap<String,Value>();
+        fields.put("id",id(r.id()));fields.put("description",resourceDescription(r.description()));fields.put("origin",id(r.origin()));
+        if(resourceBindings)fields.put("declaration",optional(r.declaration(),this::resourceDeclaration));
+        return new Obj(fields);
+    }
+    private Value resourceDescription(Interactions.ResourceDescription d) {
+        return switch(d) {
+            case Interactions.InternalTarget t -> object("kind","internal","entry",id(t.entry()));
+            case Interactions.LiteralTarget t -> target(t);
+            case Interactions.ComputedResource t -> object("kind","computed","category",t.category(),"namespace",t.namespace(),"name",id(t.name()),"namePolicy",namePolicy(t.namePolicy()),"origin",id(t.origin()));
+            case Interactions.LocalResource t -> object("kind","local","category",t.category());
+            case Interactions.UnknownResource t -> object("kind","unknown","category",t.category(),"namespace",t.namespace(),"uncertainty",id(t.uncertainty()));
+        };
+    }
+    private Value resourceDeclaration(Interactions.ResourceDeclaration d) {
+        return object("owner",id(d.owner()),"name",d.name(),"classification",d.classification(),"nameSource",d.nameSource(),
+            "objects",array(d.objects(),o->object("object",id(o.object()),"role",o.role())),
+            "uses",array(d.uses(),u->object("operation",id(u.operation()),"role",u.role(),"origin",id(u.origin()))));
     }
     private Value premise(Proofs.Premise p) {
         if (!(p.assertion() instanceof Proofs.DisjointStorage d))
@@ -37,7 +59,7 @@ final class BindingWriter {
         return object("required", array(manifest.required(), this::capability), "provided", array(manifest.provided(), this::capability));
     }
     private Value capability(Capabilities.Capability capability) {
-        if (!List.of(Capabilities.MEMORY_REGIONS, Capabilities.IBM1047, Capabilities.ENTRY_POSSIBILITIES, Capabilities.ENTRY_POSSIBILITIES_V2, Capabilities.TARGET_POSSIBILITIES).contains(capability) && !namePolicies.contains(capability))
+        if (!List.of(Capabilities.MEMORY_REGIONS, Capabilities.IBM1047, Capabilities.ENTRY_POSSIBILITIES, Capabilities.ENTRY_POSSIBILITIES_V2, Capabilities.TARGET_POSSIBILITIES, Capabilities.RESOURCE_BINDINGS).contains(capability) && !namePolicies.contains(capability))
             throw new AirJsonException(AirJsonException.Code.UNSUPPORTED_CAPABILITY,
                     "$.publication.capabilities", "Capability outside implemented transport profile");
         return object("name", capability.name(), "version", capability.version());
@@ -50,7 +72,7 @@ final class BindingWriter {
             throw limit("$.publication.units.body", "BodyKnowledge.unavailable not implemented");
         return object("id", id(u.id()), "containingUnit", optional(u.containingUnit(), this::id),
                 "objects", array(u.objects(), this::objectDeclaration),
-                "visibleObjects", empty(u.visibleObjects(), "$.publication.units.visibleObjects"),
+                "visibleObjects", array(u.visibleObjects(), this::id),
                 "entries", array(u.entries(), this::entry), "sequences", array(u.sequences(), this::sequence),
                 "completionPorts", empty(u.completionPorts(), "$.publication.units.completionPorts"),
                 "body", object("kind", "available"), "coverage", coverage(u.coverage()), "origin", id(u.origin()));
@@ -75,10 +97,17 @@ final class BindingWriter {
         };
     }
     private Value signature(Interactions.Signature s) {
-        return object("parameters", object("known", empty(s.parameters().known(), "$.signature.parameters.known"),
+        return object("parameters", object("known", array(s.parameters().known(), this::parameter),
                         "remainder", remainder(s.parameters().remainder())),
                 "results", object("known", empty(s.results().known(), "$.signature.results.known"),
                         "remainder", remainder(s.results().remainder())), "origin", id(s.origin()));
+    }
+    private Value parameter(Interactions.Parameter p) {
+        if(!(p.mode() instanceof Interactions.KnownMode mode)||!(p.objectBinding() instanceof Interactions.ExternalBinding))
+            throw limit("$.signature.parameters.known", "Only known modes with external parameter binding implemented");
+        String token=switch(mode.mode()){case VALUE->"VALUE";case REFERENCE->"REFERENCE";case COPY->"COPY";};
+        return object("position",p.position().toString(),"mode",object("kind","known","mode",token),
+            "typeRef",typeRef(p.typeRef()),"objectBinding",object("kind","external"),"origin",id(p.origin()));
     }
     private Value remainder(Interactions.UnknownBound r) {
         return switch (r) {
@@ -136,9 +165,19 @@ final class BindingWriter {
         return object("kind", "external", "signature", signature(e.signature()));
     }
     private Value effects(Interactions.EffectBound e) {
-        var f = e.otherwise();
-        return object("otherwise", object("reads", memoryBound(f.reads()), "writes", memoryBound(f.writes()),
-                "mustOverwrite", array(f.mustOverwrite(), this::id)), "perOutcome", empty(e.perOutcome(), "$.effectBound.perOutcome"));
+        return object("otherwise", foreignEffects(e.otherwise()), "perOutcome", array(e.perOutcome(),o->object("outcome",outcomeKey(o.outcome()),"effects",foreignEffects(o.effects()))));
+    }
+    private Value foreignEffects(Interactions.ForeignEffects f) {
+        return object("reads",memoryBound(f.reads()),"writes",memoryBound(f.writes()),"mustOverwrite",array(f.mustOverwrite(),this::id));
+    }
+    private Value outcomeKey(Control.OutcomeKey key) {
+        return switch(key) {
+            case Control.NormalOutcome ignored->object("kind","normal");
+            case Control.ExceptionOutcome e->object("kind","exception","tag",e.tag());
+            case Control.OtherExceptionOutcome ignored->object("kind","other_exception");
+            case Control.HaltOutcome ignored->object("kind","halt");
+            case Control.DivergeOutcome ignored->object("kind","diverge");
+        };
     }
     private Value memoryBound(Scopes.MemoryBound b) {
         return switch (b) {
