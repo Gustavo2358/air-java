@@ -1,5 +1,9 @@
 # FILE-DEPENDENCIES — contrato/codec a qualificar em W1
 
+CORE N+C qualificado; closeout/merges autorizados. W10 DEFERRED / OPTIONAL_EXTENSION,
+NOT_PART_OF_CORE, requer nova autorização. [Estado canônico](https://github.com/Gustavo2358/analysis-cfg/blob/main/docs/product/file-dependencies/closeout.md).
+As seções abaixo registram checkpoints históricos.
+
 H4 aprovado; core W0–W9/W11 autorizado, sem W10/merge. [Campanha/brief](https://github.com/Gustavo2358/analysis-cfg/blob/feat/file-dependencies/docs/product/file-dependencies/README.md)
 e [provas core A1–A4/A6/O1–O5](https://github.com/Gustavo2358/analysis-cfg/blob/feat/file-dependencies/docs/product/file-dependencies/contracts.md)
 são canônicos (workspace: `../analysis-cfg/docs/product/file-dependencies/`).
@@ -93,3 +97,6 @@ forma ainda não implementada. Evidências/falhas anteriores preservadas.
 W9 codec QUALIFIED_LOCAL: FAST exit0, 187 model +127 codec +40 harness checks;
 `.harness-results/fd-w9/fast-4.log`. Qualification-local NOT_RUN nesta etapa:
 delta focal de transporte, sem mudança do modelo/Validator. Integração W9 pendente.
+
+Closeout: IR main3fff18e é tree-idêntico a fb153ae qualificado; repin normativo
+REUSED_WITH_EQUIVALENCE_PROOF, AIR2.0.0/resource.bindings@1 inalterados.
