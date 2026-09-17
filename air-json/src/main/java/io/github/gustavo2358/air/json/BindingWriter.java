@@ -165,9 +165,19 @@ final class BindingWriter {
         return object("kind", "external", "signature", signature(e.signature()));
     }
     private Value effects(Interactions.EffectBound e) {
-        var f = e.otherwise();
-        return object("otherwise", object("reads", memoryBound(f.reads()), "writes", memoryBound(f.writes()),
-                "mustOverwrite", array(f.mustOverwrite(), this::id)), "perOutcome", empty(e.perOutcome(), "$.effectBound.perOutcome"));
+        return object("otherwise", foreignEffects(e.otherwise()), "perOutcome", array(e.perOutcome(),o->object("outcome",outcomeKey(o.outcome()),"effects",foreignEffects(o.effects()))));
+    }
+    private Value foreignEffects(Interactions.ForeignEffects f) {
+        return object("reads",memoryBound(f.reads()),"writes",memoryBound(f.writes()),"mustOverwrite",array(f.mustOverwrite(),this::id));
+    }
+    private Value outcomeKey(Control.OutcomeKey key) {
+        return switch(key) {
+            case Control.NormalOutcome ignored->object("kind","normal");
+            case Control.ExceptionOutcome e->object("kind","exception","tag",e.tag());
+            case Control.OtherExceptionOutcome ignored->object("kind","other_exception");
+            case Control.HaltOutcome ignored->object("kind","halt");
+            case Control.DivergeOutcome ignored->object("kind","diverge");
+        };
     }
     private Value memoryBound(Scopes.MemoryBound b) {
         return switch (b) {

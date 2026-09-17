@@ -322,10 +322,22 @@ final class BindingReader {
         };
     }
     private Interactions.EffectBound effects(At a) {
-        a.fields("otherwise", "perOutcome"); a.child("perOutcome").empty();
-        var f = a.child("otherwise").fields("reads", "writes", "mustOverwrite");
-        return new Interactions.EffectBound(new Interactions.ForeignEffects(memoryBound(f.child("reads")), memoryBound(f.child("writes")),
-                f.child("mustOverwrite").list(this::operandId)), List.of());
+        a.fields("otherwise", "perOutcome");
+        return new Interactions.EffectBound(foreignEffects(a.child("otherwise")),a.child("perOutcome").list(o->{o.fields("outcome","effects");return new Interactions.OutcomeEffects(outcomeKey(o.child("outcome")),foreignEffects(o.child("effects")));}));
+    }
+    private Interactions.ForeignEffects foreignEffects(At f) {
+        f.fields("reads","writes","mustOverwrite");
+        return new Interactions.ForeignEffects(memoryBound(f.child("reads")),memoryBound(f.child("writes")),f.child("mustOverwrite").list(this::operandId));
+    }
+    private Control.OutcomeKey outcomeKey(At a) {
+        return switch(a.kind()) {
+            case "normal"->{a.fields("kind");yield Control.NormalOutcome.INSTANCE;}
+            case "exception"->{a.fields("kind","tag");yield new Control.ExceptionOutcome(a.child("tag").modelText());}
+            case "other_exception"->{a.fields("kind");yield Control.OtherExceptionOutcome.INSTANCE;}
+            case "halt"->{a.fields("kind");yield Control.HaltOutcome.INSTANCE;}
+            case "diverge"->{a.fields("kind");yield Control.DivergeOutcome.INSTANCE;}
+            default->throw Json.input(a.path(),"Unknown OutcomeKey kind");
+        };
     }
     private Envelopes.Envelope conservativeEnvelope(At a) {
         a.fields("memory", "control", "dependencies");

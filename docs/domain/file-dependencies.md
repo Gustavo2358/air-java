@@ -73,3 +73,8 @@ checks (`.harness-results/fd-w8/fast-2.log`). Norma/modelo/validator/pin IR inta
 Negativo de origem corrigido para I-02 (referência), conforme norma; I-03 é owner.
 Qualification-local NOT_RUN: delta de transporte focal, sem mudança semântica core.
 Integração consumidor em andamento; isto não qualifica W8 da campanha inteira.
+
+W8 revelou ainda `EffectBound.perOutcome` não transportado (`memory-1.log` lower).
+O modelo/binding já cobrem o fato: extensão mínima do codec e oracle independente,
+sem alterar norma/modelo/validator. ForeignEffects/default e cinco chaves preservados;
+nenhuma semântica CICS entra nesta biblioteca. Focal codec126 PASS.

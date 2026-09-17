@@ -43,6 +43,7 @@ public final class CodecSuite {
         check("EP explicit partial decode preserves incomplete validation and rejects invalidity", PartialAnalysisChecks::run);
         check("RF-W3 invocation arguments and results", InvocationOperandsChecks::run);
         check("FD-W8 known external signature parameters", SignatureParameterChecks::run);
+        check("FD-W8 outcome-specific effects and closed outcome keys", OutcomeEffectsChecks::run);
         check("ST-W7 memory scope union transport", MemoryScopeChecks::run);
         check("ST-W7 unknown mixed storage transport", MixedStorageChecks::run);
         check("ST-W1 explicit IBM1047 total read and exact literal write", RegionalChecks::ibmProfile);

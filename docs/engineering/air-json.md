@@ -563,3 +563,13 @@ Campos inválidos do Parameter agora são INPUT_ERROR; não são mais um contêi
 inteiro desconhecido. Validator mantém I-55 e I-56; roundtrip não prova contrato.
 Oráculo independente `SignatureParameterChecks`, incluindo wire manual e negativos.
 A motivação C-FC está no harness consumidor; o codec não conhece COBOL/CICS.
+
+### FD-W8 — efeitos por outcome
+
+O codec também transporta `EffectBound.perOutcome` (binding§9): cinco OutcomeKey
+fechados (`normal`, `exception(tag)`, `other_exception`, `halt`, `diverge`) e os
+ForeignEffects existentes. `otherwise` não é fundido com outcomes; ordem e MUST
+permanecem exatos. Unicidade e compatibilidade são verificadas por I-60, ownership/
+fechamento pelas regras existentes. Não há cálculo de efeitos nem delta AIR.
+`OutcomeEffectsChecks` usa wire manual, roundtrip, chaves distintas, default vazio,
+duplicata, token/campo ausente/extra, tag irrepresentável e operando pendente.
