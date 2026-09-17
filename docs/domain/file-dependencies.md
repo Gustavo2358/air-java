@@ -1,6 +1,6 @@
 # FILE-DEPENDENCIES — contrato/codec a qualificar em W1
 
-FD-H0–H4 é somente harness. [Campanha/brief](https://github.com/Gustavo2358/analysis-cfg/blob/feat/file-dependencies/docs/product/file-dependencies/README.md)
+H4 aprovado; core W0–W9/W11 autorizado, sem W10/merge. [Campanha/brief](https://github.com/Gustavo2358/analysis-cfg/blob/feat/file-dependencies/docs/product/file-dependencies/README.md)
 e [provas core A1–A4/A6/O1–O5](https://github.com/Gustavo2358/analysis-cfg/blob/feat/file-dependencies/docs/product/file-dependencies/contracts.md)
 são canônicos (workspace: `../analysis-cfg/docs/product/file-dependencies/`).
 
@@ -8,7 +8,7 @@ são canônicos (workspace: `../analysis-cfg/docs/product/file-dependencies/`).
 
 `Interactions.Resource` e LiteralTarget/ComputedTarget/ComputedResource existem;
 `Artifacts.Relation` tem source ArtifactId e target artifact/literal.
-`BindingWriter` exige resources/artifactRelations vazios; `BindingReader` também.
+Baseline H4: `BindingWriter` e `BindingReader` recusavam resources/artifactRelations não vazios.
 Logo o modelo não basta para transportar inventário declarativo. W1 precisa de
 codec/validator/traversal/catalog coverage, mesmo se não criar novo tipo AIR.
 
@@ -37,3 +37,23 @@ H0–H4 roda apenas `python3 -B scripts/harness/lean.py docs`.
 
 Não adicionar DSNAME, runtime allocation, JCL state ou resolução física ao modelo.
 Todos os significados e limites da capability permanecem no brief, sem cópias aqui.
+
+## FD-W1 — resource.bindings@1
+
+D-AIR demonstrou perda de owner/objeto/uso antes da extensão; prova preservada no
+E2E/w1 e norma proposta em analysis-ir PR #7, pin fb153ae50f343022db45d20d627e1afac85de916.
+Resource mantém Target separado e recebe declaração opcional com owner, nome,
+classificações, objetos e usos por papel; LocalResource não tem alvo externo.
+UnknownResource exige lacuna DEPENDENCIES aplicável. I-RB-01/02/03 validam refs,
+visibilidade resolvida, duplicatas, classificação e capability. Verdade dos papéis
+é obrigação do produtor; não altera efeitos/controle ou resolve nomes.
+
+Impacto BREAKING para consumers da nova capability; publicações antigas sem ela
+conservam forma e semântica. Construtor Resource de três argumentos conserva
+associação não publicada. Nenhum fallback inventa declaração vazia.
+A1–A4/A6 manuais + wire independente + negativos: ResourceBindingOracle/Checks.
+A-CODEC PASS: 187 checks model, 124 transporte. Consumer bilateral ainda NOT_RUN.
+Gate fixa o novo pin normativo; allowlist de bytecode admite somente os accessors
+ResourceDeclaration.name():String e ComputedResource.name():OperandId, sem liberar
+Enum.name. Descriptor resource antes não implementado agora recusa shape ruim por
+INPUT_ERROR. Nenhum gate foi omitido/relaxado.

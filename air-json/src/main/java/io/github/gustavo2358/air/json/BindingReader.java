@@ -78,6 +78,7 @@ final class BindingReader {
             return constructor.get();
         }
     }
+    private boolean resourceBindings;
     Publication envelope(Json.Value value) {
         var e = new At(value, "$").fields("binding", "bindingVersion", "airVersion", "publication");
         version(e.child("binding"), "analysis-ir-json"); version(e.child("bindingVersion"), "1.0.0");
@@ -85,13 +86,35 @@ final class BindingReader {
         var p = e.child("publication").fields("id", "capabilities", "artifacts", "units", "storage", "resources",
                 "artifactRelations", "origins", "coverage", "uncertainties", "premises");
         var manifest = manifest(p.child("capabilities"));
-        var storage = p.child("storage").list(this::storage); p.child("resources").empty(); p.child("artifactRelations").empty();
+        resourceBindings=manifest.required().contains(Capabilities.RESOURCE_BINDINGS);
+        var storage = p.child("storage").list(this::storage); var resources=p.child("resources").list(this::resource); p.child("artifactRelations").empty();
         var premises = p.child("premises").list(this::premise);
         var id = publicationId(p.child("id")); var artifacts = p.child("artifacts").list(this::artifact);
         var units = p.child("units").list(this::unit); var origins = p.child("origins").list(this::origin);
         var coverage = coverage(p.child("coverage")); var gaps = p.child("uncertainties").list(this::uncertainty);
         return new Publication(id, SemanticVersion.AIR_2_0_0, manifest, artifacts, units,
-                storage, List.of(), List.of(), origins, coverage, gaps, premises);
+                storage, resources, List.of(), origins, coverage, gaps, premises);
+    }
+    private Interactions.Resource resource(At a) {
+        if(resourceBindings)a.fields("id","description","origin","declaration");else a.fields("id","description","origin");
+        return new Interactions.Resource(typedId(a.child("id"),ResourceId.class),resourceDescription(a.child("description")),originId(a.child("origin")),
+            resourceBindings?a.child("declaration").optional(this::resourceDeclaration):Optional.empty());
+    }
+    private Interactions.ResourceDescription resourceDescription(At a) {
+        return switch(a.kind()) {
+            case "literal" -> (Interactions.LiteralTarget)target(a);
+            case "internal" -> {a.fields("kind","entry");yield new Interactions.InternalTarget(entryId(a.child("entry")));}
+            case "computed" -> {a.fields("kind","category","namespace","name","namePolicy","origin");yield new Interactions.ComputedResource(a.child("category").modelText(),a.child("namespace").modelText(),typedId(a.child("name"),OperandId.class),namePolicy(a.child("namePolicy")),originId(a.child("origin")));}
+            case "local" -> {a.fields("kind","category");if(!resourceBindings)throw a.invalid("I-43","resource.bindings capability required");yield new Interactions.LocalResource(a.child("category").modelText());}
+            case "unknown" -> {a.fields("kind","category","namespace","uncertainty");if(!resourceBindings)throw a.invalid("I-43","resource.bindings capability required");yield new Interactions.UnknownResource(a.child("category").modelText(),a.child("namespace").modelText(),uncertaintyId(a.child("uncertainty")));}
+            default -> throw Json.input(a.path(),"Unknown ResourceDescription kind");
+        };
+    }
+    private Interactions.ResourceDeclaration resourceDeclaration(At a) {
+        a.fields("owner","name","classification","nameSource","objects","uses");
+        return new Interactions.ResourceDeclaration(unitId(a.child("owner")),a.child("name").modelText(),a.child("classification").modelText(),a.child("nameSource").modelText(),
+            a.child("objects").list(o->{o.fields("object","role");return new Interactions.ResourceObject(objectId(o.child("object")),o.child("role").modelText());}),
+            a.child("uses").list(u->{u.fields("operation","role","origin");return new Interactions.ResourceUse(operationId(u.child("operation")),u.child("role").modelText(),originId(u.child("origin")));}));
     }
     private Proofs.Premise premise(At a) {
         a.fields("id", "authority", "justification", "origin", "assertion");

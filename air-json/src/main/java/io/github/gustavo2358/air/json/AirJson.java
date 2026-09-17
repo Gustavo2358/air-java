@@ -63,7 +63,7 @@ public final class AirJson {
         var names = io.github.gustavo2358.air.model.NamePolicies.extensions(publication);
         for (var capabilities : java.util.List.of(publication.capabilities().required(), publication.capabilities().provided()))
             for (var capability : capabilities)
-                if (!java.util.List.of(io.github.gustavo2358.air.model.Capabilities.MEMORY_REGIONS, io.github.gustavo2358.air.model.Capabilities.IBM1047, io.github.gustavo2358.air.model.Capabilities.ENTRY_POSSIBILITIES, io.github.gustavo2358.air.model.Capabilities.ENTRY_POSSIBILITIES_V2, io.github.gustavo2358.air.model.Capabilities.TARGET_POSSIBILITIES).contains(capability) && !names.contains(capability))
+                if (!java.util.List.of(io.github.gustavo2358.air.model.Capabilities.MEMORY_REGIONS, io.github.gustavo2358.air.model.Capabilities.IBM1047, io.github.gustavo2358.air.model.Capabilities.ENTRY_POSSIBILITIES, io.github.gustavo2358.air.model.Capabilities.ENTRY_POSSIBILITIES_V2, io.github.gustavo2358.air.model.Capabilities.TARGET_POSSIBILITIES, io.github.gustavo2358.air.model.Capabilities.RESOURCE_BINDINGS).contains(capability) && !names.contains(capability))
                     throw new AirJsonException(UNSUPPORTED_CAPABILITY,"$.publication.capabilities","Capability outside implemented transport profile");
         return new PartialInput(publication,validate(publication,partialAnalysis));
     }

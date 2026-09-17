@@ -1,7 +1,7 @@
 {
   "analysis_ir": {
     "repository": "Gustavo2358/analysis-ir",
-    "ref": "6b8ce96f5b1020199e3fcceedf81d931a3b8d2ff",
+    "ref": "fb153ae50f343022db45d20d627e1afac85de916",
     "semantic_version": "2.0.0",
     "role": "normative",
     "normative_sections": [
@@ -21,7 +21,8 @@
       "conformidade/02-oraculos.md",
       "especificacao/12-codec-ibm1047.md",
       "especificacao/13-possibilidades-de-entrada.md",
-      "especificacao/14-possibilidades-de-target.md"
+      "especificacao/14-possibilidades-de-target.md",
+      "especificacao/15-vinculos-de-recurso.md"
     ],
     "implementation_handoff": "bindings/revisao-json-v1.md",
     "consulted_draft_transport": "bindings/json-v1.md"

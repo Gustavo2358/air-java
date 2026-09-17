@@ -15,17 +15,39 @@ final class BindingWriter {
         return new Arr(List.of());
     }
     private java.util.Set<Capabilities.Capability> namePolicies = java.util.Set.of();
+    private boolean resourceBindings;
     Value envelope(Publication p) {
+        resourceBindings=p.capabilities().required().contains(Capabilities.RESOURCE_BINDINGS);
         namePolicies = NamePolicies.extensions(p);
         return object("binding", "analysis-ir-json", "bindingVersion", "1.0.0", "airVersion", "2.0.0",
                 "publication", object("id", id(p.id()), "capabilities", manifest(p.capabilities()),
                 "artifacts", array(p.artifacts(), this::artifact), "units", array(p.units(), this::unit),
                 "storage", array(p.storage(), this::storage),
-                "resources", empty(p.resources(), "$.publication.resources"),
+                "resources", array(p.resources(), this::resource),
                 "artifactRelations", empty(p.artifactRelations(), "$.publication.artifactRelations"),
                 "origins", array(p.origins(), this::origin), "coverage", coverage(p.coverage()),
                 "uncertainties", array(p.uncertainties(), this::uncertainty),
                 "premises", array(p.premises(), this::premise)));
+    }
+    private Value resource(Interactions.Resource r) {
+        var fields=new java.util.LinkedHashMap<String,Value>();
+        fields.put("id",id(r.id()));fields.put("description",resourceDescription(r.description()));fields.put("origin",id(r.origin()));
+        if(resourceBindings)fields.put("declaration",optional(r.declaration(),this::resourceDeclaration));
+        return new Obj(fields);
+    }
+    private Value resourceDescription(Interactions.ResourceDescription d) {
+        return switch(d) {
+            case Interactions.InternalTarget t -> object("kind","internal","entry",id(t.entry()));
+            case Interactions.LiteralTarget t -> target(t);
+            case Interactions.ComputedResource t -> object("kind","computed","category",t.category(),"namespace",t.namespace(),"name",id(t.name()),"namePolicy",namePolicy(t.namePolicy()),"origin",id(t.origin()));
+            case Interactions.LocalResource t -> object("kind","local","category",t.category());
+            case Interactions.UnknownResource t -> object("kind","unknown","category",t.category(),"namespace",t.namespace(),"uncertainty",id(t.uncertainty()));
+        };
+    }
+    private Value resourceDeclaration(Interactions.ResourceDeclaration d) {
+        return object("owner",id(d.owner()),"name",d.name(),"classification",d.classification(),"nameSource",d.nameSource(),
+            "objects",array(d.objects(),o->object("object",id(o.object()),"role",o.role())),
+            "uses",array(d.uses(),u->object("operation",id(u.operation()),"role",u.role(),"origin",id(u.origin()))));
     }
     private Value premise(Proofs.Premise p) {
         if (!(p.assertion() instanceof Proofs.DisjointStorage d))
@@ -37,7 +59,7 @@ final class BindingWriter {
         return object("required", array(manifest.required(), this::capability), "provided", array(manifest.provided(), this::capability));
     }
     private Value capability(Capabilities.Capability capability) {
-        if (!List.of(Capabilities.MEMORY_REGIONS, Capabilities.IBM1047, Capabilities.ENTRY_POSSIBILITIES, Capabilities.ENTRY_POSSIBILITIES_V2, Capabilities.TARGET_POSSIBILITIES).contains(capability) && !namePolicies.contains(capability))
+        if (!List.of(Capabilities.MEMORY_REGIONS, Capabilities.IBM1047, Capabilities.ENTRY_POSSIBILITIES, Capabilities.ENTRY_POSSIBILITIES_V2, Capabilities.TARGET_POSSIBILITIES, Capabilities.RESOURCE_BINDINGS).contains(capability) && !namePolicies.contains(capability))
             throw new AirJsonException(AirJsonException.Code.UNSUPPORTED_CAPABILITY,
                     "$.publication.capabilities", "Capability outside implemented transport profile");
         return object("name", capability.name(), "version", capability.version());
