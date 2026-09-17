@@ -196,11 +196,29 @@ final class BindingReader {
     }
     private Interactions.Signature signature(At a) {
         a.fields("parameters", "results", "origin");
-        for (String name : List.of("parameters", "results")) {
-            var inventory = a.child(name).fields("known", "remainder"); inventory.child("known").empty();
+        var parameters=a.child("parameters").fields("known","remainder");
+        var results=a.child("results").fields("known","remainder");results.child("known").empty();
+        return new Interactions.Signature(new Interactions.ParameterInventory(parameters.child("known").list(this::parameter), remainder(parameters.child("remainder"))),
+                new Interactions.ResultInventory(List.of(), remainder(results.child("remainder"))), originId(a.child("origin")));
+    }
+    private Interactions.Parameter parameter(At a) {
+        a.fields("position","mode","typeRef","objectBinding","origin");
+        var mode=a.child("mode");
+        if(mode.kind().equals("unknown")){mode.fields("kind","uncertainty");throw mode.unsupported("Unknown parameter mode");}
+        if(!mode.kind().equals("known"))throw Json.input(mode.path(),"Unknown ModeKnowledge kind");
+        mode.fields("kind","mode");
+        var passing=switch(mode.child("mode").text()) {
+            case "VALUE"->Interactions.PassingMode.VALUE;case "REFERENCE"->Interactions.PassingMode.REFERENCE;case "COPY"->Interactions.PassingMode.COPY;
+            default->throw Json.input(mode.path(),"Unknown PassingMode token");
+        };
+        var binding=a.child("objectBinding");
+        switch(binding.kind()) {
+            case "external"->binding.fields("kind");
+            case "object"->{binding.fields("kind","object");throw binding.unsupported("Entry parameter binding");}
+            case "unknown"->{binding.fields("kind","uncertainty");throw binding.unsupported("Unknown parameter binding");}
+            default->throw Json.input(binding.path(),"Unknown ParameterBinding kind");
         }
-        return new Interactions.Signature(new Interactions.ParameterInventory(List.of(), remainder(a.child("parameters").child("remainder"))),
-                new Interactions.ResultInventory(List.of(), remainder(a.child("results").child("remainder"))), originId(a.child("origin")));
+        return new Interactions.Parameter(natural(a.child("position")),new Interactions.KnownMode(passing),typeRef(a.child("typeRef")),Interactions.ExternalBinding.INSTANCE,originId(a.child("origin")));
     }
     private Interactions.UnknownBound remainder(At a) {
         return switch (a.kind()) {

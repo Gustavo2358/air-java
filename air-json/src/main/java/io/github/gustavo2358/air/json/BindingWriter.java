@@ -97,10 +97,17 @@ final class BindingWriter {
         };
     }
     private Value signature(Interactions.Signature s) {
-        return object("parameters", object("known", empty(s.parameters().known(), "$.signature.parameters.known"),
+        return object("parameters", object("known", array(s.parameters().known(), this::parameter),
                         "remainder", remainder(s.parameters().remainder())),
                 "results", object("known", empty(s.results().known(), "$.signature.results.known"),
                         "remainder", remainder(s.results().remainder())), "origin", id(s.origin()));
+    }
+    private Value parameter(Interactions.Parameter p) {
+        if(!(p.mode() instanceof Interactions.KnownMode mode)||!(p.objectBinding() instanceof Interactions.ExternalBinding))
+            throw limit("$.signature.parameters.known", "Only known modes with external parameter binding implemented");
+        String token=switch(mode.mode()){case VALUE->"VALUE";case REFERENCE->"REFERENCE";case COPY->"COPY";};
+        return object("position",p.position().toString(),"mode",object("kind","known","mode",token),
+            "typeRef",typeRef(p.typeRef()),"objectBinding",object("kind","external"),"origin",id(p.origin()));
     }
     private Value remainder(Interactions.UnknownBound r) {
         return switch (r) {

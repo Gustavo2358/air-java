@@ -174,6 +174,9 @@ def inspect_topology(root):
     # Enumerate all physical inputs, including untracked owners; do not just grep imports.
     for path in root.rglob('*'):
         rel = path.relative_to(root)
+        # Raw campaign evidence is never a Maven/Javac input; do not mutate it for this gate.
+        if rel.parts[0] == '.harness-results':
+            continue
         if '.git' not in rel.parts and path.is_file() and path.suffix in {'.class', '.jar'}:
             require(len(rel.parts) > 2 and rel.parts[0] in MODULES and rel.parts[1] == 'target',
                     f'Root product or Unowned compiled artifact: {rel}')

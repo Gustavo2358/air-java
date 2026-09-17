@@ -1,0 +1,13 @@
+id: FD-W8
+title: Transportar parâmetros conhecidos de assinatura externa
+status: IN_PROGRESS
+scope: [air-json, file-dependencies]
+rule: analysis-ir fb153ae50f343022db45d20d627e1afac85de916, binding json-v1 §9 e §10.4; modelo/norma inalterados
+motivation: Oracle C-FC não transporta argumentos tipados com assinatura conhecida no codec atual.
+inputs: Parameter position Natural, KnownMode VALUE/REFERENCE/COPY, TypeRef existente, ExternalBinding, OriginId.
+limits: ResultSlot, UnknownMode e bindings de parâmetro object/unknown continuam IMPLEMENTATION_LIMIT.
+algorithm: mapear cada parâmetro com campos fechados, tokens explícitos e validador AIR existente; O(n) no inventário, sem corte.
+oracle: SignatureParameterChecks compara wire manual, decode, roundtrip e negativos de posição/modo/campos/origem.
+evidence: .harness-results/fd-w8/parameters-red-2.log (codec IMPLEMENTATION_LIMIT após AIR estrutural válido).
+gates: [bash scripts/check.sh, python3 -B scripts/harness/lean.py fast]
+checkpoint: QUALIFIED_LOCAL; fast exit0, model187/codec125/harness40; PR persistente unmerged.

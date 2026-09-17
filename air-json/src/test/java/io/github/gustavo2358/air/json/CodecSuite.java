@@ -42,6 +42,7 @@ public final class CodecSuite {
         check("EP-W1 v2 possible entry coexistence and explicit version negotiation", EvidencePreservingInitialChecks::run);
         check("EP explicit partial decode preserves incomplete validation and rejects invalidity", PartialAnalysisChecks::run);
         check("RF-W3 invocation arguments and results", InvocationOperandsChecks::run);
+        check("FD-W8 known external signature parameters", SignatureParameterChecks::run);
         check("ST-W7 memory scope union transport", MemoryScopeChecks::run);
         check("ST-W7 unknown mixed storage transport", MixedStorageChecks::run);
         check("ST-W1 explicit IBM1047 total read and exact literal write", RegionalChecks::ibmProfile);
@@ -665,9 +666,9 @@ public final class CodecSuite {
         // Nonempty containers never become empty successful Publications, regardless of deferred element form.
         for(String path:List.of("publication.artifactRelations",
                 "publication.units.0.visibleObjects","publication.units.0.completionPorts",
-                "publication.units.0.entries.0.signature.parameters.known",
                 "publication.units.0.sequences.0.terminator.values"))
             fails(IMPLEMENTATION_LIMIT,changed(path,new Json.Arr(List.of(Json.object("kind","deferred-element")))));
+        fails(INPUT_ERROR,changed("publication.units.0.entries.0.signature.parameters.known",new Json.Arr(List.of(Json.object("kind","deferred-element")))));
         fails(INPUT_ERROR,changed("publication.resources",new Json.Arr(List.of(Json.object("kind","deferred-element")))));
         // InitialCondition is now transported with a closed structure, never a deferred element.
         fails(INPUT_ERROR,changed("publication.units.0.entries.0.state.conditions",new Json.Arr(List.of(Json.object("kind","deferred-element")))));

@@ -551,3 +551,15 @@ scope still refuse. `INCOMPLETE_VALIDATION` never becomes structural validity.
 Strict `encode`/`decode` keep their existing behavior. PartialOutput defensively
 copies canonical bytes. AIR 2.0 and JSON binding 1.0 are unchanged; supported model
 forms and capability negotiation still govern the wire.
+
+## FD-W8 — parâmetros conhecidos externos
+
+No pin normativo W1 `fb153ae50f343022db45d20d627e1afac85de916`, binding§9/§10.4,
+`Signature.parameters.known` passa a transportar `Parameter` com posição Natural,
+KnownMode VALUE/REFERENCE/COPY (mappings explícitos), TypeRef já coberto,
+ExternalBinding e OriginId. Não muda modelo, bindingVersion ou analysis-ir.
+UnknownMode/bindings object/unknown e ResultSlot continuam limites explícitos.
+Campos inválidos do Parameter agora são INPUT_ERROR; não são mais um contêiner
+inteiro desconhecido. Validator mantém I-55 e I-56; roundtrip não prova contrato.
+Oráculo independente `SignatureParameterChecks`, incluindo wire manual e negativos.
+A motivação C-FC está no harness consumidor; o codec não conhece COBOL/CICS.

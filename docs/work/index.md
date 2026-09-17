@@ -1,6 +1,6 @@
 # Trabalho atual
 
-[FILE-DEPENDENCIES — FD-H0–H4 / waves futuras](../domain/file-dependencies.md): preparação source-only; STOP humano antes de W0.
+[FILE-DEPENDENCIES — CORE N+C](../domain/file-dependencies.md): W0–W9/W11 autorizados; [FD-W8](active/FD-W8.yaml) codec em andamento, STOP final W11; sem W10/merge.
 
 [WORK-STORAGE-W6-W8](WORK-STORAGE-W6-W8.json): W6/W7 G2 and W8 G3 qualified; IN_PROGRESS pending human review/merge. Extends the accepted W0–W5 work item without reopening it.
 

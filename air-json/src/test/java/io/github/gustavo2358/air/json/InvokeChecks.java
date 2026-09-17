@@ -270,7 +270,8 @@ final class InvokeChecks {
         failure(INPUT_ERROR, () -> new AirJson().decode(wire(edit(t, OP + ".target.name.kind", Json.value("fit_text")))));
         for (Object[] pair : pairs)
             failure(IMPLEMENTATION_LIMIT, () -> new AirJson().decode(wire(edit(t, OP + "." + pair[0], (Json.Value)pair[1]))));
-        for (String inventory : List.of("signature.signature.parameters.known", "signature.signature.results.known", "effectBound.perOutcome"))
+        failure(INPUT_ERROR, () -> new AirJson().decode(wire(edit(t, OP + ".signature.signature.parameters.known", new Json.Arr(List.of(object("kind", "deferred-element")))))));
+        for (String inventory : List.of("signature.signature.results.known", "effectBound.perOutcome"))
             failure(IMPLEMENTATION_LIMIT, () -> new AirJson().decode(wire(edit(t, OP + "." + inventory, new Json.Arr(List.of(object("kind", "unimplemented")))))));
         var i = invoke(true, true);
         var externalTarget = new Interactions.InternalTarget(new EntryId(UNIT, "entry"));

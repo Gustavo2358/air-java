@@ -57,3 +57,19 @@ Gate fixa o novo pin normativo; allowlist de bytecode admite somente os accessor
 ResourceDeclaration.name():String e ComputedResource.name():OperandId, sem liberar
 Enum.name. Descriptor resource antes não implementado agora recusa shape ruim por
 INPUT_ERROR. Nenhum gate foi omitido/relaxado.
+
+## FD-W8 — codec de assinatura externa
+
+Worktree auditado no pin W1 limpo. Oráculo AIR consumidor provou que os slots SYSID
+podem usar argumentos genéricos, sem norma nova, mas o codec recusava parâmetros
+conhecidos da assinatura. [FD-W8](../work/active/FD-W8.yaml) limita a ampliação a
+KnownMode/ExternalBinding na forma normativa existente. Modelo/Validator inalterados.
+O gate de topologia confundia `.harness-results/fd-w4/transport-investigation` com
+fonte produtivo. Evidência preservada intacta; teste contraprova permite apenas
+raiz de evidência dedicada e continua rejeitando Oracle.java fora dos módulos.
+
+W8 codec QUALIFIED_LOCAL: `lean.py fast` exit0, 187 model +125 codec,40 harness
+checks (`.harness-results/fd-w8/fast-2.log`). Norma/modelo/validator/pin IR intactos.
+Negativo de origem corrigido para I-02 (referência), conforme norma; I-03 é owner.
+Qualification-local NOT_RUN: delta de transporte focal, sem mudança semântica core.
+Integração consumidor em andamento; isto não qualifica W8 da campanha inteira.
