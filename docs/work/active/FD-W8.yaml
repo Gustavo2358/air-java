@@ -1,6 +1,6 @@
 id: FD-W8
 title: Transportar parâmetros externos conhecidos e efeitos por outcome
-status: IN_PROGRESS
+status: DONE
 scope: [air-json, file-dependencies]
 rule: analysis-ir fb153ae50f343022db45d20d627e1afac85de916, binding json-v1 §9 e §10.4; modelo/norma inalterados
 motivation: Oracle C-FC não transporta argumentos tipados com assinatura conhecida no codec atual.
@@ -13,3 +13,5 @@ gates: [bash scripts/check.sh, python3 -B scripts/harness/lean.py fast]
 checkpoint: QUALIFIED_LOCAL; FAST final exit0, model187/codec126/harness40; PR persistente unmerged.
 outcome_rule: binding §9 / I-60; cinco chaves fechadas e ForeignEffects existentes, O(n), sem delta normativo.
 outcome_oracle: OutcomeEffectsChecks; outcomes-red.log IMPLEMENTATION_LIMIT, outcomes-3.log126 PASS.
+
+closeout: Merged and main smoke PASS; core complete; W10 optional/deferred.
