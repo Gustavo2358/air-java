@@ -573,3 +573,21 @@ permanecem exatos. Unicidade e compatibilidade são verificadas por I-60, owners
 fechamento pelas regras existentes. Não há cálculo de efeitos nem delta AIR.
 `OutcomeEffectsChecks` usa wire manual, roundtrip, chaves distintas, default vazio,
 duplicata, token/campo ausente/extra, tag irrepresentável e operando pendente.
+
+### Logical text W2 — existing slice/concat contracts
+
+The codec now transports AIR 2.0 / binding 1.0 `slice_text(value,start,count)` and
+`binary(operator=concat,left,right)`, using explicit lowercase wire tokens and the
+existing iterative traversal. Other Binary operators retain IMPLEMENTATION_LIMIT;
+unrecognized tokens remain INPUT_ERROR. No schema, model variant, or capability
+was added. Logical coordinates count Unicode scalars, never storage bytes.
+
+The validator proves a constant slice's bounds when the source is a TextLiteral or
+FitText with an explicit length. Negative/out-of-range bounds remain INVALID_IR;
+a general Read with no length proof retains INCOMPLETE_VALIDATION. This does not
+assume source-language layout or suppress any unknown precondition.
+
+`LogicalTextExpressionChecks` covers exact/canonical round-trip, independent wire
+tokens, malformed fields/tokens and negative/out-of-range bounds. Local FAST on
+2026-09-18 passed model/codec contracts, module boundaries and 40 harness tests;
+128 deterministic transport checks executed. Corporate corpus was not used.
