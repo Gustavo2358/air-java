@@ -147,6 +147,58 @@ final class ReferenceChecks {
             }
         }
         for(Operand operand:c.index.operands.values()) operand(operand);
+        executableLocationGrounding();
+    }
+
+    /** A nominal location cycle cannot serve an executable place as an all-memory bound. */
+    private void executableLocationGrounding() {
+        var resolved=new HashMap<ObjectId,Grounding>();
+        var checked=new HashSet<ObjectId>();
+        for(Operand operand:c.index.operands.values())if(operand instanceof Places.ObjectPlace place
+                && checked.add(place.object())) {
+            var declaration=c.index.objects.get(place.object());
+            if(declaration!=null&&!grounded(place.object(),new HashSet<>(),resolved).grounded())
+                c.error("I-13",place.header().id(),"executable object has no independently grounded location bound");
+        }
+    }
+
+    private record Grounding(boolean grounded,boolean cycle) { }
+    private Grounding grounded(ObjectId id,Set<ObjectId> visiting,Map<ObjectId,Grounding> resolved) {
+        var cached=resolved.get(id);if(cached!=null)return cached;
+        if(!visiting.add(id))return new Grounding(false,true);
+        var object=c.index.objects.get(id);
+        var result=object==null?new Grounding(false,false):grounded(object.storage(),visiting,resolved);
+        visiting.remove(id);
+        // A negative answer reached through an active cycle depends on the DFS root.
+        // Recompute it from another root; a resolved positive answer is reusable.
+        if(result.grounded()||!result.cycle())resolved.put(id,result);
+        return result;
+    }
+    private Grounding grounded(Memory.Binding binding,Set<ObjectId> visiting,Map<ObjectId,Grounding> resolved) {
+        if(binding instanceof Memory.CellBinding||binding instanceof Memory.ViewBinding)return new Grounding(true,false);
+        if(binding instanceof Memory.AliasBinding alias)return grounded(alias.object(),visiting,resolved);
+        if(binding instanceof Memory.UnknownBinding unknown)return grounded(unknown.scope(),visiting,resolved);
+        var alternatives=(Memory.AlternativesBinding)binding;
+        boolean found=false,cycle=false;
+        for(var member:alternatives.alternatives()) {
+            var g=grounded(member,visiting,resolved);found|=g.grounded();cycle|=g.cycle();
+        }
+        if(alternatives.remainder() instanceof Scopes.WithinMemory within) {
+            var g=grounded(within.scope(),visiting,resolved);found|=g.grounded();cycle|=g.cycle();
+        }
+        return new Grounding(found,cycle);
+    }
+    private Grounding grounded(Scopes.MemoryScope scope,Set<ObjectId> visiting,Map<ObjectId,Grounding> resolved) {
+        if(scope instanceof Scopes.StorageMemory storage)return new Grounding(!storage.storage().isEmpty(),false);
+        if(scope instanceof Scopes.AllMemory||scope instanceof Scopes.VisibleMemory)return new Grounding(true,false);
+        boolean found=false,cycle=false;
+        if(scope instanceof Scopes.ObjectsMemory objects)for(var id:objects.objects()) {
+            var g=grounded(id,visiting,resolved);found|=g.grounded();cycle|=g.cycle();
+        }
+        else if(scope instanceof Scopes.MemoryUnion union)for(var member:union.members()) {
+            var g=grounded(member,visiting,resolved);found|=g.grounded();cycle|=g.cycle();
+        }
+        return new Grounding(found,cycle);
     }
 
     void operand(Operand operand) {

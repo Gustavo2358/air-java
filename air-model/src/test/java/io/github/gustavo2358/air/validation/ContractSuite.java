@@ -15,6 +15,7 @@ public final class ContractSuite {
     private ContractSuite() {}
     public static void main(String[] args) throws Exception {
         test("PMT positive bases and diagnostic integrity",PositiveStorageChecks::run);
+        test("PMT W3-R1 grounded executable bindings",BoundedBindingChecks::run);
         test("ST-W6 bounded regional fit codec proof",RegionalFitChecks::run);
         test("ST-W7 simultaneous regional initial state",RegionalInitialChecks::run);
         test("RF-W1 possible entry admission",PossibleEntryChecks::run);

@@ -3,7 +3,7 @@
   "bindingVersion": "1.0.0",
   "airVersion": "2.0.0",
   "status": "DRAFT",
-  "analysis_ir_pin": "b26465964fe75f944f6324df63330d69f33d77cd",
+  "analysis_ir_pin": "656d1ffcb80132a9aa06475da50929b29e72a24d",
   "external_dependencies": [],
   "checks": [
     "PMT positive bases and coverage-bearing nop transport",

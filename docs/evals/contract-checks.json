@@ -3,6 +3,7 @@
   "source": "src/test/java/io/github/gustavo2358/air/validation/ContractSuite.java",
   "checks": [
     "PMT positive bases and diagnostic integrity",
+    "PMT W3-R1 grounded executable bindings",
     "ST-W6 bounded regional fit codec proof",
     "ST-W7 simultaneous regional initial state",
     "RF-W1 possible entry admission",

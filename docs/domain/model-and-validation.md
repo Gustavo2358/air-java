@@ -29,6 +29,8 @@ resolvem compartilhamento positivo. DisjointStorage permanece asserção redunda
 validada estruturalmente, sem nova obrigação de fidelidade física da fonte. Ordenação de sequences não cria edges.
 Limite operacional não modifica cardinalidade semântica.
 
+Na resolução W3-R1, Cell representa armazenamento lógico sem afirmar layout em bytes. UnknownBinding é incerteza semântica de localização limitada ao escopo publicado. Um ObjectPlace executável cuja cadeia de binding/scope não alcança Cell, Region/StorageId ou bound amplo explícito recebe INVALID_IR (`I-13`); ciclo nominal não vira AllMemory. Uma declaração nominal sem uso executável pode reter o ciclo como cobertura. Repetição de membro já resolvido não é ciclo. O contrato normativo permanece em Analysis IR 03 §4.1.
+
 O [status existente](../implementation-status.md) é a fonte de cobertura local;
 contracasos não equivalem à certificação de todos os perfis AIR. Testar com
 expectations vindas da regra, nunca corrigir a AIR a partir da conveniência Java.
