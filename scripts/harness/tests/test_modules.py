@@ -1,5 +1,6 @@
 """Topology/graph falsifications use disposable trees, never the working product."""
 import shutil
+import json
 import sys
 import tempfile
 import unittest
@@ -29,7 +30,7 @@ class ModuleTests(unittest.TestCase):
                      'air-json/src/test/java/io/github/gustavo2358/air/json/CodecSuite.java',
                      'air-json/src/test/java/io/github/gustavo2358/air/json/GobackOracle.java',
                      'air-json/src/test/resources/goback.canonical.json',
-                     'air-json/src/test/resources/scalar-assign.canonical.json', 'air-json/src/test/resources/regional.canonical.json', 'docs/evals/transport-checks.json'):
+                     'air-json/src/test/resources/scalar-assign.canonical.json', 'air-json/src/test/resources/regional.canonical.json', 'docs/evals/transport-checks.json', 'docs/sources.lock.json'):
             target = self.root / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / name, target)
@@ -41,6 +42,27 @@ class ModuleTests(unittest.TestCase):
 
     def test_authorized_json_requires_implementation_suite_policy_modules_and_edge(self):
         self.assertEqual("0.1.0-SNAPSHOT", architecture.inspect_topology(self.root))
+
+    def test_transport_pin_matches_active_authority_and_rejects_stale_or_malformed_pin(self):
+        lock_path = self.root / 'docs/sources.lock.json'
+        policy_path = self.root / 'docs/evals/transport-checks.json'
+        lock = json.loads(lock_path.read_text())
+        policy = json.loads(policy_path.read_text())
+        self.assertEqual("0.1.0-SNAPSHOT", architecture.inspect_topology(self.root))
+        lock['analysis_ir']['ref'] = 'a' * 40
+        lock_path.write_text(json.dumps(lock))
+        with self.assertRaisesRegex(Failure, 'Invalid JSON suite/dependency policy'):
+            architecture.inspect_topology(self.root)
+        policy['analysis_ir_pin'] = 'a' * 40
+        policy_path.write_text(json.dumps(policy))
+        self.assertEqual("0.1.0-SNAPSHOT", architecture.inspect_topology(self.root))
+        for invalid in ('main', '', None):
+            lock['analysis_ir']['ref'] = invalid
+            policy['analysis_ir_pin'] = invalid
+            lock_path.write_text(json.dumps(lock))
+            policy_path.write_text(json.dumps(policy))
+            with self.subTest(pin=invalid), self.assertRaisesRegex(Failure, 'Invalid JSON suite/dependency policy'):
+                architecture.inspect_topology(self.root)
 
     def test_preserved_harness_evidence_is_not_a_compilation_input(self):
         evidence = self.root / '.harness-results' / 'investigation'

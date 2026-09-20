@@ -204,8 +204,16 @@ para nop válido; transmissão sem sameDomain aceita indevidamente por Precision
 O diagnóstico não mascara os contracasos de integridade. Não se alega qualificação
 corporativa ou conformidade global de produtores/consumidores pela biblioteca.
 
-Validação local W1: `python3 -B scripts/harness/lean.py fast` passou em Java21,
-com 188 checks de modelo, 129 checks de codec, arquitetura/jdeps e 40 testes do
-harness (além dos 12 testes da política lean). Goldens preexistentes permanecem
-byte-exatos. Contagens de obrigações W2C mudaram intencionalmente pela remoção
-de I-59 redundante; I-09/I-56 e todos os contracasos estruturais permanecem.
+O primeiro FAST local W1 passou em Java21 com 188 checks de modelo, 129 checks
+de codec, arquitetura/jdeps e 40 testes do harness (além dos 12 da política lean).
+O repin posterior do inventário de transporte invalidou essa evidência para o
+SHA 00373f6: os checks remotos falharam antes de compilar porque o harness ainda
+comparava o pin com um literal histórico. A correção compara inventário com a
+autoridade ativa de `sources.lock.json`, exige SHA exato e rejeita divergência,
+branch móvel ou pin ausente, sem relaxar política de dependências ou versões.
+O novo teste independente eleva a suíte do harness a 41 testes; RED/GREEN e FAST
+são reexecutados sobre a correção completa antes da publicação.
+
+Goldens preexistentes permanecem byte-exatos. Contagens de obrigações W2C mudaram
+intencionalmente pela remoção de I-59 redundante; I-09/I-56 e todos os contracasos
+estruturais permanecem. A correção de harness não altera produção/modelo/codec.

@@ -215,9 +215,12 @@ def inspect_topology(root):
         require((root / required).is_file(), f'Missing JSON suite/policy/evidence: {required}')
     from common import read_json
     policy = read_json(root / 'docs/evals/transport-checks.json')
+    authority = read_json(root / 'docs/sources.lock.json').get('analysis_ir', {})
+    normative_pin = authority.get('ref')
     require(policy.get('binding') == 'analysis-ir-json' and policy.get('bindingVersion') == '1.0.0'
             and policy.get('airVersion') == '2.0.0' and policy.get('status') == 'DRAFT'
-            and policy.get('analysis_ir_pin') == 'fb153ae50f343022db45d20d627e1afac85de916'
+            and re.fullmatch(r'[0-9a-f]{40}', str(normative_pin))
+            and policy.get('analysis_ir_pin') == normative_pin
             and policy.get('external_dependencies') == [] and policy.get('checks'), 'Invalid JSON suite/dependency policy')
     return version
 
