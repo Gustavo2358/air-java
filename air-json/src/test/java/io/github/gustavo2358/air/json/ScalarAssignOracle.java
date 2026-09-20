@@ -46,7 +46,7 @@ final class ScalarAssignOracle {
                 Memory.Visibility.PRIVATE, origin("data")), TEXT);
     }
     static Publication publication() { return publication(1, 1); }
-    /** Extra entities exercise cardinality only; no claim that separate cells prove disjointness. */
+    /** Extra entities exercise cardinality; distinct storage bases are independent in the model. */
     static Publication publication(int objectCount, int assignCount) {
         var objects = new ArrayList<Memory.ObjectDeclaration>(); var storage = new ArrayList<Memory.Storage>();
         for (int i = 0; i < objectCount; i++) {

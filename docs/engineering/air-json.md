@@ -591,3 +591,18 @@ assume source-language layout or suppress any unknown precondition.
 tokens, malformed fields/tokens and negative/out-of-range bounds. Local FAST on
 2026-09-18 passed model/codec contracts, module boundaries and 40 harness tests;
 128 deterministic transport checks executed. Corporate corpus was not used.
+
+
+### POSITIVE_MEMORY_TOPOLOGY W1 — nop e bases positivas
+
+`nop` já pertence à AIR 2.0/binding1.0 (§8); writer/reader agora transportam apenas
+kind e header, sem criar operands ou envelopes. Campos extras, referência de gap
+pendente e uso em posição de terminador continuam rejeitados. A motivação é
+transportar um aspecto fonte omitido com cobertura, sem havoc compensatório.
+`PositiveProjectionChecks` constrói wire independente, verifica header/roundtrip,
+fechamento e condições de entrada em bases distintas sem premissa negativa.
+
+O pin normativo é o sources.lock atual. Campos/tags/versões não mudam; topologia e
+isolamento de coverage são uma migração semântica pré-release coordenada. A antiga
+obrigação I-59 de prova física foi removida: a asserção continua validada/transportada,
+mas é redundante. I-09 e demais obrigações reais de operações permanecem.

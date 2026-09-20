@@ -113,6 +113,7 @@ public final class Proofs {
             scope = Objects.requireNonNull(scope, "scope");
         }
     }
+    /** Redundant positive-base assertion; not required to establish base independence. */
     public record DisjointStorage(List<StorageId> storage) implements Assertion {
         public DisjointStorage { storage = List.copyOf(storage); }
     }

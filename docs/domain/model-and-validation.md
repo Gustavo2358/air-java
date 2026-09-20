@@ -24,8 +24,9 @@ retido em issues. INVALID_IR já provado pode coexistir com traversal incompleto
 nenhum deles permite isStructurallyValid=true.
 
 Unknown de tipo não é wildcard. Compartilhar uncertainty não prova sameDomain;
-premissa por site não se transfere por nome/autoridade igual. Disjunção estrutural
-não prova independência física de storage. Ordenação de sequences não cria edges.
+premissa por site não se transfere por nome/autoridade igual. Bases StorageId distintas são independentes no modelo; aliases/vistas
+resolvem compartilhamento positivo. DisjointStorage permanece asserção redundante,
+validada estruturalmente, sem nova obrigação de fidelidade física da fonte. Ordenação de sequences não cria edges.
 Limite operacional não modifica cardinalidade semântica.
 
 O [status existente](../implementation-status.md) é a fonte de cobertura local;

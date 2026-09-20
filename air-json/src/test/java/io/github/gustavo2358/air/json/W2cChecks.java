@@ -65,15 +65,16 @@ final class W2cChecks {
     static void obligations() {
         var p = publication("full"); var before = valid(p);
         var after = valid(new AirJson().decode(new AirJson().encode(p)));
-        for (String rule : List.of("I-09", "I-59")) {
+        for (String rule : List.of("I-09")) {
             var expected = before.issues().stream().filter(i -> i.rule().equals(rule)).toList();
             equal(1, expected.size()); equal(ValidationIssue.Kind.SEMANTIC_OBLIGATION, expected.get(0).kind());
             equal(expected, after.issues().stream().filter(i -> i.rule().equals(rule)).toList());
         }
-        equal(before, after); equal(2L, after.diagnostics().count(ValidationIssue.Kind.SEMANTIC_OBLIGATION));
-        // Truncated retention must not erase the full obligation count or turn it into a certificate.
+        equal(before, after); equal(1L, after.diagnostics().count(ValidationIssue.Kind.SEMANTIC_OBLIGATION));
+        require(after.issues().stream().noneMatch(i -> i.rule().equals("I-59")), "redundant disjoint assertion must not create a source-layout obligation");
+        // The retained diagnostic budget does not turn the remaining purity obligation into a certificate.
         var limited = AirValidator.validate(p, new ValidationOptions(10000, 1000, 1));
-        equal(2L, limited.diagnostics().count(ValidationIssue.Kind.SEMANTIC_OBLIGATION));
+        equal(1L, limited.diagnostics().count(ValidationIssue.Kind.SEMANTIC_OBLIGATION));
         equal(1, limited.issues().size());
     }
     static Publication predicate(Publication p, Expression expression) {
@@ -234,7 +235,7 @@ final class W2cChecks {
             seq.set(3, new Sequence(label("Lmerge"), List.of(), invoke, origin("sequence")));
             seq.add(new Sequence(label("Lreturn"), List.of(), new Operations.Return(identified("return"), List.of()), origin("sequence")));
             var combined = copy(p, List.of(sequences(u, seq)), p.storage(), p.premises()); roundTrip(combined);
-            equal(3L, valid(combined).diagnostics().count(ValidationIssue.Kind.SEMANTIC_OBLIGATION));
+            equal(2L, valid(combined).diagnostics().count(ValidationIssue.Kind.SEMANTIC_OBLIGATION));
             require(valid(combined).issues().stream().anyMatch(i -> i.rule().equals("I-56")), "Invoke obligation missing in W1/W2 composition");
         }
     }
@@ -306,7 +307,7 @@ final class W2cChecks {
                 var encoded = new AirJson().encode(p); long nodeCount = nodes(Json.parse(encoded, AirJson.Limits.defaults()));
                 if (dimension.equals("controls")) { equal(4 + 2 * n, r.statistics().operations()); equal(3 + n, r.statistics().operands()); }
                 if (dimension.equals("dependencies")) { equal(4, r.statistics().operations()); equal(1 + 2 * n, r.statistics().operands()); }
-                if (dimension.equals("premises")) { equal(n, p.premises().size()); equal((long)n + 1, r.diagnostics().count(ValidationIssue.Kind.SEMANTIC_OBLIGATION)); }
+                if (dimension.equals("premises")) { equal(n, p.premises().size()); equal(1L, r.diagnostics().count(ValidationIssue.Kind.SEMANTIC_OBLIGATION)); }
                 if (dimension.equals("members")) equal(n, ((Proofs.DisjointStorage)p.premises().get(0).assertion()).storage().size());
                 equal(0L, r.statistics().domainQueries());
                 if (previousBytes > 0) {
@@ -338,7 +339,7 @@ final class W2cChecks {
             equal(gap("predicate-value-unknown"), u.reason()); equal(Scopes.NoMemory.INSTANCE, u.remainingReads()); restored = u.dependencies().get(0);
         }
         equal(read("if", "leaf", Operand.Role.VALUE_READ, FLAG), restored);
-        equal(601L, valid(decoded).diagnostics().count(ValidationIssue.Kind.SEMANTIC_OBLIGATION));
+        equal(600L, valid(decoded).diagnostics().count(ValidationIssue.Kind.SEMANTIC_OBLIGATION));
     }
     static void frozenW1() {
         // SHA-256 exports from unmodified main, before this codec implementation; frozen evidence receipt.

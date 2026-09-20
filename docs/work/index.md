@@ -1,5 +1,7 @@
 # Trabalho atual
 
+[PMT-W1](active/PMT-W1.json): IN_PROGRESS; topologia positiva, integridade e transporte de nop; revisão no companion DRAFT, sem merge.
+
 [FILE-DEPENDENCIES — CORE N+C](../domain/file-dependencies.md): W0–W9/W11 autorizados; [FD-W8](active/FD-W8.yaml) codec em andamento, STOP final W11; sem W10/merge.
 
 [WORK-STORAGE-W6-W8](WORK-STORAGE-W6-W8.json): W6/W7 G2 and W8 G3 qualified; IN_PROGRESS pending human review/merge. Extends the accepted W0–W5 work item without reopening it.

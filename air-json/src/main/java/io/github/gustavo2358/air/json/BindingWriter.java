@@ -397,11 +397,12 @@ final class BindingWriter {
         };
     }
     private Value instruction(Instruction i) {
+        if (i instanceof Operations.Nop n) return object("kind", "nop", "header", header(n.header()));
         if (i instanceof Operations.HavocMust h) return object("kind", "havoc.must", "header", header(h.header()), "destination", place(h.destination()), "reason", id(h.reason()));
         if (i instanceof Operations.HavocMay h) return object("kind", "havoc.may", "header", header(h.header()), "scope", memoryScope(h.scope()), "reason", id(h.reason()));
         if (i instanceof Operations.CopyBytes c) return object("kind", "copy_bytes", "header", header(c.header()),
                 "destination", byteRange(c.destination()), "source", byteRange(c.source()), "length", c.length().toString(), "fallback", conservativeEnvelope(c.fallback()));
-        if (!(i instanceof Operations.Assign a)) throw limit("$.sequence.instructions", "Only Instruction.assign implemented");
+        if (!(i instanceof Operations.Assign a)) throw limit("$.sequence.instructions", "Instruction outside implemented transport coverage");
         return object("kind", "assign", "header", header(a.header()), "destination", place(a.destination()), "value", expression(a.value()));
     }
     // Binding §10.4: closed tables; Java enum spelling never supplies wire tokens.

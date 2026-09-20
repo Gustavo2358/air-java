@@ -238,6 +238,7 @@ final class BindingReader {
         String kind = operationFields(a);
         if (!Set.of("assign", "havoc.must", "havoc.may", "nop", "copy_bytes").contains(kind))
             throw a.invalid("I-04", "AIR 01 §3: terminator in instructions");
+        if (kind.equals("nop")) return new Operations.Nop(header(a.child("header")));
         if (kind.equals("havoc.must")) return new Operations.HavocMust(header(a.child("header")), place(a.child("destination")), uncertaintyId(a.child("reason")));
         if (kind.equals("havoc.may")) return new Operations.HavocMay(header(a.child("header")), memoryScope(a.child("scope")), uncertaintyId(a.child("reason")));
         if (kind.equals("copy_bytes")) return new Operations.CopyBytes(header(a.child("header")),

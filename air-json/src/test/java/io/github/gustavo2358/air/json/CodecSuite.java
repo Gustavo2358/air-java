@@ -31,6 +31,7 @@ public final class CodecSuite {
         golden = Files.readAllBytes(Path.of("src/test/resources/goback.canonical.json"));
         text = new String(golden, StandardCharsets.UTF_8);
         tree = Json.parse(golden, AirJson.Limits.defaults());
+        check("PMT positive bases and coverage-bearing nop transport",PositiveProjectionChecks::run);
         check("CORE-SIZE physical JSON stack and malformed distinction", JsonCapacityChecks::physicalDepth);
         check("CORE-SIZE exact UTF-8 byte budgets", JsonCapacityChecks::byteBudgets);
         check("CORE-SIZE JSON independent cardinality series", JsonCapacityChecks::series);
@@ -385,7 +386,7 @@ public final class CodecSuite {
         check("W2C Unknown BOOL dependencies and empty list round trip", W2cChecks::unknown);
         check("W2C DisjointStorage premise exact ordered members", W2cChecks::premise);
         check("W2C complete diamond independent wire oracle", W2cChecks::wireOracle);
-        check("W2C I-09 and I-59 remain semantic obligations", W2cChecks::obligations);
+        check("W2C purity obligation remains and disjoint assertion is redundant", W2cChecks::obligations);
         check("W2C open remaining reads and array order preserved", W2cChecks::openReadsAndOrder);
         check("W2C Branch and Jump negative closure and placement", W2cChecks::branchNegatives);
         check("W2C Unknown negative reason type owner role and coverage", W2cChecks::unknownNegatives);

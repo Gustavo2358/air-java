@@ -1,0 +1,6 @@
+{
+  "id": "PMT-W1",
+  "title": "Positive storage topology and coverage isolation",
+  "status": "IN_PROGRESS",
+  "scope": "AIR normative pin, same-base entry integrity, diagnostic-independent invocation validation and existing nop transport; awaiting campaign draft review, no merge"
+}

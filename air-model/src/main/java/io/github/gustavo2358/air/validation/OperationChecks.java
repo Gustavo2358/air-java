@@ -260,8 +260,6 @@ final class OperationChecks {
         Interactions.ResultInventory results=signature.results();
         boolean parametersClosed=parameters.remainder() instanceof Interactions.NoRemainder;
         boolean resultsClosed=results.remainder() instanceof Interactions.NoRemainder;
-        boolean exactValues=invoke.header().precision().values().status()
-                ==Evidence.PrecisionStatus.EXACT;
         if(parametersClosed && invoke.arguments().size()!=parameters.known().size())
             c.error("I-08",id,"argument cardinality contradicts the closed parameter inventory");
         if(hasNormal && resultsClosed && invoke.results().size()!=results.known().size())
@@ -279,7 +277,7 @@ final class OperationChecks {
             Operand operand=argumentOperand(argument.get());
             DomainSubject destination=parameterSubject(invoke,parameter.position());
             requireConcreteSignatureType(types.type(operand),parameter.typeRef(),id);
-            if(exactValues && parameter.mode() instanceof Interactions.KnownMode
+            if(parameter.mode() instanceof Interactions.KnownMode
                     && !domains.same(new OperandDomain(operand.header().id()),destination,site))
                 c.error("I-08/I-52",id,
                         "argument transmission lacks sameDomain proof at invocation_site");
@@ -291,7 +289,7 @@ final class OperationChecks {
                 c.error("I-08",id,"known result position has no corresponding destination");
                 continue;
             }
-            if(exactValues && !domains.same(resultSubject(invoke,result.position()),
+            if(!domains.same(resultSubject(invoke,result.position()),
                     new OperandDomain(destination.get().header().id()),site))
                 c.error("I-08/I-52",id,
                         "result transmission lacks sameDomain proof at invocation_site");
@@ -442,7 +440,7 @@ final class OperationChecks {
         // Type/reference/codec checks above and strong-literal consistency still apply.
         if(c.required.contains(Capabilities.ENTRY_POSSIBILITIES_V2))return;
         if(entry.state().conditions().stream().noneMatch(s->s.value() instanceof Entries.PossibleLiterals))return;
-        var byBase=new HashMap<StorageId,List<InitialFootprint>>();var possibleBases=new HashSet<StorageId>();
+        var byBase=new HashMap<StorageId,List<InitialFootprint>>();
         for(var seed:entry.state().conditions()) {
             boolean possible=seed.value() instanceof Entries.PossibleLiterals;
             var base=storageLocation(seed.place());var cell=exactCell(seed.place());
@@ -454,7 +452,6 @@ final class OperationChecks {
                 var length=extent(seed.place());if(start!=null&&length.isPresent())end=start.add(length.get());
             }
             if(base==null||start==null||end==null) {limit(entry.id(),"possible entry disjunction needs exact storage for every simultaneous condition");continue;}
-            if(possible)possibleBases.add(base);
             byBase.computeIfAbsent(base,ignored->new ArrayList<>()).add(new InitialFootprint(base,start,end,possible));
         }
         for(var spans:byBase.values()) {
@@ -467,19 +464,8 @@ final class OperationChecks {
                 if(span.possible())possibleEnd=possibleEnd==null?span.end():possibleEnd.max(span.end());
             }
         }
-        if(byBase.size()<2)return;
-        // Index explicit separation groups once, with the common whole-group proof fast path.
-        var groups=new HashMap<StorageId,List<Set<StorageId>>>();
-        for(var premise:c.index.premises.values())if(premise.assertion() instanceof DisjointStorage separated) {
-            var members=new HashSet<>(separated.storage());
-            if(members.containsAll(byBase.keySet()))return;
-            for(var base:members)if(possibleBases.contains(base))groups.computeIfAbsent(base,ignored->new ArrayList<>()).add(members);
-        }
-        for(var base:possibleBases) {
-            var proven=new HashSet<StorageId>();proven.add(base);
-            for(var members:groups.getOrDefault(base,List.of()))proven.addAll(members);
-            if(!proven.containsAll(byBase.keySet()))limit(entry.id(),"different entry bases lack an explicit physical separation proof");
-        }
+        // Different StorageId bases are independent in the model.
+        // Only same-base intersections above need simultaneous-condition checks.
     }
     private StorageId storageLocation(Place place) {
         if(place instanceof Places.RegionSlice slice)return slice.region();

@@ -29,11 +29,11 @@ public final class PossibleEntryChecks {
         if(AirValidator.validate(f.build()).isStructurallyValid())throw new AssertionError("inexact candidate encoding accepted");
         f=fixture();a=possible(f,"bad-codec",0,1,"€");f.state=new Entries.EntryState(List.of(a),List.of());
         if(AirValidator.validate(f.build()).isStructurallyValid())throw new AssertionError("unsupported candidate bytes accepted");
-        // Distinct base IDs require a physical proof. An alias spelling cannot supply it.
+        // Distinct StorageId bases are independent without a physical source-layout proof.
         f=fixture();a=possible(f,"region",0,4,"ABCD");var object=f.object("other",Types.known(Types.Builtin.TEXT));
         var place=new Places.ObjectPlace(f.entryOperand("other-place",Operand.Role.VALUE_WRITE),object);
         var b=new Entries.InitialCondition(place,new Entries.LiteralInitial(new Expressions.Literal(f.entryOperand("other-value",Operand.Role.VALUE_READ),new Values.TextValue("OTHER"))),f.origin,List.of());
-        f.state=new Entries.EntryState(List.of(a,b),List.of());refused(f,"PRECONDITION_NOT_DISCHARGED");
+        f.state=new Entries.EntryState(List.of(a,b),List.of());valid(f);
         f.premises.add(new Proofs.Premise(new PremiseId(f.pub,"separated"),"oracle","independent allocations",f.origin,
             new Proofs.DisjointStorage(List.of(new StorageId(f.pub,"region"),new StorageId(f.pub,"other-cell")))));valid(f);
         // A candidate list is immutable and has no small cardinality ceiling.

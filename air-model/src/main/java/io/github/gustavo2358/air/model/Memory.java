@@ -5,7 +5,7 @@ import java.math.*;
 import static io.github.gustavo2358.air.model.Ids.*;
 import static io.github.gustavo2358.air.model.Require.*;
 
-/** Typed AIR 2.0 values. Collections are defensively copied; no transport dependencies. */
+/** AIR storage: distinct StorageId bases are independent; aliases and views share resolved bases. */
 public final class Memory {
     private Memory() {}
     public enum Lifetime { ACTIVATION, PERSISTENT, EXTERNAL }

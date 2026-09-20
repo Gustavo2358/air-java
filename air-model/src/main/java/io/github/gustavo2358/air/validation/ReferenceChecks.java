@@ -49,8 +49,6 @@ final class ReferenceChecks {
                         || new HashSet<>(disjoint.storage()).size()!=disjoint.storage().size())
                     c.error("I-58",premise.id(),
                             "disjoint_storage requires at least two distinct storage bases");
-                c.obligation("I-59",premise.id(),
-                        "authority must substantiate pairwise physical separation for the whole publication");
             }
         }
 
