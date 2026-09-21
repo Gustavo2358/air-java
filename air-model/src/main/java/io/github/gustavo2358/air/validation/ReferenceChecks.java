@@ -12,6 +12,7 @@ final class ReferenceChecks {
     final ValidationContext c;
     final Map<UnitId,Set<ObjectId>> visible=new HashMap<>();
     private final Map<Control.InvocationOutcomes,Set<Control.OutcomeKey>> outcomeKeys=new IdentityHashMap<>();
+    private final Map<ObjectId,Grounding> resolvedGrounding=new HashMap<>();
 
     ReferenceChecks(ValidationContext c) { this.c=c; }
 
@@ -150,16 +151,30 @@ final class ReferenceChecks {
         executableLocationGrounding();
     }
 
-    /** A nominal location cycle cannot serve an executable place as an all-memory bound. */
+    /** A nominal location cycle cannot serve an executable place or scope as an all-memory bound. */
     private void executableLocationGrounding() {
-        var resolved=new HashMap<ObjectId,Grounding>();
         var checked=new HashSet<ObjectId>();
         for(Operand operand:c.index.operands.values())if(operand instanceof Places.ObjectPlace place
                 && checked.add(place.object())) {
             var declaration=c.index.objects.get(place.object());
-            if(declaration!=null&&!grounded(place.object(),new HashSet<>(),resolved).grounded())
+            if(declaration!=null&&!grounded(place.object(),new HashSet<>(),resolvedGrounding).grounded())
                 c.error("I-13",place.header().id(),"executable object has no independently grounded location bound");
         }
+    }
+
+    void executableMemoryBound(Scopes.MemoryBound bound,Id owner,long depth) {
+        memoryBound(bound,owner,depth);
+        if(bound instanceof Scopes.WithinMemory within) executableGrounding(within.scope(),owner);
+    }
+
+    void executableMemory(Scopes.MemoryScope scope,Id owner,long depth) {
+        memory(scope,owner,depth);
+        executableGrounding(scope,owner);
+    }
+
+    private void executableGrounding(Scopes.MemoryScope scope,Id owner) {
+        if(!grounded(scope,new HashSet<>(),resolvedGrounding).grounded())
+            c.error("I-13",owner,"executable memory scope has no independently grounded location bound");
     }
 
     private record Grounding(boolean grounded,boolean cycle) { }
@@ -208,7 +223,7 @@ final class ReferenceChecks {
             if(!visible.getOrDefault(id.owner().unit(),Set.of()).contains(place.object()))
                 c.error("I-02",id,"object not explicitly visible in operand unit");
         } else if(operand instanceof Places.Choice choice) {
-            c.type(choice.typeRef(),id); memoryBound(choice.remainder(),id,0);
+            c.type(choice.typeRef(),id); executableMemoryBound(choice.remainder(),id,0);
         } else if(operand instanceof Places.RegionSlice slice) {
             c.ref(slice.region(),id); c.capability(Capabilities.MEMORY_REGIONS,id);
             if(!(c.index.storage.get(slice.region()) instanceof Memory.Region))
@@ -216,7 +231,7 @@ final class ReferenceChecks {
             c.type(slice.typeRef(),id); codec(slice.codec(),slice.typeRef(),id);
         } else if(operand instanceof Expressions.Unknown unknown) {
             c.type(unknown.typeRef(),id); c.uncertainty(unknown.reason(),null,id);
-            memoryBound(unknown.remainingReads(),id,0);
+            executableMemoryBound(unknown.remainingReads(),id,0);
             if(unknown.typeRef() instanceof Types.UnknownType type
                     && type.uncertainty().equals(unknown.reason()))
                 c.error("I-50",id,"type uncertainty and value uncertainty need distinct identities");
@@ -518,7 +533,7 @@ final class ReferenceChecks {
     }
 
     private void foreign(Interactions.ForeignEffects effects,Id owner,Operations.Invoke invoke) {
-        memoryBound(effects.reads(),owner,0); memoryBound(effects.writes(),owner,0);
+        executableMemoryBound(effects.reads(),owner,0); executableMemoryBound(effects.writes(),owner,0);
         c.refs(effects.mustOverwrite(),owner);
         for(OperandId id:effects.mustOverwrite()) {
             if(!(c.index.operands.get(id) instanceof Place))
@@ -547,8 +562,8 @@ final class ReferenceChecks {
 
     void envelope(Envelopes.Envelope envelope,OperationId owner,boolean allowContinue) {
         control(envelope.control(),owner.unit(),owner,allowContinue);
-        memoryBound(envelope.memory().otherReads(),owner,0);
-        memoryBound(envelope.memory().otherWrites(),owner,0);
+        executableMemoryBound(envelope.memory().otherReads(),owner,0);
+        executableMemoryBound(envelope.memory().otherWrites(),owner,0);
         for(List<OperandId> ids:List.of(envelope.memory().knownReads(),
                 envelope.memory().knownWrites(),envelope.memory().mustOverwrite())) {
             c.refs(ids,owner);

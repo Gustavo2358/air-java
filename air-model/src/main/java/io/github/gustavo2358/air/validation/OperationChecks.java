@@ -107,7 +107,7 @@ final class OperationChecks {
                 c.uncertainty(havoc.reason(),null,id);
             }
             case Operations.HavocMay havoc -> {
-                refs.memory(havoc.scope(),id,0); c.uncertainty(havoc.reason(),null,id);
+                refs.executableMemory(havoc.scope(),id,0); c.uncertainty(havoc.reason(),null,id);
             }
             case Operations.Nop ignored -> { }
             case Operations.CopyBytes copy -> {
