@@ -606,3 +606,13 @@ O pin normativo é o sources.lock atual. Campos/tags/versões não mudam; topolo
 isolamento de coverage são uma migração semântica pré-release coordenada. A antiga
 obrigação I-59 de prova física foi removida: a asserção continua validada/transportada,
 mas é redundante. I-09 e demais obrigações reais de operações permanecem.
+
+
+### Logical text predicates
+
+The existing AIR 2.0 / JSON 1.0 contract (binding §6 and §10.4) already defines
+binary EQ/NE/AND/OR and unary NOT. Transport now preserves these forms using
+explicit lowercase tokens, complete operand trees and iterative frames. No model,
+validator, schema or version changes. Other operators remain explicit limits.
+The independent predicate checks cover exact roundtrip, normative tokens, malformed
+fields/operators, invalid text-as-Boolean usage and canonical re-encoding.

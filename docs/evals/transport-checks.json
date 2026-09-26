@@ -13,6 +13,7 @@
     "CORE-SIZE codec operational result remains explicit",
     "ST-W6 generic fit_text transport",
     "logical text slice and concat",
+    "logical text predicate transport",
     "ST-W7 initial state transport",
     "RF-W4 partial target domain and physical choices",
     "RF-W1 possible entry candidates and required remainder",

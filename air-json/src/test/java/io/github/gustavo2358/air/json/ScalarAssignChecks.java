@@ -186,7 +186,8 @@ final class ScalarAssignChecks {
         failsAt(INPUT_ERROR, VALUE + ".length", changed(VALUE + ".kind", Json.value("fit_text")));
         failsAt(INPUT_ERROR, VALUE + ".value", changed(VALUE + ".kind", Json.value("binary")));
         failsAt(INPUT_ERROR, VALUE + ".start", changed(VALUE + ".kind", Json.value("slice_text")));
-        for (String kind : List.of("unary", "quantize", "trim_right"))
+        failsAt(INPUT_ERROR, VALUE + ".value", changed(VALUE + ".kind", Json.value("unary")));
+        for (String kind : List.of("quantize", "trim_right"))
             failsAt(IMPLEMENTATION_LIMIT, VALUE, changed(VALUE + ".kind", Json.value(kind)));
         failsAt(INPUT_ERROR, VALUE + ".value.value", changed(VALUE + ".value.kind", Json.value("int")));
         failsAt(INPUT_ERROR, VALUE + ".value.value", changed(VALUE + ".value.kind", Json.value("bytes")));

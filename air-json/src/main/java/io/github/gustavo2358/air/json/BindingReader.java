@@ -601,6 +601,7 @@ final class BindingReader {
                     ? at.fields("kind", "header", "typeRef", "dependencies", "remainingReads", "reason").child("dependencies").elements()
                     : at.kind().equals("fit_text") ? List.of(at.fields("kind","header","value","length","pad").child("value"))
                     : at.kind().equals("slice_text") ? List.of(at.fields("kind","header","value","start","count").child("value"),at.child("start"),at.child("count"))
+                    : at.kind().equals("unary") ? List.of(at.fields("kind","header","operator","argument").child("argument"))
                     : at.kind().equals("binary") ? List.of(at.fields("kind","header","operator","left","right").child("left"),at.child("right")) : List.of();
         }
     }
@@ -629,14 +630,26 @@ final class BindingReader {
                 }
                 case "slice_text" -> new Expressions.SliceText(operandHeader(a.child("header")),frame.values.get(0),frame.values.get(1),frame.values.get(2));
                 case "binary" -> {
-                    String operator=a.child("operator").text();
-                    if(!operator.equals("concat")) {
-                        if(Set.of("eq","ne","lt","le","gt","ge","and","or","add","sub","mul").contains(operator))throw a.unsupported("binary operator "+operator);
-                        throw Json.input(a.child("operator").path(),"Unknown binary operator");
-                    }
-                    yield new Expressions.Binary(operandHeader(a.child("header")),Expressions.BinaryOperator.CONCAT,frame.values.get(0),frame.values.get(1));
+                    var operator=switch(a.child("operator").text()) {
+                        case "concat" -> Expressions.BinaryOperator.CONCAT;
+                        case "eq" -> Expressions.BinaryOperator.EQ;
+                        case "ne" -> Expressions.BinaryOperator.NE;
+                        case "and" -> Expressions.BinaryOperator.AND;
+                        case "or" -> Expressions.BinaryOperator.OR;
+                        case "lt","le","gt","ge","add","sub","mul" -> throw a.unsupported("binary operator "+a.child("operator").text());
+                        default -> throw Json.input(a.child("operator").path(),"Unknown binary operator");
+                    };
+                    yield new Expressions.Binary(operandHeader(a.child("header")),operator,frame.values.get(0),frame.values.get(1));
                 }
-                case "unary", "quantize", "trim_right" ->
+                case "unary" -> {
+                    var operator=switch(a.child("operator").text()) {
+                        case "not" -> Expressions.UnaryOperator.NOT;
+                        case "neg","to_decimal","length" -> throw a.unsupported("unary operator "+a.child("operator").text());
+                        default -> throw Json.input(a.child("operator").path(),"Unknown unary operator");
+                    };
+                    yield new Expressions.Unary(operandHeader(a.child("header")),operator,frame.values.getFirst());
+                }
+                case "quantize", "trim_right" ->
                         throw a.unsupported("Expression " + a.kind());
                 default -> throw Json.input(a.path(), "Unknown Expression kind");
             };
