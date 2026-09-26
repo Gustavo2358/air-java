@@ -147,7 +147,7 @@ final class W2cChecks {
         invalid(edit(assignment, "publication.units.0.sequences.0.instructions.0.value.header.role", Json.value("CALL_TARGET")), "I-11");
         invalid(edit(full, PRED + ".typeRef", object("kind", "unknown_type", "uncertainty", W2cWireOracle.global("uncertainty", "facts"))), "I-49");
         reject(edit(full, PRED + ".kind", Json.value("future.unknown")), INPUT_ERROR, null);
-        reject(edit(full, PRED + ".dependencies.0", object("kind", "unary", "header", at(full, PRED + ".header"), "operator", "not", "operand", at(full, PRED + ".dependencies.0"))), IMPLEMENTATION_LIMIT, null);
+        reject(edit(full, PRED + ".dependencies.0", object("kind", "unary", "header", at(full, PRED + ".header"), "operator", "not", "operand", at(full, PRED + ".dependencies.0"))), INPUT_ERROR, null);
         for (String field : List.of("dependencies", "remainingReads", "reason")) {
             reject(edit(full, PRED + "." + field, null), INPUT_ERROR, null);
             reject(edit(full, PRED + "." + field, Json.Nil.INSTANCE), INPUT_ERROR, null);

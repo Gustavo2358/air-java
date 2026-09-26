@@ -352,14 +352,19 @@ final class BindingWriter {
             if(e instanceof Expressions.SliceText t&&frame.next<3){
                 var children=List.of(t.value(),t.start(),t.count());stack.push(new ExpressionFrame(children.get(frame.next++)));continue;
             }
-            if(e instanceof Expressions.Binary b&&b.operator()==Expressions.BinaryOperator.CONCAT&&frame.next<2){
+            if(e instanceof Expressions.Binary b&&supportedBinary(b.operator())&&frame.next<2){
                 stack.push(new ExpressionFrame(frame.next++==0?b.left():b.right()));continue;
             }
+            if(e instanceof Expressions.Unary u&&u.operator()==Expressions.UnaryOperator.NOT&&frame.next++==0){
+                stack.push(new ExpressionFrame(u.argument()));continue;
+            }
             Value result;
-            if(e instanceof Expressions.SliceText t)
+            if(e instanceof Expressions.Unary u&&u.operator()==Expressions.UnaryOperator.NOT)
+                result=object("kind","unary","header",operandHeader(u.header()),"operator","not","argument",frame.dependencies.getFirst());
+            else if(e instanceof Expressions.SliceText t)
                 result=object("kind","slice_text","header",operandHeader(t.header()),"value",frame.dependencies.get(0),"start",frame.dependencies.get(1),"count",frame.dependencies.get(2));
-            else if(e instanceof Expressions.Binary b&&b.operator()==Expressions.BinaryOperator.CONCAT)
-                result=object("kind","binary","header",operandHeader(b.header()),"operator","concat","left",frame.dependencies.get(0),"right",frame.dependencies.get(1));
+            else if(e instanceof Expressions.Binary b&&supportedBinary(b.operator()))
+                result=object("kind","binary","header",operandHeader(b.header()),"operator",binaryToken(b.operator()),"left",frame.dependencies.get(0),"right",frame.dependencies.get(1));
             else if(e instanceof Expressions.FitText f)
                 result=object("kind","fit_text","header",operandHeader(f.header()),"value",frame.dependencies.getFirst(),"length",f.length().toString(),"pad",f.pad());
             else if (e instanceof Expressions.Unknown u)
@@ -375,6 +380,12 @@ final class BindingWriter {
             stack.peek().dependencies.add(result);
         }
         throw new IllegalStateException("Expression frame invariant");
+    }
+    private static boolean supportedBinary(Expressions.BinaryOperator op) {
+        return switch(op){case CONCAT,EQ,NE,AND,OR -> true;default -> false;};
+    }
+    private static String binaryToken(Expressions.BinaryOperator op) {
+        return switch(op){case CONCAT -> "concat";case EQ -> "eq";case NE -> "ne";case AND -> "and";case OR -> "or";default -> throw new IllegalArgumentException("unsupported binary");};
     }
     private Value conservativeEnvelope(Envelopes.Envelope e) {
         var m = e.memory(); var c = e.control(); var d = e.dependencies();
