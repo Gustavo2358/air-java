@@ -14,6 +14,8 @@ public final class ContractSuite {
     private static int passed;
     private ContractSuite() {}
     public static void main(String[] args) throws Exception {
+        test("PMT positive bases and diagnostic integrity",PositiveStorageChecks::run);
+        test("PMT W3-R1 grounded executable bindings",BoundedBindingChecks::run);
         test("ST-W6 bounded regional fit codec proof",RegionalFitChecks::run);
         test("ST-W7 simultaneous regional initial state",RegionalInitialChecks::run);
         test("RF-W1 possible entry admission",PossibleEntryChecks::run);
@@ -232,7 +234,7 @@ public final class ContractSuite {
             Fixtures f=disjointFixture(DisjointCase.VALID);
             ValidationResult result=AirValidator.validate(f.build());
             check(result.isStructurallyValid(),result.toString());
-            issue(result,ValidationIssue.Kind.SEMANTIC_OBLIGATION,"I-59");
+            check(result.issues().isEmpty(),"redundant base assertion needs no source-layout obligation");
         });
         test("disjoint_storage dangling base is rejected",()->
                 invalid(disjointFixture(DisjointCase.DANGLING).build(),"I-02"));
@@ -407,7 +409,7 @@ public final class ContractSuite {
                     new OperandDomain(destination.header().id()),new InvocationDomain(id));
             invalid(f.build(),"I-08");
         });
-        test("closed partial signature remains conservative under open value precision",()->{
+        test("diagnostic value precision cannot waive known-slot domain integrity",()->{
             Fixtures f=transmission(false);
             UncertaintyId reason=f.uncertainty("transmission-precision",
                     "SOURCE_SEMANTICS_UNAVAILABLE");
@@ -423,7 +425,7 @@ public final class ContractSuite {
                     old.arguments(),old.results(),old.signature(),old.effectOperands(),
                     old.effectBound(),old.outcomes(),old.contract());
             replaceTerminator(f,0,conservative);
-            valid(f.build());
+            invalid(f.build(),"I-08/I-52");
         });
         test("unknown passing mode remains a present parameter",()->{
             Fixtures f=literalInvokeFixture();

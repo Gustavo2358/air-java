@@ -24,9 +24,12 @@ retido em issues. INVALID_IR já provado pode coexistir com traversal incompleto
 nenhum deles permite isStructurallyValid=true.
 
 Unknown de tipo não é wildcard. Compartilhar uncertainty não prova sameDomain;
-premissa por site não se transfere por nome/autoridade igual. Disjunção estrutural
-não prova independência física de storage. Ordenação de sequences não cria edges.
+premissa por site não se transfere por nome/autoridade igual. Bases StorageId distintas são independentes no modelo; aliases/vistas
+resolvem compartilhamento positivo. DisjointStorage permanece asserção redundante,
+validada estruturalmente, sem nova obrigação de fidelidade física da fonte. Ordenação de sequences não cria edges.
 Limite operacional não modifica cardinalidade semântica.
+
+Na resolução W3-R1, Cell representa armazenamento lógico sem afirmar layout em bytes. UnknownBinding é incerteza semântica de localização limitada ao escopo publicado. Um ObjectPlace ou MemoryScope/MemoryBound usado executavelmente cuja cadeia de binding/scope não alcança Cell, Region/StorageId ou bound amplo explícito recebe INVALID_IR (`I-13`); isso inclui HavocMay, envelopes, efeitos externos, remainingReads e Choice remainder. Ciclo nominal não vira AllMemory. Uma declaração nominal sem uso executável pode reter o ciclo como cobertura. Repetição de membro já resolvido não é ciclo. O contrato normativo permanece em Analysis IR 03 §4.1.
 
 O [status existente](../implementation-status.md) é a fonte de cobertura local;
 contracasos não equivalem à certificação de todos os perfis AIR. Testar com

@@ -2,6 +2,8 @@
   "baseline_commit": "6a4091e5394fc22b3d2ada9abbdb530eb3572a58",
   "source": "src/test/java/io/github/gustavo2358/air/validation/ContractSuite.java",
   "checks": [
+    "PMT positive bases and diagnostic integrity",
+    "PMT W3-R1 grounded executable bindings",
     "ST-W6 bounded regional fit codec proof",
     "ST-W7 simultaneous regional initial state",
     "RF-W1 possible entry admission",
@@ -150,7 +152,7 @@
     "open result remainder does not waive known-slot transmission",
     "sameDomain does not promote an argument to a required concrete type",
     "sameDomain does not promote a result destination to a required concrete type",
-    "closed partial signature remains conservative under open value precision",
+    "diagnostic value precision cannot waive known-slot domain integrity",
     "unknown passing mode remains a present parameter",
     "external signature cannot invent called-unit object binding",
     "mathematical signature position is not capped by int",

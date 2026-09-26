@@ -1,11 +1,12 @@
 {
   "analysis_ir": {
     "repository": "Gustavo2358/analysis-ir",
-    "ref": "3fff18e2c16663a3f599207457caa1946d2e0945",
+    "ref": "2c7f31f19efbe3211a2aea5bbda90173a9666fe2",
     "semantic_version": "2.0.0",
     "role": "normative",
     "normative_sections": [
       "README.md",
+      "especificacao/00-escopo-e-convencoes.md",
       "especificacao/01-modelo-e-identidades.md",
       "especificacao/02-tipos-valores-e-operandos.md",
       "especificacao/03-memoria-e-aliases.md",

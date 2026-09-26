@@ -165,8 +165,8 @@ final class ScalarAssignChecks {
     static void unsupported() {
         var nop = withInstructions(List.of(new Operations.Nop(assign(EXPECTED).header())));
         equal(List.of(), AirValidator.validate(nop).issues());
-        failure(IMPLEMENTATION_LIMIT, () -> CODEC.encode(nop));
-        failsAt(IMPLEMENTATION_LIMIT, OP, changed(OP, Json.object("kind", "nop", "header", at(OP + ".header"))));
+        equal(nop, CODEC.decode(CODEC.encode(nop)));
+        equal(nop, CODEC.decode(changed(OP, Json.object("kind", "nop", "header", at(OP + ".header")))));
         for (String kind : List.of("decimal", "opaque_type", "label"))
             failsAt(IMPLEMENTATION_LIMIT, OBJECT_PATH + ".typeRef.type", changed(OBJECT_PATH + ".typeRef.type.kind", Json.value(kind)));
         failure(INVALID_IR, () -> CODEC.decode(changed(OBJECT_PATH + ".typeRef", Json.object("kind", "unknown_type", "uncertainty", at("publication.uncertainties.0.id")))));

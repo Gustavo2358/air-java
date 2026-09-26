@@ -5,7 +5,7 @@ import java.math.*;
 import static io.github.gustavo2358.air.model.Ids.*;
 import static io.github.gustavo2358.air.model.Require.*;
 
-/** Typed AIR 2.0 values. Collections are defensively copied; no transport dependencies. */
+/** Coverage and claims describe the publication; they do not add executable effects or alternatives. */
 public final class Evidence {
     private Evidence() {}
     public enum Dimension { CONTROL, STORAGE, EFFECTS, VALUES, DEPENDENCIES }

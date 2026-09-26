@@ -6,7 +6,7 @@ A cobertura regional ST-W1 acrescenta o codec IBM1047 explícito e checks de ace
 [cobertura própria e limites explícitos](engineering/air-json.md), comprovados
 por [golden manual e suíte](quality/air-json-implementation.md).
 
-Baseline normativo: Analysis IR 2.0.0, `Gustavo2358/analysis-ir@fb153ae50f343022db45d20d627e1afac85de916`.
+Baseline normativo: Analysis IR 2.0.0, `Gustavo2358/analysis-ir@b26465964fe75f944f6324df63330d69f33d77cd`.
 A biblioteca `0.1.0-SNAPSHOT` é uma implementação Java revisável. Ela não declara
 conformidade integral de Producer, Validator ou Consumer com todos os perfis AIR.
 
@@ -29,7 +29,7 @@ O discovery e a migração do baseline Java anterior estão em
 | Controle incompleto | `InvocationOutcomes` separado de `ControlEnvelope` |
 | Incompletude | precisão, coverage, uncertainties, memory/control/dependency envelopes |
 | Proveniência | escrita, derivada, contratual, indisponível; linha/coluna ou offsets com unidade |
-| Premissas | `sameDomain` com subjects/scopes; `disjoint_storage` universal |
+| Premissas | `sameDomain` com subjects/scopes; `disjoint_storage` redundante, sem obrigação para bases distintas |
 | Relações estruturais | artifacts, resources declarativos e artifact relations sem execução fictícia |
 
 Não existem no domínio atual `Publication.contracts`, `ContractId`, entidade
@@ -50,8 +50,8 @@ O Validator cobre, na parcela decidível a partir de uma publicação isolada:
 - assinatura interna igual ao target e assinatura externa materializada no site;
 - `ContractRef` com evidência existente e `CONTRACT_UNKNOWN` tipado;
 - target calculado `known(text)` e ausência de `ResourceId` executável;
-- cardinalidade quando o inventário é fechado; com precisão de valores `EXACT`,
-  transmissão de todo slot conhecido cujo modo permite precisão, mesmo com restante
+- cardinalidade quando o inventário é fechado; independentemente de metadata de precisão,
+  transmissão de todo slot conhecido cujo modo permite transmissão, mesmo com restante
   de aridade aberto; `sameDomain` não promove `unknown_type` a `known(T)`;
 - derivação finita de `sameDomain`, aplicação de scopes, choices universais e
   contradições de domínios concretos;
@@ -182,3 +182,38 @@ local/unknown. Modelo, Validator (I-RB-01–03) e codec têm oráculos A1–A4/A
 independente e contracasos. Não cria operações/Target nem efeitos. Declarações
 sem uso continuam sem execução; papéis não conferem MUST. Verdade da associação
 e classificação continua obrigação semântica do produtor (I-RB-04).
+
+
+## POSITIVE_MEMORY_TOPOLOGY W1
+
+Bases distintas são independentes no modelo. A admissão de condições simultâneas
+`entry.possibilities@1` compara intervalos dentro da mesma base; não procura uma
+matriz de premissas negativas. Contradições de literals/aliases na mesma base,
+IDs, tipos, codecs e bounds continuam validados. `Precision.OPEN` não dispensa
+sameDomain de slots de invocação conhecidos. Claims e coverage não criam efeitos.
+
+O codec transporta a forma existente `nop(header)` da norma/binding, preservando
+cobertura e identidade sem operandos fictícios. Não foi criada variante, tag,
+versão ou framework. A migração semântica exige o pin acima e consumidores
+coordenados; o codec não calcula CFG/values nem altera opt-in físico.
+
+Oráculos executáveis FAST: `PositiveStorageChecks`, `PositiveProjectionChecks`,
+regressões de `PossibleEntryChecks`, `ContractSuite` e `W2cChecks`. REDs observados:
+PRECONDITION_NOT_DISCHARGED para bases distintas sem disjoint; IMPLEMENTATION_LIMIT
+para nop válido; transmissão sem sameDomain aceita indevidamente por Precision.OPEN.
+O diagnóstico não mascara os contracasos de integridade. Não se alega qualificação
+corporativa ou conformidade global de produtores/consumidores pela biblioteca.
+
+O primeiro FAST local W1 passou em Java21 com 188 checks de modelo, 129 checks
+de codec, arquitetura/jdeps e 40 testes do harness (além dos 12 da política lean).
+O repin posterior do inventário de transporte invalidou essa evidência para o
+SHA 00373f6: os checks remotos falharam antes de compilar porque o harness ainda
+comparava o pin com um literal histórico. A correção compara inventário com a
+autoridade ativa de `sources.lock.json`, exige SHA exato e rejeita divergência,
+branch móvel ou pin ausente, sem relaxar política de dependências ou versões.
+O novo teste independente eleva a suíte do harness a 41 testes; RED/GREEN e FAST
+são reexecutados sobre a correção completa antes da publicação.
+
+Goldens preexistentes permanecem byte-exatos. Contagens de obrigações W2C mudaram
+intencionalmente pela remoção de I-59 redundante; I-09/I-56 e todos os contracasos
+estruturais permanecem. A correção de harness não altera produção/modelo/codec.
