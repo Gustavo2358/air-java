@@ -598,7 +598,9 @@ final class BindingReader {
             this.at = at;
             dependencies = at.kind().equals("unknown")
                     ? at.fields("kind", "header", "typeRef", "dependencies", "remainingReads", "reason").child("dependencies").elements()
-                    : at.kind().equals("fit_text") ? List.of(at.fields("kind","header","value","length","pad").child("value")) : List.of();
+                    : at.kind().equals("fit_text") ? List.of(at.fields("kind","header","value","length","pad").child("value"))
+                    : at.kind().equals("slice_text") ? List.of(at.fields("kind","header","value","start","count").child("value"),at.child("start"),at.child("count"))
+                    : at.kind().equals("binary") ? List.of(at.fields("kind","header","operator","left","right").child("left"),at.child("right")) : List.of();
         }
     }
     private Expression expression(At root) {
@@ -624,7 +626,16 @@ final class BindingReader {
                     if(pad.codePointCount(0,pad.length())!=1)throw Json.input(a.child("pad").path(),"fit pad requires exactly one scalar");
                     yield new Expressions.FitText(operandHeader(a.child("header")),frame.values.getFirst(),natural(a.child("length")),pad);
                 }
-                case "unary", "binary", "quantize", "slice_text", "trim_right" ->
+                case "slice_text" -> new Expressions.SliceText(operandHeader(a.child("header")),frame.values.get(0),frame.values.get(1),frame.values.get(2));
+                case "binary" -> {
+                    String operator=a.child("operator").text();
+                    if(!operator.equals("concat")) {
+                        if(Set.of("eq","ne","lt","le","gt","ge","and","or","add","sub","mul").contains(operator))throw a.unsupported("binary operator "+operator);
+                        throw Json.input(a.child("operator").path(),"Unknown binary operator");
+                    }
+                    yield new Expressions.Binary(operandHeader(a.child("header")),Expressions.BinaryOperator.CONCAT,frame.values.get(0),frame.values.get(1));
+                }
+                case "unary", "quantize", "trim_right" ->
                         throw a.unsupported("Expression " + a.kind());
                 default -> throw Json.input(a.path(), "Unknown Expression kind");
             };

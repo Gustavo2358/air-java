@@ -11,6 +11,7 @@
     "CORE-SIZE JSON independent cardinality series",
     "CORE-SIZE codec operational result remains explicit",
     "ST-W6 generic fit_text transport",
+    "logical text slice and concat",
     "ST-W7 initial state transport",
     "RF-W4 partial target domain and physical choices",
     "RF-W1 possible entry candidates and required remainder",

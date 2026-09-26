@@ -21,6 +21,13 @@ final class OperationChecks {
         this.c=c; this.refs=refs; this.types=types; this.domains=domains;
     }
 
+    private static Optional<BigInteger> textLength(Expression expression) {
+        if(expression instanceof Expressions.FitText fit)return Optional.of(fit.length());
+        if(expression instanceof Expressions.Literal literal&&literal.value() instanceof Values.TextValue text)
+            return Optional.of(BigInteger.valueOf(text.value().codePointCount(0,text.value().length())));
+        return Optional.empty();
+    }
+
     void run() {
         for(Operand operand:c.index.operands.values()) {
             types.type(operand); checkOperand(operand);
@@ -53,12 +60,10 @@ final class OperationChecks {
             if(from.isPresent() && from.get().signum()<0
                     || count.isPresent() && count.get().signum()<0) {
                 c.error("I-09/I-46",id,"text slice has a negative bound");
-            } else if(slice.value() instanceof Expressions.Literal literal
-                    && literal.value() instanceof Values.TextValue text
-                    && from.isPresent() && count.isPresent()) {
-                BigInteger length=BigInteger.valueOf(text.value().codePointCount(0,text.value().length()));
+            } else if(textLength(slice.value()).isPresent() && from.isPresent() && count.isPresent()) {
+                BigInteger length=textLength(slice.value()).orElseThrow();
                 if(from.get().add(count.get()).compareTo(length)>0)
-                    c.error("I-09/I-46",id,"literal text slice is out of bounds");
+                    c.error("I-09/I-46",id,"statically bounded text slice is out of bounds");
             } else {
                 limit(id,"text slice totality cannot be discharged from literal bounds by this validator");
             }
