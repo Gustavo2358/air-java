@@ -31,6 +31,10 @@ public final class CodecSuite {
         golden = Files.readAllBytes(Path.of("src/test/resources/goback.canonical.json"));
         text = new String(golden, StandardCharsets.UTF_8);
         tree = Json.parse(golden, AirJson.Limits.defaults());
+        check("LOCAL shared body independent wire oracle",LocalControlChecks::wireOracle);
+        check("LOCAL lossless variants and recursive references",LocalControlChecks::roundTrips);
+        check("LOCAL closure ownership and capability failures",LocalControlChecks::closureAndCapabilities);
+        check("LOCAL malformed fields naturals and operational limits",LocalControlChecks::malformedAndLimits);
         check("PMT positive bases and coverage-bearing nop transport",PositiveProjectionChecks::run);
         check("CORE-SIZE physical JSON stack and malformed distinction", JsonCapacityChecks::physicalDepth);
         check("CORE-SIZE exact UTF-8 byte budgets", JsonCapacityChecks::byteBudgets);
