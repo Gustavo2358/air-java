@@ -64,3 +64,17 @@ Use analyzer-lean-gates C2/C3 guidance. The frontier is the shared AIR codec and
 The existing qualified CardDemo products (73 programs) contain 110,317 AIR sequences, 110,570 CFG nodes and 124,356 transitions; canonical AIR totals 1,338,048,740 bytes and CFG 80,302,820 bytes. COACCT01 has 32,145 nodes; CODATE01 17,440; COTRTLIC 5,656; COACTUPC 5,037. These counts measure the baseline, not an achievable compression ratio. Products were read from the previous campaign's `review-qualification/results.json`; no pipeline rerun is claimed.
 
 Before implementation, the new independent local-control fixture compiles and AirValidator accepts its Java model, but CodecSuite fails with IMPLEMENTATION_LIMIT at the nonempty completion-port inventory. The existing 189 model checks pass. Evidence: local campaign `evidence/transport-red-02.log`. The first attempted wrapper run stopped on the new resource's missing explicit harness ownership; its entry was added before the semantic RED run.
+
+## S1 result — ready for Draft review, not merged
+
+Implementation commit: `84ab27823fa1210329901fc22bbca37b901960b6`. [Machine-readable summary](evidence/shared-routine-bodies-s1.json).
+
+- **FAST: PASS** — 189 model checks, 134 transport checks and 41 harness tests. The new golden is required by module ownership and missing-resource falsification tests. The transient harness failure was corrected by adding that resource to temporary project fixtures, without relaxing the gate.
+- **qualification-local: PASS** — complete Maven `clean verify`, including model/codec suites and module boundaries.
+- **560/560 differential transport replays: PASS** — baseline codec versus new codec; every input equals its canonical output byte for byte, and validation results are identical. Population: CardDemo 73, PERFORM 39, Chaos 48, aliases 14, PERFORM adversarial 25, general fixtures 331, final focal contracts 29 and frontier payload 1. No transport regressions found.
+- **Three compiled mutations detected** — swapping invoke entry/resume, discarding unwind count, and discarding fallback read bounds. Clean focal suites passed before and after; mutations used separate temporary classes, never modified production evidence.
+- **Consumer boundary checked** — the new codec decodes the local-control golden, but the unchanged frozen CFG consumer explicitly returns `UNSUPPORTED_CAPABILITY control.local@1` (exit 4) and emits no CFG. I-26 fallback obligations remain visible. This verifies that transport support does not silently enable execution.
+
+The prior unsupported-capability test now targets the still-unsupported `control.indirect@1`; local-control version 2 is rejected separately. A malformed completion-port item now fails INPUT_ERROR after closed-shape parsing, instead of the former unimplemented-inventory limit. Neither negative was removed.
+
+New evidence is in the local `.shared-routine-bodies/evidence/` directory; hashes are in the summary. Historical products are reused as immutable transport inputs. Frontend, lowering, CFG and dependency generation were not rerun in S1: their execution model and pins did not change. No new reduction in nodes, runtime or memory is claimed. S2/S3 must establish matched-return traversal and isolated value states before S4 enables sharing.
