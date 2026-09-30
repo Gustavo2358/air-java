@@ -29,5 +29,5 @@
     "consulted_draft_transport": "bindings/json-v1.md"
   },
   "library_version": "0.1.0-SNAPSHOT",
-  "json_binding_status": "DRAFT; shared Java codec implements the declared 1A GOBACK coverage; no full qualification"
+  "json_binding_status": "DRAFT; implemented subsets and limits in docs/engineering/air-json.md, including control.local@1 transport; no claim of consumer stack execution or full AIR profile conformance"
 }

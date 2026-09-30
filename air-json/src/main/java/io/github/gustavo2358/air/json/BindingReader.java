@@ -158,14 +158,19 @@ final class BindingReader {
             case "unavailable" -> { body.fields("kind", "uncertainty"); throw body.unsupported("BodyKnowledge.unavailable"); }
             default -> throw Json.input(body.path(), "Unknown BodyKnowledge kind");
         }
-        var objects = a.child("objects").list(this::objectDeclaration); var visible=a.child("visibleObjects").list(this::objectId); a.child("completionPorts").empty();
+        var objects = a.child("objects").list(this::objectDeclaration); var visible=a.child("visibleObjects").list(this::objectId);
+        var ports = a.child("completionPorts").list(this::completionPort);
         var id = unitId(a.child("id")); var containing = a.child("containingUnit").optional(this::unitId);
         var entries = a.child("entries").list(this::entry); var sequences = a.child("sequences").list(this::sequence);
         var coverage = coverage(a.child("coverage")); var origin = originId(a.child("origin"));
         if (entries.isEmpty()) throw a.child("entries").invalid("AIR-01 §2", "Available body requires at least one entry");
         if (sequences.isEmpty()) throw a.child("sequences").invalid("AIR-01 §3", "Available body requires at least one sequence");
-        return a.construct(() -> new Unit(id, containing, objects, visible, entries, sequences, List.of(),
+        return a.construct(() -> new Unit(id, containing, objects, visible, entries, sequences, ports,
                 Unit.BodyAvailability.AVAILABLE, Optional.empty(), coverage, origin));
+    }
+    private Entries.CompletionPort completionPort(At a) {
+        a.fields("id", "origin");
+        return new Entries.CompletionPort(typedId(a.child("id"), CompletionPortId.class), originId(a.child("origin")));
     }
     private Entries.Entry entry(At a) {
         a.fields("id", "initialLabel", "signature", "state", "origin");
@@ -274,6 +279,13 @@ final class BindingReader {
         if (kind.equals("jump")) return new Operations.Jump(header(a.child("header")), labelId(a.child("destination")));
         if (kind.equals("branch")) return new Operations.Branch(header(a.child("header")), expression(a.child("predicate")),
                 labelId(a.child("trueDestination")), labelId(a.child("falseDestination")));
+        if (kind.equals("local.invoke")) return new Operations.LocalInvoke(header(a.child("header")), labelId(a.child("entry")),
+                a.child("completionPorts").list(p -> typedId(p, CompletionPortId.class)), labelId(a.child("resume")), conservativeEnvelope(a.child("fallback")));
+        if (kind.equals("local.boundary")) return new Operations.LocalBoundary(header(a.child("header")), typedId(a.child("port"), CompletionPortId.class),
+                labelId(a.child("defaultDestination")), conservativeEnvelope(a.child("fallback")));
+        if (kind.equals("local.resume")) return new Operations.LocalResume(header(a.child("header")), conservativeEnvelope(a.child("fallback")));
+        if (kind.equals("local.unwind")) return new Operations.LocalUnwind(header(a.child("header")), natural(a.child("count")),
+                labelId(a.child("destination")), conservativeEnvelope(a.child("fallback")));
         if (kind.equals("invoke")) {
             return new Operations.Invoke(header(a.child("header")), a.child("action").modelText(), target(a.child("target")),
                     a.child("arguments").list(this::argument), a.child("results").list(this::place), invocationSignature(a.child("signature")), a.child("effectOperands").list(this::place),
