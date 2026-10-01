@@ -19,6 +19,13 @@ JSON = "io.github.gustavo2358.air.json."
 JSON_JDK_CLASSES = {"java.nio.ByteBuffer", "java.nio.CharBuffer", "java.nio.charset.Charset",
                     "java.nio.charset.CharsetDecoder", "java.nio.charset.CharacterCodingException",
                     "java.nio.charset.CodingErrorAction", "java.nio.charset.StandardCharsets"}
+# Operational dependencies are confined to the codec's scheduler/configuration.
+JSON_OPERATIONAL_CLASSES = {
+    JSON + "AirJson$DecodeOptions": {"java.lang.Runtime"},
+    JSON + "OrderedBlocks": {"java.util.concurrent." + name for name in (
+        "Callable", "ExecutionException", "ExecutorService", "Executors", "Future", "ThreadFactory")},
+}
+RUNTIME_METHODS = {"getRuntime:()Ljava/lang/Runtime;", "availableProcessors:()I"}
 # Ordinary values/collections/math and compiler-generated record/lambda support.
 # java.io/java.nio/java.net/JSON/frontend/frameworks are outside this boundary.
 JDK_PACKAGES = {"java.lang", "java.lang.invoke", "java.lang.runtime", "java.math",
@@ -42,8 +49,10 @@ def inspect_dependencies(output, owner="air-model"):
                     f"model -> validation forbidden: {source} -> {target}")
         else:
             package = target.rpartition(".")[0]
-            require(location == "java.base" and (package in JDK_PACKAGES or (owner == "air-json" and target in JSON_JDK_CLASSES))
-                    and target not in FORBIDDEN_CLASSES,
+            operational = owner == "air-json" and target in JSON_OPERATIONAL_CLASSES.get(source, set())
+            require(location == "java.base" and (operational or (
+                    (package in JDK_PACKAGES or (owner == "air-json" and target in JSON_JDK_CLASSES))
+                    and target not in FORBIDDEN_CLASSES)),
                     f"Forbidden dependency: {source} -> {target} ({location})")
     return len(edges)
 
@@ -96,10 +105,21 @@ def inspect_jar(jar, classes, owner):
     return len(packed)
 
 
+def inspect_runtime_methods(output):
+    # Inspect constant-pool method references too, so method handles cannot bypass the rule.
+    methods = set(re.findall(r"//\s+java/lang/Runtime\.([^\s]+)", output))
+    require(methods and methods <= RUNTIME_METHODS,
+            "DecodeOptions Runtime access is limited to availableProcessors: " + str(sorted(methods)))
+
+
 def bytecode(root, classes, owner='air-model', model_classes=None):
     cp = ['--class-path', str(model_classes)] if owner == 'air-json' else []
-    return inspect_dependencies(run(['jdeps', '--multi-release', '21', '-verbose:class', '-filter:none',
+    edges = inspect_dependencies(run(['jdeps', '--multi-release', '21', '-verbose:class', '-filter:none',
                                      *cp, str(classes)], root), owner)
+    if owner == 'air-json':
+        inspect_runtime_methods(run(['javap', '-classpath', str(classes), '-verbose', '-p',
+                                     JSON + 'AirJson$DecodeOptions'], root))
+    return edges
 
 
 def compile_json(root, classes, model_classes):
