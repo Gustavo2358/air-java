@@ -40,17 +40,18 @@ final class BindingReader {
             }
             return result.toString();
         }
-        Json.Obj object() {
-            if (value instanceof Json.Obj o) return o;
+        java.util.Map<String,Json.Value> object() {
+            if (value instanceof Json.Obj o) return o.fields();
+            if (value instanceof Utf8Input.Node n && n.object()) return n.fields();
             throw Json.input(path(), "Expected object");
         }
         At child(String key) {
-            Json.Value child = object().fields().get(key);
+            Json.Value child = object().get(key);
             if (child == null) throw Json.input(path() + "." + key, "Required field omitted");
             return new At(child, this, key, -1);
         }
         At fields(String... names) {
-            var fields = object().fields();
+            var fields = object();
             // Valid objects need only one lookup per required field, without a temporary set.
             if (fields.size() == names.length) {
                 boolean complete = true;
@@ -66,14 +67,17 @@ final class BindingReader {
         }
         String text() {
             if (value instanceof Json.Text t) return t.value();
+            if (value instanceof Utf8Input.Node n) { var text=n.text();if(text!=null)return text; }
             throw Json.input(path(), "Expected string");
         }
         boolean bool() {
             if (value instanceof Json.Bool b) return b.value();
+            if (value instanceof Utf8Input.Node n) { var bool=n.bool();if(bool!=null)return bool; }
             throw Json.input(path(), "Expected boolean");
         }
         List<Json.Value> array() {
             if (value instanceof Json.Arr a) return a.values();
+            if (value instanceof Utf8Input.Node n && n.array())return n.values();
             throw Json.input(path(), "Expected array");
         }
         At element(List<Json.Value> values, int index) { return new At(values.get(index), this, null, index); }

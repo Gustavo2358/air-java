@@ -32,6 +32,7 @@ public final class CodecSuite {
         text = new String(golden, StandardCharsets.UTF_8);
         tree = Json.parse(golden, AirJson.Limits.defaults());
         check("decode scheduling preserves facts diagnostics and isolation", DecodeSchedulingChecks::run);
+        check("UTF-8 tape matches the physical parser and binding", Utf8InputChecks::run);
         check("LOCAL shared body independent wire oracle",LocalControlChecks::wireOracle);
         check("LOCAL lossless variants and recursive references",LocalControlChecks::roundTrips);
         check("LOCAL closure ownership and capability failures",LocalControlChecks::closureAndCapabilities);

@@ -17,7 +17,7 @@ public final class CodecLatencyProbe {
             long start = System.nanoTime();
             double parse = 0, bind = 0, validate = 0;
             if (args[3].equals("phases")) {
-                var tree = Json.parse(bytes, AirJson.Limits.defaults());
+                var tree = Utf8Input.parse(bytes, AirJson.Limits.defaults());
                 long parsed = System.nanoTime();
                 io.github.gustavo2358.air.model.Publication publication;
                 if (workers == 0) publication = new BindingReader().envelope(tree);

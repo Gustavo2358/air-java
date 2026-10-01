@@ -9,6 +9,24 @@ import java.util.*;
  */
 public final class AirValidator {
     private AirValidator() {}
+    /** An actual validation run bound to this immutable publication and these exact budgets. */
+    public static final class CheckedPublication {
+        private final Publication publication;
+        private final ValidationOptions options;
+        private final ValidationResult result;
+        private CheckedPublication(Publication publication, ValidationOptions options) {
+            this.publication = publication;
+            this.options = options;
+            this.result = validate(publication, options);
+        }
+        public Publication publication() { return publication; }
+        public ValidationOptions options() { return options; }
+        /** Includes incomplete/invalid outcomes; this is not a claim of semantic validity. */
+        public ValidationResult result() { return result; }
+    }
+    public static CheckedPublication check(Publication publication, ValidationOptions options) {
+        return new CheckedPublication(publication, options);
+    }
     public static ValidationResult validate(Publication publication) {
         return validate(publication,ValidationOptions.defaults());
     }
