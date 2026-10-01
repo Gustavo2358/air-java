@@ -31,6 +31,10 @@ public final class CodecSuite {
         golden = Files.readAllBytes(Path.of("src/test/resources/goback.canonical.json"));
         text = new String(golden, StandardCharsets.UTF_8);
         tree = Json.parse(golden, AirJson.Limits.defaults());
+        check("LOCAL shared body independent wire oracle",LocalControlChecks::wireOracle);
+        check("LOCAL lossless variants and recursive references",LocalControlChecks::roundTrips);
+        check("LOCAL closure ownership and capability failures",LocalControlChecks::closureAndCapabilities);
+        check("LOCAL malformed fields naturals and operational limits",LocalControlChecks::malformedAndLimits);
         check("PMT positive bases and coverage-bearing nop transport",PositiveProjectionChecks::run);
         check("CORE-SIZE physical JSON stack and malformed distinction", JsonCapacityChecks::physicalDepth);
         check("CORE-SIZE exact UTF-8 byte budgets", JsonCapacityChecks::byteBudgets);
@@ -229,7 +233,7 @@ public final class CodecSuite {
         });
         check("deferred forms fail explicitly without partial materialization", CodecSuite::unsupported);
         check("capability nonempty manifest distinguished from invalid AIR", () -> fails(UNSUPPORTED_CAPABILITY,
-                changed("publication.capabilities.required", new Json.Arr(List.of(Json.object("name", "control.local", "version", "1"))))));
+                changed("publication.capabilities.required", new Json.Arr(List.of(Json.object("name", "control.indirect", "version", "1"))))));
         check("document and depth limits explicit in both directions", () -> {
             var small = new AirJson(new AirJson.Limits(20,128), ValidationOptions.defaults());
             failure(RESOURCE_LIMIT, () -> small.decode(golden)); failure(RESOURCE_LIMIT, () -> small.encode(EXPECTED));
@@ -670,9 +674,10 @@ public final class CodecSuite {
         // W1B maps UnknownBound.unknown; its independent preservation and limit tests live in InvokeChecks.
         // Nonempty containers never become empty successful Publications, regardless of deferred element form.
         for(String path:List.of("publication.artifactRelations",
-                "publication.units.0.completionPorts",
                 "publication.units.0.sequences.0.terminator.values"))
             fails(IMPLEMENTATION_LIMIT,changed(path,new Json.Arr(List.of(Json.object("kind","deferred-element")))));
+        // LOCAL now parses CompletionPort fields; malformed elements fail the closed input shape.
+        fails(INPUT_ERROR,changed("publication.units.0.completionPorts",new Json.Arr(List.of(Json.object("kind","deferred-element")))));
         fails(INPUT_ERROR,changed("publication.units.0.entries.0.signature.parameters.known",new Json.Arr(List.of(Json.object("kind","deferred-element")))));
         fails(INPUT_ERROR,changed("publication.units.0.visibleObjects",new Json.Arr(List.of(Json.object("kind","deferred-element")))));
         fails(INPUT_ERROR,changed("publication.resources",new Json.Arr(List.of(Json.object("kind","deferred-element")))));

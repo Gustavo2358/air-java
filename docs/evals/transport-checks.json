@@ -6,6 +6,10 @@
   "analysis_ir_pin": "2c7f31f19efbe3211a2aea5bbda90173a9666fe2",
   "external_dependencies": [],
   "checks": [
+    "LOCAL shared body independent wire oracle",
+    "LOCAL lossless variants and recursive references",
+    "LOCAL closure ownership and capability failures",
+    "LOCAL malformed fields naturals and operational limits",
     "PMT positive bases and coverage-bearing nop transport",
     "CORE-SIZE physical JSON stack and malformed distinction",
     "CORE-SIZE exact UTF-8 byte budgets",

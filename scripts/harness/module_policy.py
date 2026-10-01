@@ -195,7 +195,7 @@ def inspect_topology(root):
                               'air-json/src/test/java/io/github/gustavo2358/air/json/')
                 require((rel.as_posix().startswith(java_roots) and path.suffix == '.java')
                         or rel.as_posix() in {'air-json/src/test/resources/goback.canonical.json',
-                                              'air-json/src/test/resources/scalar-assign.canonical.json', 'air-json/src/test/resources/regional.canonical.json'},
+                                              'air-json/src/test/resources/scalar-assign.canonical.json', 'air-json/src/test/resources/regional.canonical.json', 'air-json/src/test/resources/local-control.canonical.json'},
                         f'Unowned JSON source/resource: {rel}')
             else:
                 require(rel.parts[:4] in [('air-model', 'src', 'main', 'java'), ('air-model', 'src', 'test', 'java')],
@@ -211,7 +211,7 @@ def inspect_topology(root):
                      'air-json/src/test/java/io/github/gustavo2358/air/json/CodecSuite.java',
                      'air-json/src/test/java/io/github/gustavo2358/air/json/GobackOracle.java',
                      'air-json/src/test/resources/goback.canonical.json',
-                     'air-json/src/test/resources/scalar-assign.canonical.json', 'air-json/src/test/resources/regional.canonical.json', 'docs/evals/transport-checks.json'):
+                     'air-json/src/test/resources/scalar-assign.canonical.json', 'air-json/src/test/resources/regional.canonical.json', 'air-json/src/test/resources/local-control.canonical.json', 'docs/evals/transport-checks.json'):
         require((root / required).is_file(), f'Missing JSON suite/policy/evidence: {required}')
     from common import read_json
     policy = read_json(root / 'docs/evals/transport-checks.json')

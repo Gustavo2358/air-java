@@ -1,4 +1,31 @@
-# Codec compartilhado AIR JSON — cobertura 1A + 4B + CP6 W1B/W2C
+# AIR JSON — cobertura atual e história
+
+A autoridade vigente é `analysis-ir@2c7f31f19efbe3211a2aea5bbda90173a9666fe2`,
+AIR 2.0.0 / binding 1.0.0 DRAFT, fixada em [sources.lock](../sources.lock.json).
+As seções históricas abaixo registram subsets adicionados progressivamente;
+a suíte atual e seus limites são o inventário de implementação.
+
+## Stage 5 / S1 — transporte de controle local
+
+`control.local@1` passa a ser aceito em required/provided, com os campos existentes
+de `local.invoke`, `local.boundary`, `local.resume`, `local.unwind` e
+`Unit.completionPorts`. Portas carregam `id` e `origin`; contagens preservam Natural
+por BigInteger. Versões distintas e `control.indirect@1` continuam rejeitadas.
+O Validator exige a capability em required quando as operações/portas a usam.
+
+O transporte mantém a ordem das listas, IDs completos, entry/resume/default
+independentes e envelopes de fallback, sem executar a pilha ou fabricar arestas.
+O fallback tem a mesma cobertura do codec de envelopes existente: suas formas
+não implementadas, inclusive `dependencies.known` não vazio, falham explicitamente.
+Sucesso do codec não prova a suficiência semântica do fallback e não habilita
+execução de controle local no CFG ou dataflow.
+
+Golden independente: `air-json/src/test/resources/local-control.canonical.json`.
+[Plano, limites e qualificação da etapa](../work/shared-routine-bodies.md).
+
+---
+
+## Histórico — cobertura 1A + 4B + CP6 W1B/W2C
 
 O módulo `air-json` implementa o subset transitivo do GOBACK descrito por 0B e
 o transporte escalar Object/Cell/Assign text de 4B, Invoke W1B e Branch/Jump/Unknown

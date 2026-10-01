@@ -1,5 +1,7 @@
 # Trabalho atual
 
+[SHARED-ROUTINE-BODIES](shared-routine-bodies.md): IN_PROGRESS; etapa 5 separada. S1 habilita transporte de controle local; execução contextual e integração permanecem nos checkpoints seguintes.
+
 [PMT-W1](active/PMT-W1.json): IN_PROGRESS; topologia positiva, integridade e transporte de nop; revisão no companion DRAFT, sem merge.
 
 [File Dependencies CORE N+C](../domain/file-dependencies.md): DONE / MERGED; main smoke PASS; W10 opcional/deferred.

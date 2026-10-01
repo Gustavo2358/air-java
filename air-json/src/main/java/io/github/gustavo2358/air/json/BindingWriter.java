@@ -59,7 +59,7 @@ final class BindingWriter {
         return object("required", array(manifest.required(), this::capability), "provided", array(manifest.provided(), this::capability));
     }
     private Value capability(Capabilities.Capability capability) {
-        if (!List.of(Capabilities.MEMORY_REGIONS, Capabilities.IBM1047, Capabilities.ENTRY_POSSIBILITIES, Capabilities.ENTRY_POSSIBILITIES_V2, Capabilities.TARGET_POSSIBILITIES, Capabilities.RESOURCE_BINDINGS).contains(capability) && !namePolicies.contains(capability))
+        if (!List.of(Capabilities.LOCAL_CONTROL, Capabilities.MEMORY_REGIONS, Capabilities.IBM1047, Capabilities.ENTRY_POSSIBILITIES, Capabilities.ENTRY_POSSIBILITIES_V2, Capabilities.TARGET_POSSIBILITIES, Capabilities.RESOURCE_BINDINGS).contains(capability) && !namePolicies.contains(capability))
             throw new AirJsonException(AirJsonException.Code.UNSUPPORTED_CAPABILITY,
                     "$.publication.capabilities", "Capability outside implemented transport profile");
         return object("name", capability.name(), "version", capability.version());
@@ -74,7 +74,7 @@ final class BindingWriter {
                 "objects", array(u.objects(), this::objectDeclaration),
                 "visibleObjects", array(u.visibleObjects(), this::id),
                 "entries", array(u.entries(), this::entry), "sequences", array(u.sequences(), this::sequence),
-                "completionPorts", empty(u.completionPorts(), "$.publication.units.completionPorts"),
+                "completionPorts", array(u.completionPorts(), p -> object("id", id(p.id()), "origin", id(p.origin()))),
                 "body", object("kind", "available"), "coverage", coverage(u.coverage()), "origin", id(u.origin()));
     }
     private Value entry(Entries.Entry e) {
@@ -125,6 +125,17 @@ final class BindingWriter {
         if (t instanceof Operations.Branch b)
             return object("kind", "branch", "header", header(b.header()), "predicate", expression(b.predicate()),
                     "trueDestination", id(b.trueDestination()), "falseDestination", id(b.falseDestination()));
+        if (t instanceof Operations.LocalInvoke l)
+            return object("kind", "local.invoke", "header", header(l.header()), "entry", id(l.entry()),
+                    "completionPorts", array(l.completionPorts(), this::id), "resume", id(l.resume()), "fallback", conservativeEnvelope(l.fallback()));
+        if (t instanceof Operations.LocalBoundary l)
+            return object("kind", "local.boundary", "header", header(l.header()), "port", id(l.port()),
+                    "defaultDestination", id(l.defaultDestination()), "fallback", conservativeEnvelope(l.fallback()));
+        if (t instanceof Operations.LocalResume l)
+            return object("kind", "local.resume", "header", header(l.header()), "fallback", conservativeEnvelope(l.fallback()));
+        if (t instanceof Operations.LocalUnwind l)
+            return object("kind", "local.unwind", "header", header(l.header()), "count", l.count().toString(),
+                    "destination", id(l.destination()), "fallback", conservativeEnvelope(l.fallback()));
         if (t instanceof Operations.Invoke i)
             return object("kind", "invoke", "header", header(i.header()), "action", i.action(), "target", target(i.target()),
                     "arguments", array(i.arguments(), this::argument), "results", array(i.results(), this::place),

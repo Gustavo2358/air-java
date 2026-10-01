@@ -1,0 +1,98 @@
+{
+  "stage": "5 / S1",
+  "scope": "Local-control AIR JSON transport only; contextual CFG, dataflow and producer sharing are later checkpoints",
+  "productionCommit": "84ab27823fa1210329901fc22bbca37b901960b6",
+  "baselinePins": {
+    "proleap-poc": "4c00dea2a6bad1ba21076e55681f6038b80f8a47",
+    "cobol-lower": "c98ff4821fdbd89a472792f02f11aa00d5b3583d",
+    "analysis-cfg": "4ae401171ebb706905a1014445d9f40ddb67eb53",
+    "air-java": "59df1f7d6f3523b21b172a3ea4b5a0dc95128faa",
+    "analysis-ir": "2c7f31f19efbe3211a2aea5bbda90173a9666fe2"
+  },
+  "validation": {
+    "fast": {
+      "result": "PASS",
+      "modelChecks": 189,
+      "transportChecks": 134,
+      "harnessTests": 41
+    },
+    "qualificationLocal": {
+      "result": "PASS",
+      "command": "python3 -B scripts/harness/lean.py qualification-local",
+      "implementation": "Maven clean verify"
+    },
+    "transportReplay": {
+      "count": 560,
+      "groups": {
+        "aliases": 14,
+        "carddemo": 73,
+        "chaos": 48,
+        "final-focal-contracts": 29,
+        "fixtures": 331,
+        "frontier-payload-green": 1,
+        "perform": 39,
+        "perform-adversarial": 25
+      },
+      "differences": [],
+      "allInputBytesPreserved": true,
+      "allValidationResultsPreserved": true
+    },
+    "challenges": {
+      "swapped-call-destinations": {
+        "compiled": true,
+        "detected": true,
+        "exitCode": 1
+      },
+      "discard-unwind-count": {
+        "compiled": true,
+        "detected": true,
+        "exitCode": 1
+      },
+      "discard-fallback-reads": {
+        "compiled": true,
+        "detected": true,
+        "exitCode": 1
+      }
+    },
+    "consumerAdmission": {
+      "consumer": "frozen review-runtime-01, reused executable content equivalent to integrated main",
+      "newCodec": true,
+      "result": "UNSUPPORTED_CAPABILITY",
+      "capability": "control.local@1",
+      "exitCode": 4,
+      "cfgArtifactCreated": false
+    }
+  },
+  "carddemoBaseline": {
+    "source": "Reused products: previous values/control campaign review-qualification/results.json",
+    "programs": 73,
+    "totals": {
+      "sequences": 110317,
+      "nodes": 110570,
+      "transitions": 124356,
+      "airBytes": 1338048740,
+      "cfgBytes": 80302820
+    }
+  },
+  "productionSourceSha256": "ac79edff74a1b72733e0aee8b3013d8e745156bc0a89914048ad165004171ffb",
+  "evidenceHashes": {
+    "transport-red-02.log": "bea87a00aa805f11156dcdb0765efff76b0c30f4609b8fc53940bf6cceeeb5b3",
+    "fast-02.log": "6747ceb74cd40d27507488bb5f7978ec2fd7c764c15c725bb7e22b04a160d95b",
+    "qualification-01.log": "80bdb1a242d35ea6ba1be09c3b0da572a123e2ba7cf73d1b6cdbc199f0ccf9d7",
+    "transport-replay/baseline.tsv": "7ad6985ab9e6711018a44bc0c2792f0ba6bc0630a4bbfdd8db79accee6d4a6b0",
+    "transport-replay/candidate.tsv": "df019312d99ed65005103b91826df2e61ccf352cc2d9299d35df8c67894ecced",
+    "transport-replay/paths.txt": "e4e42114520340bde56666f127729c4c8f32daddbe87f4b40a96737a0a202ae9",
+    "transport-replay/execution.json": "6f78e565bf9cbf36c5df9a5f8585aef472753530dffe59d987bcd95d31799566",
+    "consumer-admission/stderr.log": "1221a206e63abc1af4951863dbb516c548a7a7728ae5bd77ef9e3bf8e7075dce"
+  },
+  "notExecuted": [
+    "New frontend \u2192 lower \u2192 CFG \u2192 dependencies corpus run",
+    "Shared-body contextual execution or compression measurement"
+  ],
+  "limits": [
+    "Existing supported fallback-envelope subset; unsupported nested forms remain explicit implementation limits",
+    "No consumer repin or activation of local control",
+    "No new AIR semantic or binding version; existing control.local@1 forms only",
+    "No merge"
+  ]
+}

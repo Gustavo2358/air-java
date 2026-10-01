@@ -6,12 +6,20 @@ A cobertura regional ST-W1 acrescenta o codec IBM1047 explícito e checks de ace
 [cobertura própria e limites explícitos](engineering/air-json.md), comprovados
 por [golden manual e suíte](quality/air-json-implementation.md).
 
-Baseline normativo: Analysis IR 2.0.0, `Gustavo2358/analysis-ir@b26465964fe75f944f6324df63330d69f33d77cd`.
+Baseline normativo vigente: Analysis IR 2.0.0, `Gustavo2358/analysis-ir@2c7f31f19efbe3211a2aea5bbda90173a9666fe2` ([lock](sources.lock.json)).
 A biblioteca `0.1.0-SNAPSHOT` é uma implementação Java revisável. Ela não declara
 conformidade integral de Producer, Validator ou Consumer com todos os perfis AIR.
 
 O discovery e a migração do baseline Java anterior estão em
 `docs/reconciliation-air-2.md`.
+
+## Controle local: modelo e transporte
+
+A [etapa 5 / S1](work/shared-routine-bodies.md) acrescenta ao codec as quatro
+operações de `control.local@1` e declarações de portas já existentes no modelo.
+Isso preserva o contrato de chamadas locais, mas não implementa execução da pilha,
+CFG contextual ou análise de valores. Os limites dos envelopes transportáveis
+continuam explícitos na política do codec.
 
 ## Modelo materializado
 
