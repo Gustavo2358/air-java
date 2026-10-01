@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from common import Failure, run
-from architecture import inspect_classes, inspect_dependencies
+from architecture import inspect_classes, inspect_dependencies, inspect_runtime_methods
 
 
 class BytecodeTests(unittest.TestCase):
@@ -79,6 +79,38 @@ class BytecodeTests(unittest.TestCase):
             (classes / (package.replace('.', '/') + '/' + name + '.class')).unlink()
             with self.subTest(package=package), self.assertRaisesRegex(Failure, 'Unresolved dependency'):
                 self.inspect(classes)
+
+    def test_codec_scheduler_dependencies_are_scoped_to_their_owners(self):
+        source = "io.github.gustavo2358.air.json."
+        def edge(owner, target):
+            return f"   {source}{owner} -> {target} java.base"
+        self.assertEqual(1, inspect_dependencies(edge("AirJson$DecodeOptions", "java.lang.Runtime"), "air-json"))
+        for name in ("Callable", "ExecutionException", "ExecutorService", "Executors", "Future", "ThreadFactory"):
+            self.assertEqual(1, inspect_dependencies(edge("OrderedBlocks", "java.util.concurrent." + name), "air-json"))
+        for owner, target in (("BindingReader", "java.lang.Runtime"), ("OrderedBlocks", "java.lang.Runtime"),
+                              ("AirJson$DecodeOptions", "java.util.concurrent.Executors"),
+                              ("AirJson$DecodeOptions", "java.lang.ProcessBuilder"),
+                              ("OrderedBlocks", "java.util.concurrent.ForkJoinPool")):
+            with self.subTest(owner=owner, target=target), self.assertRaisesRegex(Failure, "Forbidden dependency"):
+                inspect_dependencies(edge(owner, target), "air-json")
+        with self.assertRaisesRegex(Failure, "Forbidden dependency"):
+            inspect_dependencies("   io.github.gustavo2358.air.model.Value -> java.lang.Runtime java.base")
+
+    def test_runtime_cpu_query_is_allowed_but_process_and_other_runtime_methods_are_not(self):
+        for body, allowed in (("return Runtime.getRuntime().availableProcessors();", True),
+                              ("return (int) Runtime.getRuntime().freeMemory();", False),
+                              ('Runtime.getRuntime().exec("example"); return 1;', False),
+                              ("java.util.function.IntConsumer stop=Runtime.getRuntime()::exit; return 1;", False)):
+            with self.subTest(body=body):
+                classes = self.compile({"AirJson.java":
+                    "package io.github.gustavo2358.air.json; public class AirJson { public static class DecodeOptions { public int workers() throws Exception { " + body + " } } }"})
+                output = run(["javap", "-classpath", str(classes), "-verbose", "-p",
+                              "io.github.gustavo2358.air.json.AirJson$DecodeOptions"])
+                if allowed:
+                    inspect_runtime_methods(output)
+                else:
+                    with self.assertRaisesRegex(Failure, "Runtime access is limited"):
+                        inspect_runtime_methods(output)
 
     def test_wrong_major_or_preview_is_rejected(self):
         classes = self.compile({"Value.java": "package io.github.gustavo2358.air.model; public class Value {}"})

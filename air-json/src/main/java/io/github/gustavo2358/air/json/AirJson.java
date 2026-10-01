@@ -23,10 +23,24 @@ public final class AirJson {
         }
         public static Limits defaults() { return new Limits(Integer.MAX_VALUE, Integer.MAX_VALUE); }
     }
+    /** Scheduling only: identical facts, array order and failure precedence for every setting. */
+    public record DecodeOptions(int bindingParallelism) {
+        public DecodeOptions {
+            if (bindingParallelism < 1) throw new IllegalArgumentException("Positive binding parallelism required");
+        }
+        public static DecodeOptions defaults() {
+            return new DecodeOptions(Math.min(4, Runtime.getRuntime().availableProcessors()));
+        }
+    }
+    private final DecodeOptions decodeOptions;
     private final Limits limits;
     private final ValidationOptions validationOptions;
     public AirJson() { this(Limits.defaults(), ValidationOptions.defaults()); }
     public AirJson(Limits limits, ValidationOptions validationOptions) {
+        this(limits, validationOptions, DecodeOptions.defaults());
+    }
+    public AirJson(Limits limits, ValidationOptions validationOptions, DecodeOptions decodeOptions) {
+        this.decodeOptions = Objects.requireNonNull(decodeOptions);
         this.limits = Objects.requireNonNull(limits);
         this.validationOptions = Objects.requireNonNull(validationOptions);
     }
@@ -56,20 +70,34 @@ public final class AirJson {
     /** Opt-in AIR 08 §9 admission. Strict decode/encode behavior and wire format remain unchanged. */
     public PartialInput decodeForPartialAnalysis(byte[] bytes) { return decode(bytes,true); }
     private PartialInput decode(byte[] bytes,boolean partialAnalysis) {
+        var checked = decodeChecked(bytes, partialAnalysis);
+        return new PartialInput(checked.publication(), checked.result());
+    }
+    /** Decode and retain the validation run for downstream consumers of the same snapshot. */
+    public AirValidator.CheckedPublication decodeChecked(byte[] bytes) { return decodeChecked(bytes, false); }
+    public AirValidator.CheckedPublication decodeCheckedForPartialAnalysis(byte[] bytes) { return decodeChecked(bytes, true); }
+    private AirValidator.CheckedPublication decodeChecked(byte[] bytes,boolean partialAnalysis) {
         Objects.requireNonNull(bytes, "bytes");
-        Json.Value wire = Json.parse(bytes, limits);
-        Publication publication = new BindingReader().envelope(wire);
+        Json.Value wire = Utf8Input.parse(bytes, limits);
+        Publication publication;
+        try (var blocks = new OrderedBlocks(decodeOptions.bindingParallelism())) {
+            publication = new BindingReader(blocks).envelope(wire);
+        }
         // Validate capability use only after the complete typed payload is available.
         var names = io.github.gustavo2358.air.model.NamePolicies.extensions(publication);
         for (var capabilities : java.util.List.of(publication.capabilities().required(), publication.capabilities().provided()))
             for (var capability : capabilities)
                 if (!java.util.List.of(io.github.gustavo2358.air.model.Capabilities.LOCAL_CONTROL, io.github.gustavo2358.air.model.Capabilities.MEMORY_REGIONS, io.github.gustavo2358.air.model.Capabilities.IBM1047, io.github.gustavo2358.air.model.Capabilities.ENTRY_POSSIBILITIES, io.github.gustavo2358.air.model.Capabilities.ENTRY_POSSIBILITIES_V2, io.github.gustavo2358.air.model.Capabilities.TARGET_POSSIBILITIES, io.github.gustavo2358.air.model.Capabilities.RESOURCE_BINDINGS).contains(capability) && !names.contains(capability))
                     throw new AirJsonException(UNSUPPORTED_CAPABILITY,"$.publication.capabilities","Capability outside implemented transport profile");
-        return new PartialInput(publication,validate(publication,partialAnalysis));
+        var checked = AirValidator.check(publication, validationOptions);
+        admit(checked.result(), partialAnalysis);
+        return checked;
     }
     private void validate(Publication publication) { validate(publication,false); }
     private ValidationResult validate(Publication publication,boolean partialAnalysis) {
-        ValidationResult result = AirValidator.validate(publication, validationOptions);
+        return admit(AirValidator.validate(publication, validationOptions), partialAnalysis);
+    }
+    private ValidationResult admit(ValidationResult result, boolean partialAnalysis) {
         if (result.hasIssues(ValidationIssue.Kind.RESOURCE_LIMIT))
             throw new AirJsonException(RESOURCE_LIMIT, "$", "AIR validation operational budget exhausted", result);
         if (result.status() == ValidationResult.Status.INVALID_IR)
