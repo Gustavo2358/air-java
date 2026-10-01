@@ -1,3 +1,5 @@
+[Integração atual — DONE / MERGED](air-codec-latency.md): controle local #23 e codec #24; testes, medições e limites registrados. As entradas anteriores abaixo são históricas.
+
 # Trabalho atual
 
 [SHARED-ROUTINE-BODIES](shared-routine-bodies.md): IN_PROGRESS; etapa 5 separada. S1 habilita transporte de controle local; execução contextual e integração permanecem nos checkpoints seguintes.

@@ -2,8 +2,12 @@
 
 - id: SHARED-ROUTINE-BODIES
 - title: Share routine representation while retaining call, return and data contexts
-- status: IN_PROGRESS
+- status: DONE
 - scope: Stage 5 authorized on 2026-09-29; separate from the merged values/control campaign. This first PR implements the AIR JSON transport prerequisite only.
+
+Merged in [AIR #23](https://github.com/Gustavo2358/air-java/pull/23) on 2026-10-01.
+[Current integration and codec qualification](air-codec-latency.md).
+The discovery and checkpoint sections below retain their original scope.
 
 ## Discovery and authority
 

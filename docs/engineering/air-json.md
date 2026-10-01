@@ -46,7 +46,7 @@ byte[] canonical = codec.encode(publication);
 Publication restored = codec.decode(canonical);
 ```
 
-`AirJson`, `AirJson.Limits`, `AirJsonException` e seu enum `Code` compõem a API
+`AirJson`, `AirJson.Limits`, `AirJson.DecodeOptions`, `AirJsonException` e seu enum `Code` compõem a API
 pública do módulo. Não há Map público, annotations no model, serialização de records, DTOs
 acoplados ao model, adaptador Path/arquivo, streams de filesystem, CLI ou rede.
 O codec é imutável e não mantém estado de uma chamada para outra. O model e seu
@@ -55,7 +55,7 @@ Validator pertencem a `air-model`, artefato Maven `air-java`.
 Ambos os métodos retornam somente após sucesso integral. `decode` valida bytes,
 campos/formas e versões, materializa os fatos exatos e chama `AirValidator`.
 `encode` verifica a versão, mapeia explicitamente os fatos, valida AIR e emite
-bytes canônicos. Obrigações semânticas isoladas não bloqueiam transporte e não são satisfeitas por esse sucesso. Consumers que precisem de avaliação executam `AirValidator.validate(restored)`; I-56 é reconstruído dos fatos materializados. Nenhum percurso completa lacunas ou executa análise de CFG.
+bytes canônicos. Obrigações semânticas isoladas não bloqueiam transporte e não são satisfeitas por esse sucesso. Consumers podem obter a execução original com `decodeChecked` e reutilizá-la para a mesma publicação e opções de validação. `AirValidator.check` também aceita uma publicação em memória. `CheckedPublication` retém o resultado completo, inclusive invalidez ou incompletude, e não certifica validade; I-56 é reconstruído dos fatos materializados. Nenhum percurso completa lacunas ou executa análise de CFG.
 Uma Publication com formas ainda não implementadas é rejeitada antes de alegar
 validação completa desse conteúdo. Não há materialização parcial disponível ao caller.
 
@@ -265,8 +265,12 @@ não níveis semânticos AIR. O writer usa duas passagens iterativas: conta byte
 UTF-8 canônicos exatos e valida depth/scalars antes de alocar um único byte[] de
 saída; depois preenche esse buffer privado. Um budget exato inclui escapes e
 multibyte Unicode. Não há StringBuilder/String de documento no encode.
-A árvore intermediária continua presente; decode mantém bytes/string/árvore/model
-nas fases aplicáveis. Não é streaming nem promessa de heap ilimitado.
+No decode válido, uma tabela segmentada de offsets UTF-8 substitui a String e a
+árvore genérica do documento; o binding lê diretamente os bytes. Falhas físicas
+reexecutam o parser de referência para preservar diagnósticos e posições UTF-16.
+O encode conserva sua árvore intermediária. Input, offsets e modelo continuam
+retidos no decode; não há promessa de heap ilimitado.
+[Paralelismo, API checked e medição](../work/air-codec-latency.md).
 [Discovery, custos e compatibilidade](../quality/air-capacity.md).
 
 ## Evidência, risco e continuação

@@ -21,6 +21,12 @@ Isso preserva o contrato de chamadas locais, mas não implementa execução da p
 CFG contextual ou análise de valores. Os limites dos envelopes transportáveis
 continuam explícitos na política do codec.
 
+## Decode de AIR grande
+
+[Codec UTF-8, binding paralelo e validação reutilizável](work/air-codec-latency.md)
+integrados por #24. APIs anteriores e diagnósticos permanecem compatíveis;
+`CheckedPublication` retém a execução, sem promover incompletude a validade.
+
 ## Modelo materializado
 
 | Área normativa | Representação Java atual |
