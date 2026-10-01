@@ -23,10 +23,24 @@ public final class AirJson {
         }
         public static Limits defaults() { return new Limits(Integer.MAX_VALUE, Integer.MAX_VALUE); }
     }
+    /** Scheduling only: identical facts, array order and failure precedence for every setting. */
+    public record DecodeOptions(int bindingParallelism) {
+        public DecodeOptions {
+            if (bindingParallelism < 1) throw new IllegalArgumentException("Positive binding parallelism required");
+        }
+        public static DecodeOptions defaults() {
+            return new DecodeOptions(Math.min(4, Runtime.getRuntime().availableProcessors()));
+        }
+    }
+    private final DecodeOptions decodeOptions;
     private final Limits limits;
     private final ValidationOptions validationOptions;
     public AirJson() { this(Limits.defaults(), ValidationOptions.defaults()); }
     public AirJson(Limits limits, ValidationOptions validationOptions) {
+        this(limits, validationOptions, DecodeOptions.defaults());
+    }
+    public AirJson(Limits limits, ValidationOptions validationOptions, DecodeOptions decodeOptions) {
+        this.decodeOptions = Objects.requireNonNull(decodeOptions);
         this.limits = Objects.requireNonNull(limits);
         this.validationOptions = Objects.requireNonNull(validationOptions);
     }
@@ -58,7 +72,10 @@ public final class AirJson {
     private PartialInput decode(byte[] bytes,boolean partialAnalysis) {
         Objects.requireNonNull(bytes, "bytes");
         Json.Value wire = Json.parse(bytes, limits);
-        Publication publication = new BindingReader().envelope(wire);
+        Publication publication;
+        try (var blocks = new OrderedBlocks(decodeOptions.bindingParallelism())) {
+            publication = new BindingReader(blocks).envelope(wire);
+        }
         // Validate capability use only after the complete typed payload is available.
         var names = io.github.gustavo2358.air.model.NamePolicies.extensions(publication);
         for (var capabilities : java.util.List.of(publication.capabilities().required(), publication.capabilities().provided()))

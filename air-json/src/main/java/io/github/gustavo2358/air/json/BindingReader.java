@@ -16,52 +16,94 @@ import static io.github.gustavo2358.air.json.AirJsonException.Code.*;
 
 /** Binding shape checks precede model construction; closure is a separate Validator step. */
 final class BindingReader {
-    private record At(Json.Value value, String path) {
+    private final OrderedBlocks blocks;
+    BindingReader() { this(null); }
+    BindingReader(OrderedBlocks blocks) { this.blocks = blocks; }
+
+    private final class At {
+        private final Json.Value value;
+        private final At parent;
+        private final String field;
+        private final int index;
+        At(Json.Value value, At parent, String field, int index) {
+            this.value = value; this.parent = parent; this.field = field; this.index = index;
+        }
+        Json.Value value() { return value; }
+        String path() {
+            var ancestors = new ArrayDeque<At>();
+            for (At at = this; at.parent != null; at = at.parent) ancestors.push(at);
+            var result = new StringBuilder("$");
+            while (!ancestors.isEmpty()) {
+                At at = ancestors.pop();
+                if (at.field == null) result.append('[').append(at.index).append(']');
+                else result.append('.').append(at.field);
+            }
+            return result.toString();
+        }
         Json.Obj object() {
             if (value instanceof Json.Obj o) return o;
-            throw Json.input(path, "Expected object");
+            throw Json.input(path(), "Expected object");
         }
         At child(String key) {
             Json.Value child = object().fields().get(key);
-            if (child == null) throw Json.input(path + "." + key, "Required field omitted");
-            return new At(child, path + "." + key);
+            if (child == null) throw Json.input(path() + "." + key, "Required field omitted");
+            return new At(child, this, key, -1);
         }
         At fields(String... names) {
+            var fields = object().fields();
+            // Valid objects need only one lookup per required field, without a temporary set.
+            if (fields.size() == names.length) {
+                boolean complete = true;
+                for (String name : names) if (!fields.containsKey(name)) { complete = false; break; }
+                if (complete) return this;
+            }
             Set<String> required = Set.of(names);
-            for (String name : object().fields().keySet())
-                if (!required.contains(name)) throw Json.input(path + "." + name, "Unknown field");
-            for (String name : names) child(name);
+            for (String name : fields.keySet())
+                if (!required.contains(name)) throw Json.input(path() + "." + name, "Unknown field");
+            for (String name : names)
+                if (!fields.containsKey(name)) throw Json.input(path() + "." + name, "Required field omitted");
             return this;
         }
         String text() {
             if (value instanceof Json.Text t) return t.value();
-            throw Json.input(path, "Expected string");
+            throw Json.input(path(), "Expected string");
         }
         boolean bool() {
             if (value instanceof Json.Bool b) return b.value();
-            throw Json.input(path, "Expected boolean");
+            throw Json.input(path(), "Expected boolean");
         }
+        List<Json.Value> array() {
+            if (value instanceof Json.Arr a) return a.values();
+            throw Json.input(path(), "Expected array");
+        }
+        At element(List<Json.Value> values, int index) { return new At(values.get(index), this, null, index); }
         List<At> elements() {
-            if (!(value instanceof Json.Arr a)) throw Json.input(path, "Expected array");
-            var result = new ArrayList<At>();
-            for (int i = 0; i < a.values().size(); i++) result.add(new At(a.values().get(i), path + "[" + i + "]"));
+            var values = array();
+            var result = new ArrayList<At>(values.size());
+            for (int i = 0; i < values.size(); i++) result.add(element(values, i));
             return result;
         }
-        <T> List<T> list(Function<At,T> mapper) { return elements().stream().map(mapper).toList(); }
+        <T> List<T> list(Function<At,T> mapper) {
+            var values = array();
+            if (blocks != null) return blocks.map(values.size(), i -> mapper.apply(element(values, i)));
+            var result = new ArrayList<T>(values.size());
+            for (int i = 0; i < values.size(); i++) result.add(mapper.apply(element(values, i)));
+            return List.copyOf(result);
+        }
         <T> Optional<T> optional(Function<At,T> mapper) {
             return value == Json.Nil.INSTANCE ? Optional.empty() : Optional.of(mapper.apply(this));
         }
         void empty() {
-            if (!elements().isEmpty()) throw unsupported("Nonempty inventory");
+            if (!array().isEmpty()) throw unsupported("Nonempty inventory");
         }
         String kind() { return child("kind").text(); }
-        AirJsonException unsupported(String form) { return Json.limit(path, form + " outside implemented 1A/4B coverage"); }
+        AirJsonException unsupported(String form) { return Json.limit(path(), form + " outside implemented 1A/4B coverage"); }
         AirJsonException invalid(String rule, String detail) {
-            return new AirJsonException(INVALID_IR, path, detail,
+            return new AirJsonException(INVALID_IR, path(), detail,
                     List.of(new ValidationIssue(ValidationIssue.Kind.INVALID_IR, rule, Optional.empty(), detail)));
         }
         AirJsonException representability(String restriction) {
-            return Json.limit(path, "air-java representability limit: " + restriction);
+            return Json.limit(path(), "air-java representability limit: " + restriction);
         }
         AirJsonException spanRepresentability(String restriction) {
             return representability("Physical Span fields accepted; no pinned AIR invalidity rule identified; " + restriction);
@@ -73,14 +115,13 @@ final class BindingReader {
             return text;
         }
         <T> T construct(Supplier<T> constructor) {
-            // Known AIR rules and Java representability gaps are checked explicitly at their sites.
-            // Unexpected failures must retain their identity; they are not a codec classification.
+            // Unexpected failures retain their identity rather than becoming codec classifications.
             return constructor.get();
         }
     }
     private boolean resourceBindings;
     Publication envelope(Json.Value value) {
-        var e = new At(value, "$").fields("binding", "bindingVersion", "airVersion", "publication");
+        var e = new At(value, null, null, -1).fields("binding", "bindingVersion", "airVersion", "publication");
         version(e.child("binding"), "analysis-ir-json"); version(e.child("bindingVersion"), "1.0.0");
         version(e.child("airVersion"), "2.0.0");
         var p = e.child("publication").fields("id", "capabilities", "artifacts", "units", "storage", "resources",

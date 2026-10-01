@@ -31,6 +31,7 @@ public final class CodecSuite {
         golden = Files.readAllBytes(Path.of("src/test/resources/goback.canonical.json"));
         text = new String(golden, StandardCharsets.UTF_8);
         tree = Json.parse(golden, AirJson.Limits.defaults());
+        check("decode scheduling preserves facts diagnostics and isolation", DecodeSchedulingChecks::run);
         check("LOCAL shared body independent wire oracle",LocalControlChecks::wireOracle);
         check("LOCAL lossless variants and recursive references",LocalControlChecks::roundTrips);
         check("LOCAL closure ownership and capability failures",LocalControlChecks::closureAndCapabilities);
@@ -462,9 +463,9 @@ public final class CodecSuite {
         var sentinel = new IllegalArgumentException("unanalysed constructor failure");
         try {
             Class<?> at = Class.forName("io.github.gustavo2358.air.json.BindingReader$At");
-            var constructor = at.getDeclaredConstructor(Json.Value.class, String.class); constructor.setAccessible(true);
+            var constructor = at.getDeclaredConstructor(BindingReader.class, Json.Value.class, at, String.class, int.class); constructor.setAccessible(true);
             var construct = at.getDeclaredMethod("construct", java.util.function.Supplier.class); construct.setAccessible(true);
-            var site = constructor.newInstance(tree, "$.injected");
+            var site = constructor.newInstance(new BindingReader(), tree, null, null, -1);
             java.util.function.Supplier<Object> fail = () -> { throw sentinel; };
             try { construct.invoke(site, fail); throw new AssertionError("Unexpected constructor succeeded"); }
             catch (java.lang.reflect.InvocationTargetException error) {

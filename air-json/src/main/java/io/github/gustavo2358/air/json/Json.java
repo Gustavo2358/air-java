@@ -45,13 +45,14 @@ final class Json {
         return value;
     }
 
-    static void scalars(String value, String path) {
+    static void scalars(String value, String path) { scalars(value, path, -1); }
+    private static void scalars(String value, String path, int position) {
         for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
             if (Character.isHighSurrogate(c)) {
                 if (++i == value.length() || !Character.isLowSurrogate(value.charAt(i)))
-                    throw input(path, "Isolated high surrogate");
-            } else if (Character.isLowSurrogate(c)) throw input(path, "Isolated low surrogate");
+                    throw input(path == null ? "$@" + position : path, "Isolated high surrogate");
+            } else if (Character.isLowSurrogate(c)) throw input(path == null ? "$@" + position : path, "Isolated low surrogate");
         }
     }
 
@@ -129,11 +130,22 @@ final class Json {
             position += token.length(); return value;
         }
         String string() {
-            expect('"'); var result = new StringBuilder();
+            expect('"');
+            int start = position;
+            // Strict UTF-8 decoding already checked raw scalars. Only escapes can introduce
+            // isolated surrogates; the common unescaped case needs just one slice copy.
+            while (position < text.length()) {
+                char c = text.charAt(position++);
+                if (c == '"') return text.substring(start, position - 1);
+                if (c < 0x20) throw error("Unescaped control character");
+                if (c == '\\') { position--; break; }
+            }
+            var result = new StringBuilder();
+            result.append(text, start, position);
             while (position < text.length()) {
                 char c = text.charAt(position++);
                 if (c == '"') {
-                    String value = result.toString(); scalars(value, "$@" + position); return value;
+                    String value = result.toString(); scalars(value, null, position); return value;
                 }
                 if (c < 0x20) throw error("Unescaped control character");
                 if (c != '\\') { result.append(c); continue; }
