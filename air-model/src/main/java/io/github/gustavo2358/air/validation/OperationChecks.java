@@ -157,6 +157,10 @@ final class OperationChecks {
             case Operations.LocalInvoke local -> {
                 c.capability(Capabilities.LOCAL_CONTROL,id);
                 refs.label(local.entry(),id.unit(),id); refs.label(local.resume(),id.unit(),id);
+                local.reentryGuard().ifPresent(guard -> {
+                    c.capability(Capabilities.LOCAL_REENTRY_GUARD,id);
+                    refs.label(guard.destination(),id.unit(),id);
+                });
                 c.refs(local.completionPorts(),id);
                 for(CompletionPortId port:local.completionPorts())
                     if(!port.unit().equals(id.unit()))

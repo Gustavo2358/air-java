@@ -59,7 +59,7 @@ final class BindingWriter {
         return object("required", array(manifest.required(), this::capability), "provided", array(manifest.provided(), this::capability));
     }
     private Value capability(Capabilities.Capability capability) {
-        if (!List.of(Capabilities.LOCAL_CONTROL, Capabilities.MEMORY_REGIONS, Capabilities.IBM1047, Capabilities.ENTRY_POSSIBILITIES, Capabilities.ENTRY_POSSIBILITIES_V2, Capabilities.TARGET_POSSIBILITIES, Capabilities.RESOURCE_BINDINGS).contains(capability) && !namePolicies.contains(capability))
+        if (!List.of(Capabilities.LOCAL_CONTROL, Capabilities.LOCAL_REENTRY_GUARD, Capabilities.MEMORY_REGIONS, Capabilities.IBM1047, Capabilities.ENTRY_POSSIBILITIES, Capabilities.ENTRY_POSSIBILITIES_V2, Capabilities.TARGET_POSSIBILITIES, Capabilities.RESOURCE_BINDINGS).contains(capability) && !namePolicies.contains(capability))
             throw new AirJsonException(AirJsonException.Code.UNSUPPORTED_CAPABILITY,
                     "$.publication.capabilities", "Capability outside implemented transport profile");
         return object("name", capability.name(), "version", capability.version());
@@ -125,6 +125,12 @@ final class BindingWriter {
         if (t instanceof Operations.Branch b)
             return object("kind", "branch", "header", header(b.header()), "predicate", expression(b.predicate()),
                     "trueDestination", id(b.trueDestination()), "falseDestination", id(b.falseDestination()));
+        if (t instanceof Operations.LocalInvoke l && l.reentryGuard().isPresent()) {
+            var guard=l.reentryGuard().orElseThrow();
+            return object("kind", "local.invoke", "header", header(l.header()), "entry", id(l.entry()),
+                    "completionPorts", array(l.completionPorts(), this::id), "resume", id(l.resume()), "fallback", conservativeEnvelope(l.fallback()),
+                    "reentryGuard", object("activationKey", guard.activationKey(), "destination", id(guard.destination())));
+        }
         if (t instanceof Operations.LocalInvoke l)
             return object("kind", "local.invoke", "header", header(l.header()), "entry", id(l.entry()),
                     "completionPorts", array(l.completionPorts(), this::id), "resume", id(l.resume()), "fallback", conservativeEnvelope(l.fallback()));

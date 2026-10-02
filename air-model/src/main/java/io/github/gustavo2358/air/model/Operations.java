@@ -158,13 +158,24 @@ public final class Operations {
         }
         @Override public String kind() { return "opaque"; }
     }
-    public record LocalInvoke(Header header, LabelId entry, List<CompletionPortId> completionPorts, LabelId resume, Envelopes.Envelope fallback) implements Terminator {
+    /** Logical activation identity, scoped to the invoking Unit (AIR 05 §7.6). */
+    public record ReentryGuard(String activationKey, LabelId destination) {
+        public ReentryGuard {
+            activationKey = text(activationKey, "activationKey");
+            destination = Objects.requireNonNull(destination, "destination");
+        }
+    }
+    public record LocalInvoke(Header header, LabelId entry, List<CompletionPortId> completionPorts, LabelId resume, Envelopes.Envelope fallback, Optional<ReentryGuard> reentryGuard) implements Terminator {
+        public LocalInvoke(Header header, LabelId entry, List<CompletionPortId> completionPorts, LabelId resume, Envelopes.Envelope fallback) {
+            this(header, entry, completionPorts, resume, fallback, Optional.empty());
+        }
         public LocalInvoke {
             header = Objects.requireNonNull(header, "header");
             entry = Objects.requireNonNull(entry, "entry");
             completionPorts = List.copyOf(completionPorts);
             resume = Objects.requireNonNull(resume, "resume");
             fallback = Objects.requireNonNull(fallback, "fallback");
+            reentryGuard = Objects.requireNonNull(reentryGuard, "reentryGuard");
             
         }
         @Override public String kind() { return "local.invoke"; }
