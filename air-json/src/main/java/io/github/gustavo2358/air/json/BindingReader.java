@@ -708,7 +708,11 @@ final class BindingReader {
                         case "ne" -> Expressions.BinaryOperator.NE;
                         case "and" -> Expressions.BinaryOperator.AND;
                         case "or" -> Expressions.BinaryOperator.OR;
-                        case "lt","le","gt","ge","add","sub","mul" -> throw a.unsupported("binary operator "+a.child("operator").text());
+                        case "lt" -> Expressions.BinaryOperator.LT;
+                        case "le" -> Expressions.BinaryOperator.LE;
+                        case "gt" -> Expressions.BinaryOperator.GT;
+                        case "ge" -> Expressions.BinaryOperator.GE;
+                        case "add","sub","mul" -> throw a.unsupported("binary operator "+a.child("operator").text());
                         default -> throw Json.input(a.child("operator").path(),"Unknown binary operator");
                     };
                     yield new Expressions.Binary(operandHeader(a.child("header")),operator,frame.values.get(0),frame.values.get(1));

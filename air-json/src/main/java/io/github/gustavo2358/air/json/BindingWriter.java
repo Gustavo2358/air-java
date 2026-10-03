@@ -401,10 +401,10 @@ final class BindingWriter {
         throw new IllegalStateException("Expression frame invariant");
     }
     private static boolean supportedBinary(Expressions.BinaryOperator op) {
-        return switch(op){case CONCAT,EQ,NE,AND,OR -> true;default -> false;};
+        return switch(op){case CONCAT,EQ,NE,LT,LE,GT,GE,AND,OR -> true;default -> false;};
     }
     private static String binaryToken(Expressions.BinaryOperator op) {
-        return switch(op){case CONCAT -> "concat";case EQ -> "eq";case NE -> "ne";case AND -> "and";case OR -> "or";default -> throw new IllegalArgumentException("unsupported binary");};
+        return switch(op){case CONCAT -> "concat";case EQ -> "eq";case NE -> "ne";case LT -> "lt";case LE -> "le";case GT -> "gt";case GE -> "ge";case AND -> "and";case OR -> "or";default -> throw new IllegalArgumentException("unsupported binary");};
     }
     private Value conservativeEnvelope(Envelopes.Envelope e) {
         var m = e.memory(); var c = e.control(); var d = e.dependencies();
