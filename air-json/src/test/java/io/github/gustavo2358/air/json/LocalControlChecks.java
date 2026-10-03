@@ -72,7 +72,7 @@ final class LocalControlChecks {
         equal(AirValidator.validate(p),AirValidator.validate(CODEC.decode(expected)));
     }
     static void roundTrips() {
-        var p=fixture();roundTrip(p);
+        var p=fixture();roundTrip(p);guardedInvocations();selectedResumes();
         var reversed=new ArrayList<>(p.units().getFirst().sequences());Collections.reverse(reversed);roundTrip(withSequences(p,reversed));
         // Empty port sets and cyclic references are legal transport, not a bounded stack policy.
         var sequences=new ArrayList<>(p.units().getFirst().sequences());
@@ -90,6 +90,54 @@ final class LocalControlChecks {
             u.body(),u.bodyUnavailable(),u.coverage(),u.origin()),p.capabilities()));
         var partial=CODEC.decodeForPartialAnalysis(golden());equal(p,partial.publication());
         equal(AirValidator.validate(p),partial.validation());bytes(golden(),CODEC.encodeForPartialAnalysis(p).bytes());
+    }
+    private static void guardedInvocations() {
+        var p=fixture();var sequences=new ArrayList<>(p.units().getFirst().sequences());
+        var first=sequences.getFirst();var call=(Operations.LocalInvoke)first.terminator();
+        var guard=new Operations.ReentryGuard("binding/α",label("ordinary"));
+        sequences.set(0,new Sequence(first.label(),first.instructions(),new Operations.LocalInvoke(call.header(),call.entry(),call.completionPorts(),call.resume(),call.fallback(),Optional.of(guard)),first.origin()));
+        var guarded=withSequences(p,sequences);
+        var missingCapability=guarded;expect(INVALID_IR,()->CODEC.encode(missingCapability),"I-43");
+        var caps=List.of(Capabilities.LOCAL_CONTROL,Capabilities.LOCAL_REENTRY_GUARD);
+        guarded=withUnit(guarded,guarded.units().getFirst(),new Capabilities.Manifest(caps,caps));
+        roundTrip(guarded);
+        var tree=Json.parse(CODEC.encode(guarded),AirJson.Limits.defaults());
+        String path=BASE+"sequences.0.terminator.reentryGuard";
+        equal("binding/α",((Json.Text)at(tree,path+".activationKey")).value());
+        equal("ordinary",((Json.Text)at(tree,path+".destination.localId")).value());
+        reject(INVALID_IR,change(tree,path+".destination.localId",Json.value("absent")),"I-02");
+        reject(INVALID_IR,change(tree,path+".destination.unit",Json.value("foreign")),"I-02");
+        reject(INPUT_ERROR,change(tree,path+".activationKey",Json.value("")),null);
+        reject(INPUT_ERROR,change(tree,path,Json.Nil.INSTANCE),null);
+        var fields=new LinkedHashMap<>(((Json.Obj)at(tree,path)).fields());fields.put("extra",Json.value("ignored"));
+        reject(INPUT_ERROR,change(tree,path,new Json.Obj(fields)),null);
+    }
+    private static void selectedResumes() {
+        var tree=Json.parse(golden(),AirJson.Limits.defaults());
+        var caps=new Json.Arr(List.of(
+            new Json.Obj(Map.of("name",Json.value("control.local"),"version",Json.value("1"))),
+            new Json.Obj(Map.of("name",Json.value("control.local.resume_routes"),"version",Json.value("1"))),
+            new Json.Obj(Map.of("name",Json.value("control.local.unwind_all"),"version",Json.value("1")))));
+        tree=change(tree,"publication.capabilities.required",caps);tree=change(tree,"publication.capabilities.provided",caps);
+        var route=new Json.Obj(Map.of("key",Json.value("state/β"),"destination",at(tree,BASE+"sequences.0.terminator.resume")));
+        tree=change(tree,BASE+"sequences.0.terminator.resumeRoutes",new Json.Arr(List.of(route)));
+        tree=change(tree,BASE+"sequences.5.terminator.resumeKey",Json.value("state/β"));
+        tree=change(tree,BASE+"sequences.6.terminator.count",Json.value("0"));
+        tree=change(tree,BASE+"sequences.6.terminator.all",Json.value(true));
+        var decoded=CODEC.decode(Json.write(tree,AirJson.Limits.defaults()));roundTrip(decoded);
+        var encoded=Json.parse(CODEC.encode(decoded),AirJson.Limits.defaults());
+        equal(at(tree,BASE+"sequences.0.terminator.resumeRoutes"),at(encoded,BASE+"sequences.0.terminator.resumeRoutes"));
+        equal(at(tree,BASE+"sequences.5.terminator.resumeKey"),at(encoded,BASE+"sequences.5.terminator.resumeKey"));
+        equal(at(tree,BASE+"sequences.6.terminator.all"),at(encoded,BASE+"sequences.6.terminator.all"));
+        reject(INVALID_IR,change(tree,BASE+"sequences.0.terminator.resumeRoutes.0.destination.unit",Json.value("foreign")),"I-02");
+        reject(INVALID_IR,change(tree,BASE+"sequences.0.terminator.resumeRoutes.0.destination.localId",Json.value("absent")),"I-02");
+        reject(INVALID_IR,change(tree,BASE+"sequences.0.terminator.resumeRoutes",new Json.Arr(List.of(route,route))),"I-01");
+        reject(INVALID_IR,change(tree,BASE+"sequences.6.terminator.count",Json.value("1")),null);
+        reject(INVALID_IR,change(tree,"publication.capabilities.required",new Json.Arr(List.of(caps.values().getFirst()))),"I-43");
+        for(var field:List.of("sequences.0.terminator.resumeRoutes.0.key","sequences.5.terminator.resumeKey"))
+            reject(INPUT_ERROR,change(tree,BASE+field,Json.value(" ")),null);
+        reject(INPUT_ERROR,change(tree,BASE+"sequences.6.terminator.all",Json.value("true")),null);
+        reject(INPUT_ERROR,change(tree,BASE+"sequences.0.terminator.resumeRoutes",Json.Nil.INSTANCE),null);
     }
     static void closureAndCapabilities() {
         var p=fixture();var tree=Json.parse(golden(),AirJson.Limits.defaults());

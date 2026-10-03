@@ -309,13 +309,25 @@ final class BindingReader {
             case "invoke" -> "action,target,arguments,results,signature,effectOperands,effectBound,outcomes,contract";
             case "opaque" -> "observedKind,knownOperands,valueResults,envelope";
             case "copy_bytes" -> "destination,source,length,fallback";
-            case "local.invoke" -> "entry,completionPorts,resume,fallback";
-            case "local.boundary" -> "port,defaultDestination,fallback"; case "local.resume" -> "fallback";
-            case "local.unwind" -> "count,destination,fallback"; case "indirect.jump" -> "target,within,fallback";
+            case "local.invoke" -> "entry,completionPorts,resume,fallback" + (a.object().containsKey("reentryGuard") ? ",reentryGuard" : "") + (a.object().containsKey("resumeRoutes") ? ",resumeRoutes" : "");
+            case "local.boundary" -> "port,defaultDestination,fallback"; case "local.resume" -> "fallback" + (a.object().containsKey("resumeKey") ? ",resumeKey" : "");
+            case "local.unwind" -> "count,destination,fallback" + (a.object().containsKey("all") ? ",all" : ""); case "indirect.jump" -> "target,within,fallback";
             default -> throw Json.input(a.path(), "Unknown Operation kind");
         };
         a.fields(("kind,header" + (extra.isEmpty() ? "" : "," + extra)).split(","));
         return kind;
+    }
+    private Operations.ReentryGuard reentryGuard(At a) {
+        a.fields("activationKey", "destination");
+        var key=a.child("activationKey").text();
+        if(key.isBlank())throw Json.input(a.child("activationKey").path(),"Activation key must not be blank");
+        return new Operations.ReentryGuard(key,labelId(a.child("destination")));
+    }
+    private static String resumeText(At a) {
+        var key=a.text();if(key.isBlank())throw Json.input(a.path(),"Resume key must not be blank");return key;
+    }
+    private Operations.ResumeRoute resumeRoute(At a) {
+        a.fields("key","destination");return new Operations.ResumeRoute(resumeText(a.child("key")),labelId(a.child("destination")));
     }
     private Terminator operation(At a) {
         String kind = operationFields(a);
@@ -325,12 +337,15 @@ final class BindingReader {
         if (kind.equals("branch")) return new Operations.Branch(header(a.child("header")), expression(a.child("predicate")),
                 labelId(a.child("trueDestination")), labelId(a.child("falseDestination")));
         if (kind.equals("local.invoke")) return new Operations.LocalInvoke(header(a.child("header")), labelId(a.child("entry")),
-                a.child("completionPorts").list(p -> typedId(p, CompletionPortId.class)), labelId(a.child("resume")), conservativeEnvelope(a.child("fallback")));
+                a.child("completionPorts").list(p -> typedId(p, CompletionPortId.class)), labelId(a.child("resume")), conservativeEnvelope(a.child("fallback")),
+                a.object().containsKey("reentryGuard") ? Optional.of(reentryGuard(a.child("reentryGuard"))) : Optional.empty(),
+                a.object().containsKey("resumeRoutes") ? a.child("resumeRoutes").list(this::resumeRoute) : List.of());
         if (kind.equals("local.boundary")) return new Operations.LocalBoundary(header(a.child("header")), typedId(a.child("port"), CompletionPortId.class),
                 labelId(a.child("defaultDestination")), conservativeEnvelope(a.child("fallback")));
-        if (kind.equals("local.resume")) return new Operations.LocalResume(header(a.child("header")), conservativeEnvelope(a.child("fallback")));
+        if (kind.equals("local.resume")) return new Operations.LocalResume(header(a.child("header")), conservativeEnvelope(a.child("fallback")),
+                a.object().containsKey("resumeKey") ? Optional.of(resumeText(a.child("resumeKey"))) : Optional.empty());
         if (kind.equals("local.unwind")) return new Operations.LocalUnwind(header(a.child("header")), natural(a.child("count")),
-                labelId(a.child("destination")), conservativeEnvelope(a.child("fallback")));
+                labelId(a.child("destination")), conservativeEnvelope(a.child("fallback")), a.object().containsKey("all") && a.child("all").bool());
         if (kind.equals("invoke")) {
             return new Operations.Invoke(header(a.child("header")), a.child("action").modelText(), target(a.child("target")),
                     a.child("arguments").list(this::argument), a.child("results").list(this::place), invocationSignature(a.child("signature")), a.child("effectOperands").list(this::place),

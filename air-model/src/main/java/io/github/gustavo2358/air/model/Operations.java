@@ -158,13 +158,31 @@ public final class Operations {
         }
         @Override public String kind() { return "opaque"; }
     }
-    public record LocalInvoke(Header header, LabelId entry, List<CompletionPortId> completionPorts, LabelId resume, Envelopes.Envelope fallback) implements Terminator {
+    /** Logical activation identity, scoped to the invoking Unit (AIR 05 §7.6). */
+    public record ReentryGuard(String activationKey, LabelId destination) {
+        public ReentryGuard {
+            activationKey = text(activationKey, "activationKey");
+            destination = Objects.requireNonNull(destination, "destination");
+        }
+    }
+    public record ResumeRoute(String key, LabelId destination) {
+        public ResumeRoute { key=text(key,"key");destination=Objects.requireNonNull(destination,"destination"); }
+    }
+    public record LocalInvoke(Header header, LabelId entry, List<CompletionPortId> completionPorts, LabelId resume, Envelopes.Envelope fallback, Optional<ReentryGuard> reentryGuard, List<ResumeRoute> resumeRoutes) implements Terminator {
+        public LocalInvoke(Header header, LabelId entry, List<CompletionPortId> completionPorts, LabelId resume, Envelopes.Envelope fallback) {
+            this(header, entry, completionPorts, resume, fallback, Optional.empty(), List.of());
+        }
+        public LocalInvoke(Header header, LabelId entry, List<CompletionPortId> completionPorts, LabelId resume, Envelopes.Envelope fallback, Optional<ReentryGuard> reentryGuard) {
+            this(header, entry, completionPorts, resume, fallback, reentryGuard, List.of());
+        }
         public LocalInvoke {
             header = Objects.requireNonNull(header, "header");
             entry = Objects.requireNonNull(entry, "entry");
             completionPorts = List.copyOf(completionPorts);
             resume = Objects.requireNonNull(resume, "resume");
             fallback = Objects.requireNonNull(fallback, "fallback");
+            reentryGuard = Objects.requireNonNull(reentryGuard, "reentryGuard");
+            resumeRoutes = List.copyOf(resumeRoutes);
             
         }
         @Override public String kind() { return "local.invoke"; }
@@ -179,15 +197,18 @@ public final class Operations {
         }
         @Override public String kind() { return "local.boundary"; }
     }
-    public record LocalResume(Header header, Envelopes.Envelope fallback) implements Terminator {
+    public record LocalResume(Header header, Envelopes.Envelope fallback, Optional<String> resumeKey) implements Terminator {
+        public LocalResume(Header header, Envelopes.Envelope fallback) { this(header,fallback,Optional.empty()); }
         public LocalResume {
+            resumeKey=Objects.requireNonNull(resumeKey,"resumeKey").map(k->text(k,"resumeKey"));
             header = Objects.requireNonNull(header, "header");
             fallback = Objects.requireNonNull(fallback, "fallback");
             
         }
         @Override public String kind() { return "local.resume"; }
     }
-    public record LocalUnwind(Header header, BigInteger count, LabelId destination, Envelopes.Envelope fallback) implements Terminator {
+    public record LocalUnwind(Header header, BigInteger count, LabelId destination, Envelopes.Envelope fallback, boolean all) implements Terminator {
+        public LocalUnwind(Header header, BigInteger count, LabelId destination, Envelopes.Envelope fallback) { this(header,count,destination,fallback,false); }
         public LocalUnwind {
             header = Objects.requireNonNull(header, "header");
             count = Objects.requireNonNull(count, "count");

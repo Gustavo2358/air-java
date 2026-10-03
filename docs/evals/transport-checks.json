@@ -3,7 +3,7 @@
   "bindingVersion": "1.0.0",
   "airVersion": "2.0.0",
   "status": "DRAFT",
-  "analysis_ir_pin": "2c7f31f19efbe3211a2aea5bbda90173a9666fe2",
+  "analysis_ir_pin": "f8c723e5f023cde92a6f4650e3be9334ebbaba1a",
   "external_dependencies": [],
   "checks": [
     "decode scheduling preserves facts diagnostics and isolation",

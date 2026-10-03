@@ -29,6 +29,9 @@ public final class Capabilities {
     public static final Capability ENTRY_POSSIBILITIES = new Capability("entry.possibilities","1");
     public static final Capability MEMORY_REGIONS = new Capability("memory.regions","1");
     public static final Capability IBM1047 = new Capability("text.ebcdic.ibm1047","1");
+    public static final Capability LOCAL_RESUME_ROUTES = new Capability("control.local.resume_routes","1");
+    public static final Capability LOCAL_UNWIND_ALL = new Capability("control.local.unwind_all","1");
+    public static final Capability LOCAL_REENTRY_GUARD = new Capability("control.local.reentry_guard","1");
     public static final Capability LOCAL_CONTROL = new Capability("control.local","1");
     public static final Capability INDIRECT_CONTROL = new Capability("control.indirect","1");
 
