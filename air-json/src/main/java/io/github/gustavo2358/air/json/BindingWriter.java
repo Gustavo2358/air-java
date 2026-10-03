@@ -59,7 +59,7 @@ final class BindingWriter {
         return object("required", array(manifest.required(), this::capability), "provided", array(manifest.provided(), this::capability));
     }
     private Value capability(Capabilities.Capability capability) {
-        if (!List.of(Capabilities.LOCAL_CONTROL, Capabilities.LOCAL_REENTRY_GUARD, Capabilities.MEMORY_REGIONS, Capabilities.IBM1047, Capabilities.ENTRY_POSSIBILITIES, Capabilities.ENTRY_POSSIBILITIES_V2, Capabilities.TARGET_POSSIBILITIES, Capabilities.RESOURCE_BINDINGS).contains(capability) && !namePolicies.contains(capability))
+        if (!List.of(Capabilities.LOCAL_CONTROL, Capabilities.LOCAL_REENTRY_GUARD, Capabilities.LOCAL_RESUME_ROUTES, Capabilities.LOCAL_UNWIND_ALL, Capabilities.MEMORY_REGIONS, Capabilities.IBM1047, Capabilities.ENTRY_POSSIBILITIES, Capabilities.ENTRY_POSSIBILITIES_V2, Capabilities.TARGET_POSSIBILITIES, Capabilities.RESOURCE_BINDINGS).contains(capability) && !namePolicies.contains(capability))
             throw new AirJsonException(AirJsonException.Code.UNSUPPORTED_CAPABILITY,
                     "$.publication.capabilities", "Capability outside implemented transport profile");
         return object("name", capability.name(), "version", capability.version());
@@ -125,23 +125,25 @@ final class BindingWriter {
         if (t instanceof Operations.Branch b)
             return object("kind", "branch", "header", header(b.header()), "predicate", expression(b.predicate()),
                     "trueDestination", id(b.trueDestination()), "falseDestination", id(b.falseDestination()));
-        if (t instanceof Operations.LocalInvoke l && l.reentryGuard().isPresent()) {
-            var guard=l.reentryGuard().orElseThrow();
-            return object("kind", "local.invoke", "header", header(l.header()), "entry", id(l.entry()),
-                    "completionPorts", array(l.completionPorts(), this::id), "resume", id(l.resume()), "fallback", conservativeEnvelope(l.fallback()),
-                    "reentryGuard", object("activationKey", guard.activationKey(), "destination", id(guard.destination())));
+        if (t instanceof Operations.LocalInvoke l) {
+            var fields=new java.util.LinkedHashMap<>((object("kind", "local.invoke", "header", header(l.header()), "entry", id(l.entry()),
+                "completionPorts", array(l.completionPorts(), this::id), "resume", id(l.resume()), "fallback", conservativeEnvelope(l.fallback()))).fields());
+            l.reentryGuard().ifPresent(g->fields.put("reentryGuard",object("activationKey",g.activationKey(),"destination",id(g.destination()))));
+            if(!l.resumeRoutes().isEmpty())fields.put("resumeRoutes",array(l.resumeRoutes(),r->object("key",r.key(),"destination",id(r.destination()))));
+            return new Obj(fields);
         }
-        if (t instanceof Operations.LocalInvoke l)
-            return object("kind", "local.invoke", "header", header(l.header()), "entry", id(l.entry()),
-                    "completionPorts", array(l.completionPorts(), this::id), "resume", id(l.resume()), "fallback", conservativeEnvelope(l.fallback()));
         if (t instanceof Operations.LocalBoundary l)
             return object("kind", "local.boundary", "header", header(l.header()), "port", id(l.port()),
                     "defaultDestination", id(l.defaultDestination()), "fallback", conservativeEnvelope(l.fallback()));
-        if (t instanceof Operations.LocalResume l)
-            return object("kind", "local.resume", "header", header(l.header()), "fallback", conservativeEnvelope(l.fallback()));
-        if (t instanceof Operations.LocalUnwind l)
-            return object("kind", "local.unwind", "header", header(l.header()), "count", l.count().toString(),
-                    "destination", id(l.destination()), "fallback", conservativeEnvelope(l.fallback()));
+        if (t instanceof Operations.LocalResume l) {
+            var fields=new java.util.LinkedHashMap<>((object("kind","local.resume","header",header(l.header()),"fallback",conservativeEnvelope(l.fallback()))).fields());
+            l.resumeKey().ifPresent(k->fields.put("resumeKey",value(k)));return new Obj(fields);
+        }
+        if (t instanceof Operations.LocalUnwind l) {
+            var fields=new java.util.LinkedHashMap<>((object("kind","local.unwind","header",header(l.header()),"count",l.count().toString(),
+                "destination",id(l.destination()),"fallback",conservativeEnvelope(l.fallback()))).fields());
+            if(l.all())fields.put("all",value(true));return new Obj(fields);
+        }
         if (t instanceof Operations.Invoke i)
             return object("kind", "invoke", "header", header(i.header()), "action", i.action(), "target", target(i.target()),
                     "arguments", array(i.arguments(), this::argument), "results", array(i.results(), this::place),

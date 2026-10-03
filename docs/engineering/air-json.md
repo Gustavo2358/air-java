@@ -682,3 +682,24 @@ também control.local@1. O codec omite o campo em invocações comuns e conserva
 seus bytes canônicos anteriores; null e campos extras são rejeitados. A validação
 confere capacidade e referência, sem executar a pilha ou certificar a política
 do produtor. Contratos negativos e roundtrip estão em LocalControlChecks.
+
+### Selected local returns and complete unwind
+
+The normative `control.local.resume_routes@1` extension adds optional
+`LocalInvoke.resumeRoutes` and `LocalResume.resumeKey`. Route keys are nonblank and
+unique within an invocation; destinations must resolve in the same Unit. A keyed
+resume uses only the top frame's matching route. A missing key or empty stack has
+the existing `invalid_local_return` outcome. The codec carries these facts; it
+does not execute the stack or infer routes.
+
+`control.local.unwind_all@1` adds `LocalUnwind.all=true`, requiring `count=0`.
+Execution discards all local frames, including guards and routes, before entering
+the destination. Ordinary fixed-count unwind remains unchanged. Both extensions
+require `control.local@1`; missing capabilities are rejected by the validator.
+
+Old constructors remain available. The writer omits absent keys, empty route lists
+and `all=false`, preserving the existing canonical representation.
+`LocalControlChecks.selectedResumes` covers manually authored wire, roundtrip,
+missing capabilities, duplicate/blank keys, invalid destinations and malformed
+fields. Local FAST and qualification passed on 2026-10-02: 189 model and 136
+transport checks.

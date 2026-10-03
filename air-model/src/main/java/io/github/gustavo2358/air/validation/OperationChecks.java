@@ -161,6 +161,10 @@ final class OperationChecks {
                     c.capability(Capabilities.LOCAL_REENTRY_GUARD,id);
                     refs.label(guard.destination(),id.unit(),id);
                 });
+                if(!local.resumeRoutes().isEmpty())c.capability(Capabilities.LOCAL_RESUME_ROUTES,id);
+                if(local.resumeRoutes().stream().map(Operations.ResumeRoute::key).distinct().count()!=local.resumeRoutes().size())
+                    c.error("I-01",id,"duplicate local resume route key");
+                local.resumeRoutes().forEach(route->refs.label(route.destination(),id.unit(),id));
                 c.refs(local.completionPorts(),id);
                 for(CompletionPortId port:local.completionPorts())
                     if(!port.unit().equals(id.unit()))
@@ -176,10 +180,15 @@ final class OperationChecks {
             }
             case Operations.LocalResume local -> {
                 c.capability(Capabilities.LOCAL_CONTROL,id);
+                if(local.resumeKey().isPresent())c.capability(Capabilities.LOCAL_RESUME_ROUTES,id);
                 refs.envelope(local.fallback(),id,false);
             }
             case Operations.LocalUnwind local -> {
                 c.capability(Capabilities.LOCAL_CONTROL,id);
+                if(local.all()) {
+                    c.capability(Capabilities.LOCAL_UNWIND_ALL,id);
+                    if(local.count().signum()!=0)c.error("I-08",id,"unwind all requires zero count");
+                }
                 refs.label(local.destination(),id.unit(),id);
                 refs.envelope(local.fallback(),id,false);
             }

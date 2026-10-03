@@ -247,7 +247,7 @@ final class ReferenceChecks {
                 if(!names.add(capability.name()))
                     c.error("I-43",c.index.publication.id(),
                             "duplicate capability name: "+capability.name());
-                boolean standard=List.of(Capabilities.MEMORY_REGIONS,Capabilities.LOCAL_CONTROL, Capabilities.LOCAL_REENTRY_GUARD,
+                boolean standard=List.of(Capabilities.MEMORY_REGIONS,Capabilities.LOCAL_CONTROL, Capabilities.LOCAL_REENTRY_GUARD, Capabilities.LOCAL_RESUME_ROUTES, Capabilities.LOCAL_UNWIND_ALL,
                         Capabilities.INDIRECT_CONTROL,Capabilities.IBM1047,Capabilities.ENTRY_POSSIBILITIES,Capabilities.ENTRY_POSSIBILITIES_V2,Capabilities.TARGET_POSSIBILITIES,Capabilities.RESOURCE_BINDINGS).contains(capability);
                 boolean profile=capability.name().startsWith("AIR-");
                 if(profile) c.obligation("profile",c.index.publication.id(),
