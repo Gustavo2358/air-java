@@ -37,3 +37,5 @@ Nenhum item ativo. W2B NOT_STARTED / NOT_AUTHORIZED. W2D NOT_STARTED / NOT_AUTHO
 - [WORK-AIR-JSON-005 — conservative operation transport](active/WORK-AIR-JSON-005.yaml): IN_PROGRESS / Draft review.
 
 [WORK-FD-HARNESS](active/WORK-FD-HARNESS.json): IN_PROGRESS; preparação para revisão, sem merge.
+
+[Prioridades 1 e 2 — integração aprovada](priority2-integration.md): o merge do PR #27 efetiva DONE.
