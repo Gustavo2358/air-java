@@ -22,6 +22,9 @@ final class OperationChecks {
     }
 
     private static Optional<BigInteger> textLength(Expression expression) {
+        if(expression instanceof Expressions.FormatDecimal f)return Optional.of(DecimalText.describe(f.parts()).extent());
+        if(expression instanceof Expressions.IntegerDigits digits)return Optional.of(digits.digits());
+        if(expression instanceof Expressions.FillText fill)return Optional.of(fill.length());
         if(expression instanceof Expressions.FitText fit)return Optional.of(fit.length());
         if(expression instanceof Expressions.Literal literal&&literal.value() instanceof Values.TextValue text)
             return Optional.of(BigInteger.valueOf(text.value().codePointCount(0,text.value().length())));
@@ -54,6 +57,11 @@ final class OperationChecks {
             } else if(choice.remainder() instanceof Scopes.NoMemory && sameKnown) {
                 c.error("I-51",id,"closed homogeneous choice must preserve its known domain");
             }
+        } else if(operand instanceof Expressions.FillText fill) {
+            Optional<BigInteger> length=textLength(fill.character());
+            if(length.isEmpty()) limit(id,"fill character cardinality is not statically proven");
+            else if(!length.get().equals(BigInteger.ONE))
+                c.error("I-09/I-46",id,"fill character must contain exactly one Unicode scalar");
         } else if(operand instanceof Expressions.SliceText slice) {
             Optional<BigInteger> from=integer(slice.start());
             Optional<BigInteger> count=integer(slice.count());

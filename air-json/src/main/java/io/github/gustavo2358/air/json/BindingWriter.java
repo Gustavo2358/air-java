@@ -281,6 +281,7 @@ final class BindingWriter {
         if (k.type() == Types.Builtin.TEXT) kind = "text";
         else if (k.type() == Types.Builtin.BOOL) kind = "bool";
         else if (k.type() == Types.Builtin.INT) kind = "int";
+        else if (k.type() == Types.Builtin.DECIMAL) kind = "decimal";
         else if (k.type() == Types.Builtin.BYTES) kind = "bytes";
         else throw limit("$.typeRef", "Only known(text/bool/int) implemented");
         return object("kind", "known", "type", object("kind", kind));
@@ -347,6 +348,7 @@ final class BindingWriter {
     }
     private Value literalValue(Values.LiteralValue v) {
         if (v instanceof Values.IntValue i) return object("kind", "int", "value", i.value().toString());
+        if (v instanceof Values.DecimalValue d) return object("kind","decimal","coefficient",d.coefficient().toString(),"scale",d.scale().toString());
         if (v instanceof Values.BytesValue b) return object("kind", "bytes", "base64", java.util.Base64.getEncoder().encodeToString(b.toByteArray()));
         if (!(v instanceof Values.TextValue t)) throw limit("$.literal.value", "Only LiteralValue.text implemented");
         return object("kind", "text", "value", t.value());
@@ -365,6 +367,16 @@ final class BindingWriter {
             if (e instanceof Expressions.Unknown u && frame.next < u.dependencies().size()) {
                 stack.push(new ExpressionFrame(u.dependencies().get(frame.next++))); continue;
             }
+            if(e instanceof Expressions.ParseInteger p&&frame.next<2) {stack.push(new ExpressionFrame(frame.next++==0?p.value():p.onInvalid()));continue;}
+            if(e instanceof Expressions.FormatDecimal f && frame.next++==0) {stack.push(new ExpressionFrame(f.value()));continue;}
+            if(e instanceof Expressions.IntegerDigits d && frame.next++==0) {stack.push(new ExpressionFrame(d.value()));continue;}
+            if(e instanceof Expressions.WrapInteger w && frame.next++==0) {
+                stack.push(new ExpressionFrame(w.value()));continue;
+            }
+            if(e instanceof Expressions.FitDecimal f && frame.next++==0) {
+                stack.push(new ExpressionFrame(f.value()));continue;
+            }
+            if(e instanceof Expressions.FillText f && frame.next++==0) {stack.push(new ExpressionFrame(f.character()));continue;}
             if(e instanceof Expressions.FitText f && frame.next++==0) {
                 stack.push(new ExpressionFrame(f.value()));continue;
             }
@@ -374,16 +386,29 @@ final class BindingWriter {
             if(e instanceof Expressions.Binary b&&supportedBinary(b.operator())&&frame.next<2){
                 stack.push(new ExpressionFrame(frame.next++==0?b.left():b.right()));continue;
             }
-            if(e instanceof Expressions.Unary u&&u.operator()==Expressions.UnaryOperator.NOT&&frame.next++==0){
+            if(e instanceof Expressions.Unary u&&supportedUnary(u.operator())&&frame.next++==0){
                 stack.push(new ExpressionFrame(u.argument()));continue;
             }
             Value result;
-            if(e instanceof Expressions.Unary u&&u.operator()==Expressions.UnaryOperator.NOT)
-                result=object("kind","unary","header",operandHeader(u.header()),"operator","not","argument",frame.dependencies.getFirst());
+            if(e instanceof Expressions.Unary u&&supportedUnary(u.operator()))
+                result=object("kind","unary","header",operandHeader(u.header()),"operator",unaryToken(u.operator()),"argument",frame.dependencies.getFirst());
             else if(e instanceof Expressions.SliceText t)
                 result=object("kind","slice_text","header",operandHeader(t.header()),"value",frame.dependencies.get(0),"start",frame.dependencies.get(1),"count",frame.dependencies.get(2));
             else if(e instanceof Expressions.Binary b&&supportedBinary(b.operator()))
                 result=object("kind","binary","header",operandHeader(b.header()),"operator",binaryToken(b.operator()),"left",frame.dependencies.get(0),"right",frame.dependencies.get(1));
+            else if(e instanceof Expressions.ParseInteger p)
+                result=object("kind","parse_integer","header",operandHeader(p.header()),"value",frame.dependencies.get(0),"onInvalid",frame.dependencies.get(1));
+            else if(e instanceof Expressions.FormatDecimal f)
+                result=object("kind","format_decimal","header",operandHeader(f.header()),"value",frame.dependencies.getFirst(),
+                    "parts",new Arr(f.parts().stream().map(p->(Value)object("kind",decimalPartToken(p.kind()),"count",p.count().toString(),"text",p.text(),"negative",p.negative())).toList()));
+            else if(e instanceof Expressions.IntegerDigits d)
+                result=object("kind","integer_digits","header",operandHeader(d.header()),"value",frame.dependencies.getFirst(),"digits",d.digits().toString());
+            else if(e instanceof Expressions.WrapInteger w)
+                result=object("kind","wrap_integer","header",operandHeader(w.header()),"value",frame.dependencies.getFirst(),"width",w.width().toString(),"signed",w.signed());
+            else if(e instanceof Expressions.FitDecimal f)
+                result=object("kind","fit_decimal","header",operandHeader(f.header()),"value",frame.dependencies.getFirst(),"digits",f.digits().toString(),"scale",f.scale().toString(),"absolute",f.absolute());
+            else if(e instanceof Expressions.FillText f)
+                result=object("kind","fill_text","header",operandHeader(f.header()),"character",frame.dependencies.getFirst(),"length",f.length().toString());
             else if(e instanceof Expressions.FitText f)
                 result=object("kind","fit_text","header",operandHeader(f.header()),"value",frame.dependencies.getFirst(),"length",f.length().toString(),"pad",f.pad());
             else if (e instanceof Expressions.Unknown u)
@@ -400,11 +425,13 @@ final class BindingWriter {
         }
         throw new IllegalStateException("Expression frame invariant");
     }
+    private static String unaryToken(Expressions.UnaryOperator op) { return switch(op) { case NOT -> "not"; case ABS -> "abs"; case TO_DECIMAL -> "to_decimal"; case TO_INT -> "to_int"; case IS_DIGITS -> "is_digits"; default -> throw new IllegalArgumentException("unsupported unary"); }; }
+    private static boolean supportedUnary(Expressions.UnaryOperator op) { return op==Expressions.UnaryOperator.NOT||op==Expressions.UnaryOperator.ABS||op==Expressions.UnaryOperator.TO_DECIMAL||op==Expressions.UnaryOperator.TO_INT||op==Expressions.UnaryOperator.IS_DIGITS; }
     private static boolean supportedBinary(Expressions.BinaryOperator op) {
-        return switch(op){case CONCAT,EQ,NE,LT,LE,GT,GE,AND,OR -> true;default -> false;};
+        return switch(op){case MUL,CONCAT,EQ,NE,LT,LE,GT,GE,AND,OR -> true;default -> false;};
     }
     private static String binaryToken(Expressions.BinaryOperator op) {
-        return switch(op){case CONCAT -> "concat";case EQ -> "eq";case NE -> "ne";case LT -> "lt";case LE -> "le";case GT -> "gt";case GE -> "ge";case AND -> "and";case OR -> "or";default -> throw new IllegalArgumentException("unsupported binary");};
+        return switch(op){case MUL -> "mul";case CONCAT -> "concat";case EQ -> "eq";case NE -> "ne";case LT -> "lt";case LE -> "le";case GT -> "gt";case GE -> "ge";case AND -> "and";case OR -> "or";default -> throw new IllegalArgumentException("unsupported binary");};
     }
     private Value conservativeEnvelope(Envelopes.Envelope e) {
         var m = e.memory(); var c = e.control(); var d = e.dependencies();
@@ -545,5 +572,11 @@ final class BindingWriter {
     }
     private Value owned(String domain, Id i, UnitId unit) {
         return object("domain", domain, "publication", i.publication().localId(), "unit", unit.localId(), "localId", i.localId());
+    }
+    private static String decimalPartToken(DecimalText.Kind kind) {
+        return switch(kind) {
+            case DIGITS -> "DIGITS"; case SUPPRESS_SPACE -> "SUPPRESS_SPACE"; case SUPPRESS_STAR -> "SUPPRESS_STAR";
+            case INSERT -> "INSERT"; case RADIX -> "RADIX"; case SIGN -> "SIGN"; case FLOAT_SIGN -> "FLOAT_SIGN";
+        };
     }
 }

@@ -3,7 +3,7 @@
   "bindingVersion": "1.0.0",
   "airVersion": "2.0.0",
   "status": "DRAFT",
-  "analysis_ir_pin": "f8c723e5f023cde92a6f4650e3be9334ebbaba1a",
+  "analysis_ir_pin": "61e13365f09bf3fff951ae6f0c63b0d64e2698e1",
   "external_dependencies": [],
   "checks": [
     "decode scheduling preserves facts diagnostics and isolation",
@@ -18,6 +18,7 @@
     "CORE-SIZE JSON independent cardinality series",
     "CORE-SIZE codec operational result remains explicit",
     "ST-W6 generic fit_text transport",
+    "Numeric decimal expression transport",
     "logical text slice and concat",
     "logical text predicate transport",
     "ordered comparison transport",
