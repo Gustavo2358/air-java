@@ -1,9 +1,25 @@
 # AIR JSON — cobertura atual e história
 
-A autoridade vigente é `analysis-ir@2c7f31f19efbe3211a2aea5bbda90173a9666fe2`,
-AIR 2.0.0 / binding 1.0.0 DRAFT, fixada em [sources.lock](../sources.lock.json).
+A autoridade vigente é o commit de `analysis-ir` fixado em
+[sources.lock](../sources.lock.json), AIR 2.0.0 / binding 1.0.0 DRAFT.
 As seções históricas abaixo registram subsets adicionados progressivamente;
 a suíte atual e seus limites são o inventário de implementação.
+
+## Formatação decimal — catálogo JSON canônico
+
+`format_decimal.parts[].kind` usa exatamente `DIGITS`, `SUPPRESS_SPACE`,
+`SUPPRESS_STAR`, `INSERT`, `RADIX`, `SIGN` e `FLOAT_SIGN`. O catálogo é fechado,
+sensível à caixa, sem aliases minúsculos/mistos; a expressão `format_decimal`
+permanece minúscula. A especificação foi corrigida para explicitar a grafia
+já emitida e aceita pelo codec. Não houve mudança de reader, writer ou modelo.
+
+`DecimalPartBindingChecks` usa sete segmentos JSON escritos literalmente e um
+fixture base manual, sem produzir a entrada com o writer. Para cada segmento,
+verifica a publicação decodificada contra fatos Java independentes e compara
+todos os bytes emitidos com o JSON canônico manual. Também rejeita 21 casos
+minúsculos/mistos/fora do catálogo. O check integra CodecSuite/FAST além do
+round-trip de NumericExpressionChecks. Mutações isoladas do writer e de ambos
+reader/writer para minúsculas são detectadas pelo oracle.
 
 ## Stage 5 / S1 — transporte de controle local
 
