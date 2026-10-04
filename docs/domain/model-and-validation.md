@@ -44,3 +44,17 @@ regra PRECONDITION_NOT_DISCHARGED e proprietário OperationId (direto ou via Ope
 Retorna conjunto imutável; entry forte e limite sem escopo não são admitidos.
 O status de validação não muda. O consumidor deve manter esses motivos e usar
 atualização fraca nas operações afetadas. A biblioteca não executa essa análise.
+
+
+### Literal fitting and codec write preconditions
+
+A `fit_text` of a TEXT literal has exactly the declared output extent. Codec
+validation checks only the retained literal prefix and, when padding is needed,
+the single pad scalar. ASCII and IBM1047 are single-byte codecs, so representable
+scalars plus equal extents discharge this write precondition. Discarded suffixes
+and unused padding cannot invalidate the output. This is a structural check under
+AIR 02 fitting and AIR memory codec rules; it does not select a source charset.
+The algorithm is linear in the supplied literal, independent of the fitted size.
+An unknown or unsupported expression still leaves the precondition open.
+Oracle: A fitted to 10^9 ASCII bytes passes without expansion; retained euro/pad
+fails; a discarded euro suffix passes. Destination extent mismatch is invalid.

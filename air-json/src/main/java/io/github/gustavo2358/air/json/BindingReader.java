@@ -551,11 +551,11 @@ final class BindingReader {
             case "known" -> {
                 a.fields("kind", "type"); var type = a.child("type");
                 switch (type.kind()) {
-                    case "text", "bool", "int", "bytes" -> type.fields("kind");
-                    case "decimal", "opaque_type", "label" -> throw type.unsupported("Type " + type.kind());
+                    case "text", "bool", "int", "bytes", "decimal" -> type.fields("kind");
+                    case "opaque_type", "label" -> throw type.unsupported("Type " + type.kind());
                     default -> throw Json.input(type.path(), "Unknown Type kind");
                 }
-                yield Types.known(switch(type.kind()){case "bool"->Types.Builtin.BOOL;case "int"->Types.Builtin.INT;case "bytes"->Types.Builtin.BYTES;default->Types.Builtin.TEXT;});
+                yield Types.known(switch(type.kind()){case "decimal"->Types.Builtin.DECIMAL;case "bool"->Types.Builtin.BOOL;case "int"->Types.Builtin.INT;case "bytes"->Types.Builtin.BYTES;default->Types.Builtin.TEXT;});
             }
             case "unknown_type" -> { a.fields("kind", "uncertainty"); yield new Types.UnknownType(uncertaintyId(a.child("uncertainty"))); }
             default -> throw Json.input(a.path(), "Unknown TypeRef kind");
@@ -671,6 +671,12 @@ final class BindingReader {
             this.at = at;
             dependencies = at.kind().equals("unknown")
                     ? at.fields("kind", "header", "typeRef", "dependencies", "remainingReads", "reason").child("dependencies").elements()
+                    : at.kind().equals("parse_integer") ? List.of(at.fields("kind","header","value","onInvalid").child("value"),at.child("onInvalid"))
+                    : at.kind().equals("format_decimal") ? List.of(at.fields("kind","header","value","parts").child("value"))
+                    : at.kind().equals("integer_digits") ? List.of(at.fields("kind","header","value","digits").child("value"))
+                    : at.kind().equals("wrap_integer") ? List.of(at.fields("kind","header","value","width","signed").child("value"))
+                    : at.kind().equals("fit_decimal") ? List.of(at.fields("kind","header","value","digits","scale","absolute").child("value"))
+                    : at.kind().equals("fill_text") ? List.of(at.fields("kind","header","character","length").child("character"))
                     : at.kind().equals("fit_text") ? List.of(at.fields("kind","header","value","length","pad").child("value"))
                     : at.kind().equals("slice_text") ? List.of(at.fields("kind","header","value","start","count").child("value"),at.child("start"),at.child("count"))
                     : at.kind().equals("unary") ? List.of(at.fields("kind","header","operator","argument").child("argument"))
@@ -695,6 +701,36 @@ final class BindingReader {
                 }
                 case "unknown" -> new Expressions.Unknown(operandHeader(a.child("header")), typeRef(a.child("typeRef")),
                         frame.values, memoryBound(a.child("remainingReads")), uncertaintyId(a.child("reason")));
+                case "parse_integer" -> new Expressions.ParseInteger(operandHeader(a.child("header")),frame.values.get(0),frame.values.get(1));
+                case "format_decimal" -> new Expressions.FormatDecimal(operandHeader(a.child("header")),frame.values.getFirst(),
+                    a.child("parts").list(p->{
+                        p.fields("kind","count","text","negative");
+                        DecimalText.Kind kind=switch(p.child("kind").text()) {
+                            case "DIGITS" -> DecimalText.Kind.DIGITS; case "SUPPRESS_SPACE" -> DecimalText.Kind.SUPPRESS_SPACE;
+                            case "SUPPRESS_STAR" -> DecimalText.Kind.SUPPRESS_STAR; case "INSERT" -> DecimalText.Kind.INSERT;
+                            case "RADIX" -> DecimalText.Kind.RADIX; case "SIGN" -> DecimalText.Kind.SIGN;
+                            case "FLOAT_SIGN" -> DecimalText.Kind.FLOAT_SIGN;
+                            default -> throw Json.input(p.path(),"unknown decimal format segment");
+                        };
+                        try {return new DecimalText.Part(kind,natural(p.child("count")),p.child("text").text(),p.child("negative").text());}
+                        catch(IllegalArgumentException e){throw Json.input(p.path(),"incoherent decimal format segment");}
+                    }));
+                case "integer_digits" -> {
+                    var digits=natural(a.child("digits"));
+                    if(digits.signum()==0)throw Json.input(a.child("digits").path(),"positive digit length required");
+                    yield new Expressions.IntegerDigits(operandHeader(a.child("header")),frame.values.getFirst(),digits);
+                }
+                case "wrap_integer" -> {
+                    var width=natural(a.child("width"));
+                    if(width.signum()==0)throw Json.input(a.child("width").path(),"positive bit width required");
+                    yield new Expressions.WrapInteger(operandHeader(a.child("header")),frame.values.getFirst(),width,a.child("signed").bool());
+                }
+                case "fit_decimal" -> {
+                    var digits=natural(a.child("digits"));
+                    if(digits.signum()==0)throw Json.input(a.child("digits").path(),"positive decimal precision required");
+                    yield new Expressions.FitDecimal(operandHeader(a.child("header")),frame.values.getFirst(),digits,integer(a.child("scale")),a.child("absolute").bool());
+                }
+                case "fill_text" -> new Expressions.FillText(operandHeader(a.child("header")),frame.values.getFirst(),natural(a.child("length")));
                 case "fit_text" -> {
                     String pad=a.child("pad").text();
                     if(pad.codePointCount(0,pad.length())!=1)throw Json.input(a.child("pad").path(),"fit pad requires exactly one scalar");
@@ -708,7 +744,12 @@ final class BindingReader {
                         case "ne" -> Expressions.BinaryOperator.NE;
                         case "and" -> Expressions.BinaryOperator.AND;
                         case "or" -> Expressions.BinaryOperator.OR;
-                        case "lt","le","gt","ge","add","sub","mul" -> throw a.unsupported("binary operator "+a.child("operator").text());
+                        case "lt" -> Expressions.BinaryOperator.LT;
+                        case "le" -> Expressions.BinaryOperator.LE;
+                        case "gt" -> Expressions.BinaryOperator.GT;
+                        case "ge" -> Expressions.BinaryOperator.GE;
+                        case "mul" -> Expressions.BinaryOperator.MUL;
+                        case "add","sub" -> throw a.unsupported("binary operator "+a.child("operator").text());
                         default -> throw Json.input(a.child("operator").path(),"Unknown binary operator");
                     };
                     yield new Expressions.Binary(operandHeader(a.child("header")),operator,frame.values.get(0),frame.values.get(1));
@@ -716,7 +757,11 @@ final class BindingReader {
                 case "unary" -> {
                     var operator=switch(a.child("operator").text()) {
                         case "not" -> Expressions.UnaryOperator.NOT;
-                        case "neg","to_decimal","length" -> throw a.unsupported("unary operator "+a.child("operator").text());
+                        case "abs" -> Expressions.UnaryOperator.ABS;
+                        case "to_decimal" -> Expressions.UnaryOperator.TO_DECIMAL;
+                        case "to_int" -> Expressions.UnaryOperator.TO_INT;
+                        case "is_digits" -> Expressions.UnaryOperator.IS_DIGITS;
+                        case "neg","length" -> throw a.unsupported("unary operator "+a.child("operator").text());
                         default -> throw Json.input(a.child("operator").path(),"Unknown unary operator");
                     };
                     yield new Expressions.Unary(operandHeader(a.child("header")),operator,frame.values.getFirst());
@@ -750,7 +795,10 @@ final class BindingReader {
                     throw Json.input(a.child("base64").path(), "Nonzero base64 padding bits");
                 yield Values.BytesValue.of(bytes);
             }
-            case "bool", "decimal", "label" -> throw a.unsupported("LiteralValue " + a.kind());
+            case "decimal" -> {
+                a.fields("kind","coefficient","scale"); yield new Values.DecimalValue(integer(a.child("coefficient")),natural(a.child("scale")));
+            }
+            case "bool", "label" -> throw a.unsupported("LiteralValue " + a.kind());
             default -> throw Json.input(a.path(), "Unknown LiteralValue kind");
         };
     }
@@ -862,6 +910,10 @@ final class BindingReader {
         var including = artifactId(a.child("including")); var included = artifactId(a.child("included"));
         var name = a.child("requestedName").modelText(); var site = a.child("site").optional(this::location);
         return a.construct(() -> new Origins.IncludeFrame(including, included, name, site));
+    }
+    private BigInteger integer(At a) {
+        String s=a.text();if(!s.matches("0|-?[1-9][0-9]*"))throw Json.input(a.path(),"Expected canonical Integer string");
+        return new BigInteger(s);
     }
     private BigInteger natural(At a) {
         String s = a.text();

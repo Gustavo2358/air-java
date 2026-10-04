@@ -22,6 +22,9 @@ final class OperationChecks {
     }
 
     private static Optional<BigInteger> textLength(Expression expression) {
+        if(expression instanceof Expressions.FormatDecimal f)return Optional.of(DecimalText.describe(f.parts()).extent());
+        if(expression instanceof Expressions.IntegerDigits digits)return Optional.of(digits.digits());
+        if(expression instanceof Expressions.FillText fill)return Optional.of(fill.length());
         if(expression instanceof Expressions.FitText fit)return Optional.of(fit.length());
         if(expression instanceof Expressions.Literal literal&&literal.value() instanceof Values.TextValue text)
             return Optional.of(BigInteger.valueOf(text.value().codePointCount(0,text.value().length())));
@@ -54,6 +57,11 @@ final class OperationChecks {
             } else if(choice.remainder() instanceof Scopes.NoMemory && sameKnown) {
                 c.error("I-51",id,"closed homogeneous choice must preserve its known domain");
             }
+        } else if(operand instanceof Expressions.FillText fill) {
+            Optional<BigInteger> length=textLength(fill.character());
+            if(length.isEmpty()) limit(id,"fill character cardinality is not statically proven");
+            else if(!length.get().equals(BigInteger.ONE))
+                c.error("I-09/I-46",id,"fill character must contain exactly one Unicode scalar");
         } else if(operand instanceof Expressions.SliceText slice) {
             Optional<BigInteger> from=integer(slice.start());
             Optional<BigInteger> count=integer(slice.count());
@@ -550,6 +558,19 @@ final class OperationChecks {
                 && extent.filter(fit.length()::equals).isPresent()
                 && MemoryCodecs.encodeText(codec,new Values.TextValue(fit.pad()),BigInteger.ONE).status()==MemoryCodecs.Status.EXACT)
             discharged=true;
+        if(value instanceof Expressions.FitText fit && fit.value() instanceof Expressions.Literal literal
+                && literal.value() instanceof Values.TextValue text && extent.isPresent()
+                && (codec instanceof Memory.AsciiText || MemoryCodecs.isIbm1047(codec))) {
+            discharged=true;
+            int scalars=text.value().codePointCount(0,text.value().length());
+            int retained=fit.length().min(BigInteger.valueOf(scalars)).intValueExact();
+            var prefix=new Values.TextValue(text.value().substring(0,text.value().offsetByCodePoints(0,retained)));
+            boolean representable=MemoryCodecs.encodeText(codec,prefix,BigInteger.valueOf(retained)).status()==MemoryCodecs.Status.EXACT;
+            if(fit.length().compareTo(BigInteger.valueOf(scalars))>0)
+                representable &= MemoryCodecs.encodeText(codec,new Values.TextValue(fit.pad()),BigInteger.ONE).status()==MemoryCodecs.Status.EXACT;
+            if(!extent.orElseThrow().equals(fit.length()) || !representable)
+                c.error("I-46",id,"fitted text value does not fit exact declared codec view");
+        }
         if(value instanceof Expressions.Literal literal && extent.isPresent()) {
             BigInteger size=extent.get();
             if(codec instanceof Memory.IdentityBytes

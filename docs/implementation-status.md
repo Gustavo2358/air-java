@@ -231,3 +231,21 @@ são reexecutados sobre a correção completa antes da publicação.
 Goldens preexistentes permanecem byte-exatos. Contagens de obrigações W2C mudaram
 intencionalmente pela remoção de I-59 redundante; I-09/I-56 e todos os contracasos
 estruturais permanecem. A correção de harness não altera produção/modelo/codec.
+
+## Interpretação textual explícita (prioridade 2, em revisão)
+
+ParseInteger recebe TEXT + fallback INT explícito e retorna INT. IS_DIGITS
+recebe TEXT e retorna BOOL. A biblioteca valida esses domínios, preserva os dois
+operandos no traversal e no codec, sem executar conversão nem inventar zero.
+A autoridade de trabalho é AIR 02 §11; pins finais serão coordenados no PR.
+
+## Conversões e preenchimento simbólico (prioridade 2)
+
+FitDecimal, WrapInteger, IntegerDigits e FormatDecimal transportam ajustes
+numéricos explícitos. FillText repete uma expressão de um escalar Unicode por
+comprimento natural; não expande caracteres e não escolhe a collating sequence.
+TO_INT, ABS, TO_DECIMAL e MUL conservam domínios e leituras. O Validator rejeita
+tipos e descritores incoerentes; comprimento de caractere não provado gera uma
+obrigação explícita. NumericExpressionChecks verifica round-trip, limites,
+Unicode, campos adversariais e contagens grandes com payload constante.
+A autoridade está fixada no commit corrente de docs/sources.lock.json.

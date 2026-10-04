@@ -43,8 +43,11 @@ public final class CodecSuite {
         check("CORE-SIZE JSON independent cardinality series", JsonCapacityChecks::series);
         check("CORE-SIZE codec operational result remains explicit", JsonCapacityChecks::validationBudget);
         check("ST-W6 generic fit_text transport", FitTextChecks::run);
+        check("Numeric decimal expression transport", NumericExpressionChecks::run);
+        check("DecimalPart literal binding tokens and canonical output", DecimalPartBindingChecks::run);
         check("logical text slice and concat", LogicalTextExpressionChecks::run);
         check("logical text predicate transport", TextPredicateChecks::run);
+        check("ordered comparison transport", OrderedComparisonChecks::run);
         check("ST-W7 initial state transport", InitialStateChecks::run);
         check("RF-W4 partial target domain and physical choices", ChoiceTargetChecks::run);
         check("RF-W1 possible entry candidates and required remainder", PossibleInitialChecks::run);

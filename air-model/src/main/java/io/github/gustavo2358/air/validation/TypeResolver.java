@@ -42,8 +42,10 @@ final class TypeResolver {
                 Optional<TypeRef> t=cached(u.argument());
                 yield switch(u.operator()) {
                     case NOT -> { expect(t,Builtin.BOOL,u.header().id()); yield known(Builtin.BOOL); }
-                    case NEG -> { numeric(t,u.header().id()); yield t; }
+                    case NEG, ABS -> { numeric(t,u.header().id()); yield t; }
                     case TO_DECIMAL -> { expect(t,Builtin.INT,u.header().id()); yield known(Builtin.DECIMAL); }
+                    case TO_INT -> { expect(t,Builtin.DECIMAL,u.header().id()); yield known(Builtin.INT); }
+                    case IS_DIGITS -> { expect(t,Builtin.TEXT,u.header().id()); yield known(Builtin.BOOL); }
                     case LENGTH -> { textOrBytes(t,u.header().id()); yield known(Builtin.INT); }
                 };
             }
@@ -59,6 +61,12 @@ final class TypeResolver {
                 };
             }
             case Expressions.Quantize q -> { expect(cached(q.value()),Builtin.DECIMAL,q.header().id()); yield known(Builtin.DECIMAL); }
+            case Expressions.ParseInteger p -> { expect(cached(p.value()),Builtin.TEXT,p.header().id()); expect(cached(p.onInvalid()),Builtin.INT,p.header().id()); yield known(Builtin.INT); }
+            case Expressions.FormatDecimal f -> { expect(cached(f.value()),Builtin.DECIMAL,f.header().id()); yield known(Builtin.TEXT); }
+            case Expressions.IntegerDigits d -> { expect(cached(d.value()),Builtin.INT,d.header().id()); yield known(Builtin.TEXT); }
+            case Expressions.WrapInteger w -> { expect(cached(w.value()),Builtin.INT,w.header().id()); yield known(Builtin.INT); }
+            case Expressions.FitDecimal f -> { expect(cached(f.value()),Builtin.DECIMAL,f.header().id()); yield known(Builtin.DECIMAL); }
+            case Expressions.FillText f -> { expect(cached(f.character()),Builtin.TEXT,f.header().id()); yield known(Builtin.TEXT); }
             case Expressions.FitText f -> { expect(cached(f.value()),Builtin.TEXT,f.header().id()); yield known(Builtin.TEXT); }
             case Expressions.SliceText s -> {
                 expect(cached(s.value()),Builtin.TEXT,s.header().id());

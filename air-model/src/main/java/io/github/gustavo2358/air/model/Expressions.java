@@ -8,7 +8,7 @@ import static io.github.gustavo2358.air.model.Require.*;
 /** Typed AIR 2.0 values. Collections are defensively copied; no transport dependencies. */
 public final class Expressions {
     private Expressions() {}
-    public enum UnaryOperator { NOT, NEG, TO_DECIMAL, LENGTH }
+    public enum UnaryOperator { NOT, NEG, ABS, TO_DECIMAL, TO_INT, IS_DIGITS, LENGTH }
     public enum BinaryOperator { EQ, NE, LT, LE, GT, GE, AND, OR, ADD, SUB, MUL, CONCAT }
     public enum Rounding { TOWARD_ZERO, HALF_EVEN }
     public record Literal(Operand.Header header, Values.LiteralValue value) implements Expression {
@@ -67,6 +67,38 @@ public final class Expressions {
             
         }
 
+    }
+    /** Value-level wrapping; does not infer an encoding or a memory layout. */
+    public record WrapInteger(Operand.Header header,Expression value,BigInteger width,boolean signed) implements Expression {
+        public WrapInteger { Objects.requireNonNull(header);Objects.requireNonNull(value);Objects.requireNonNull(width);
+            if(width.signum()<=0)throw new IllegalArgumentException("positive bit width"); }
+    }
+    /** Explicit finite decimal adjustment; d/s are descriptors, never expanded by the model. */
+    public record FitDecimal(Operand.Header header, Expression value, BigInteger digits,
+                             BigInteger scale, boolean absolute) implements Expression {
+        public FitDecimal {
+            Objects.requireNonNull(header);Objects.requireNonNull(value);Objects.requireNonNull(digits);Objects.requireNonNull(scale);
+            if(digits.signum()<=0)throw new IllegalArgumentException("positive decimal precision");
+        }
+    }
+    /** Decimal digits of a magnitude, with explicit fixed length; no locale or physical encoding. */
+    public record IntegerDigits(Operand.Header header,Expression value,BigInteger digits) implements Expression {
+        public IntegerDigits { Objects.requireNonNull(header);Objects.requireNonNull(value);Objects.requireNonNull(digits);
+            if(digits.signum()<=0)throw new IllegalArgumentException("positive digit length"); }
+    }
+    /** Total decimal digit interpretation; invalid input uses an explicit INT expression. */
+    public record ParseInteger(Operand.Header header,Expression value,Expression onInvalid) implements Expression {
+        public ParseInteger { Objects.requireNonNull(header);Objects.requireNonNull(value);Objects.requireNonNull(onInvalid); }
+    }
+    public record FormatDecimal(Operand.Header header,Expression value,List<DecimalText.Part> parts) implements Expression {
+        public FormatDecimal { Objects.requireNonNull(header);Objects.requireNonNull(value);parts=List.copyOf(parts);DecimalText.describe(parts); }
+    }
+    /** One logical scalar repeated a natural number of times, without materialization. */
+    public record FillText(Operand.Header header, Expression character, BigInteger length) implements Expression {
+        public FillText {
+            Objects.requireNonNull(header); Objects.requireNonNull(character); Objects.requireNonNull(length);
+            nonNegative(length,"length");
+        }
     }
     public record FitText(Operand.Header header, Expression value, BigInteger length, String pad) implements Expression {
         public FitText {

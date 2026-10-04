@@ -167,7 +167,8 @@ final class ScalarAssignChecks {
         equal(List.of(), AirValidator.validate(nop).issues());
         equal(nop, CODEC.decode(CODEC.encode(nop)));
         equal(nop, CODEC.decode(changed(OP, Json.object("kind", "nop", "header", at(OP + ".header")))));
-        for (String kind : List.of("decimal", "opaque_type", "label"))
+        failure(INVALID_IR, () -> CODEC.decode(changed(OBJECT_PATH + ".typeRef.type.kind", Json.value("decimal"))));
+        for (String kind : List.of("opaque_type", "label"))
             failsAt(IMPLEMENTATION_LIMIT, OBJECT_PATH + ".typeRef.type", changed(OBJECT_PATH + ".typeRef.type.kind", Json.value(kind)));
         failure(INVALID_IR, () -> CODEC.decode(changed(OBJECT_PATH + ".typeRef", Json.object("kind", "unknown_type", "uncertainty", at("publication.uncertainties.0.id")))));
         for (String kind : List.of("alternatives"))
@@ -191,7 +192,8 @@ final class ScalarAssignChecks {
             failsAt(IMPLEMENTATION_LIMIT, VALUE, changed(VALUE + ".kind", Json.value(kind)));
         failsAt(INPUT_ERROR, VALUE + ".value.value", changed(VALUE + ".value.kind", Json.value("int")));
         failsAt(INPUT_ERROR, VALUE + ".value.value", changed(VALUE + ".value.kind", Json.value("bytes")));
-        for (String kind : List.of("bool", "decimal", "label"))
+        failure(INPUT_ERROR, () -> CODEC.decode(changed(VALUE + ".value.kind", Json.value("decimal"))));
+        for (String kind : List.of("bool", "label"))
             failsAt(IMPLEMENTATION_LIMIT, VALUE + ".value", changed(VALUE + ".value.kind", Json.value(kind)));
     }
     static void enumTables() {

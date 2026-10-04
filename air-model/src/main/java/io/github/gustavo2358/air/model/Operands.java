@@ -15,6 +15,12 @@ public final class Operands {
             case Expressions.Unary unary -> List.of(unary.argument());
             case Expressions.Binary binary -> List.of(binary.left(), binary.right());
             case Expressions.Quantize q -> List.of(q.value());
+            case Expressions.ParseInteger p -> List.of(p.value(),p.onInvalid());
+            case Expressions.FormatDecimal f -> List.of(f.value());
+            case Expressions.IntegerDigits d -> List.of(d.value());
+            case Expressions.WrapInteger w -> List.of(w.value());
+            case Expressions.FitDecimal f -> List.of(f.value());
+            case Expressions.FillText f -> List.of(f.character());
             case Expressions.FitText f -> List.of(f.value());
             case Expressions.SliceText s -> List.of(s.value(),s.start(),s.count());
             case Expressions.TrimRight t -> List.of(t.value());
