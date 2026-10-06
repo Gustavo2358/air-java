@@ -55,14 +55,35 @@ final class Utf8Input {
         String text() { int k=input.kind(token);return k==TEXT||k==ESCAPED?input.stringValue(token):null; }
         Boolean bool() { return switch(input.kind(token)){case TRUE->true;case FALSE->false;default->null;}; }
         Map<String,Json.Value> fields() {
+            // Bound auxiliary space per active record; larger objects keep exact linear lookup.
+            int children=input.get(token,2),capacity=2;
+            while(capacity<children*2L&&children<=64)capacity<<=1;
+            final int[] positions=children<=64?new int[capacity*2]:null;
+            if(positions!=null)for(int t=token+1,end=input.next(token);t<end;t=input.next(t)) {
+                int id=input.name(t)+1,slot=(id*0x9e3779b9)&(positions.length/2-1);
+                while(positions[slot*2]!=0)slot=(slot+1)&(positions.length/2-1);
+                positions[slot*2]=id;positions[slot*2+1]=t;
+            }
             return new AbstractMap<>() {
+                private int locate(Object key) {
+                    if(!(key instanceof String))return -1;
+                    Integer ordinal=input.symbols.get(key);if(ordinal==null)return -1;
+                    if(positions==null) {
+                        for(int t=token+1,end=input.next(token);t<end;t=input.next(t))if(input.name(t)==ordinal)return t;
+                        return -1;
+                    }
+                    int id=ordinal+1,slot=(id*0x9e3779b9)&(positions.length/2-1);
+                    while(positions[slot*2]!=0) {
+                        if(positions[slot*2]==id)return positions[slot*2+1];
+                        slot=(slot+1)&(positions.length/2-1);
+                    }
+                    return -1;
+                }
                 @Override public int size() { return input.get(token,2); }
                 @Override public Json.Value get(Object key) {
-                    for(int t=token+1,end=input.next(token);t<end;t=input.next(t))
-                        if(input.names.get(input.name(t)).equals(key))return input.node(t);
-                    return null;
+                    int position=locate(key);return position<0?null:input.node(position);
                 }
-                @Override public boolean containsKey(Object key) { return get(key)!=null; }
+                @Override public boolean containsKey(Object key) { return locate(key)>=0; }
                 @Override public Set<Entry<String,Json.Value>> entrySet() {
                     // Only error reporting enumerates object fields. Match Map.copyOf's order in
                     // the reference reader, including unknown-field precedence within this JVM.

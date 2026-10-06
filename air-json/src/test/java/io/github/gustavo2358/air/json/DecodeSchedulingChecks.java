@@ -36,6 +36,7 @@ final class DecodeSchedulingChecks {
         for (int workers : List.of(1, 2, 4, 6)) {
             var codec = codec(workers);
             var result = codec.decodeForPartialAnalysis(bytes);
+            ScopedIdentityChecks.owned(result.publication());
             require(publication.equals(result.publication()), "publication order/facts");
             require(sequential.validation().equals(result.validation()), "validation changed");
             require(Arrays.equals(bytes, codec.encode(result.publication())), "canonical bytes changed");

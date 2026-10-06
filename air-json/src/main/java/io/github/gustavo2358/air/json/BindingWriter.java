@@ -10,6 +10,21 @@ import static io.github.gustavo2358.air.json.Json.*;
 
 /** Explicit semantic-to-wire mapping. Field names and variants come from the pinned binding. */
 final class BindingWriter {
+    private static final Obj COVERAGE_OBJECT=new Obj(java.util.Map.of());
+    private static final Arr COVERAGE_ARRAY=new Arr(List.of());
+    private final boolean checking,incremental;
+    BindingWriter(){this(false,false);}
+    BindingWriter(boolean checking,boolean incremental){this.checking=checking;this.incremental=incremental;}
+    private Obj object(Object... pairs){return checking?COVERAGE_OBJECT:Json.object(pairs);}
+    private <T> Arr array(List<T> source,java.util.function.Function<T,Value> mapping) {
+        if(checking){for(var value:source)mapping.apply(value);return COVERAGE_ARRAY;}
+        if(incremental)return Json.lazyArray(source,mapping);
+        return Json.array(source,mapping);
+    }
+    private <T> Value optional(java.util.Optional<T> source,java.util.function.Function<T,Value> mapping) {
+        if(checking){source.ifPresent(mapping::apply);return Nil.INSTANCE;}
+        return Json.optional(source,mapping);
+    }
     private static Arr empty(List<?> items, String path) {
         if (!items.isEmpty()) throw limit(path, "Binding form outside implemented 1A/4B coverage");
         return new Arr(List.of());
@@ -59,7 +74,7 @@ final class BindingWriter {
         return object("required", array(manifest.required(), this::capability), "provided", array(manifest.provided(), this::capability));
     }
     private Value capability(Capabilities.Capability capability) {
-        if (!List.of(Capabilities.LOCAL_CONTROL, Capabilities.LOCAL_REENTRY_GUARD, Capabilities.LOCAL_RESUME_ROUTES, Capabilities.LOCAL_UNWIND_ALL, Capabilities.MEMORY_REGIONS, Capabilities.IBM1047, Capabilities.ENTRY_POSSIBILITIES, Capabilities.ENTRY_POSSIBILITIES_V2, Capabilities.TARGET_POSSIBILITIES, Capabilities.RESOURCE_BINDINGS).contains(capability) && !namePolicies.contains(capability))
+        if (!List.of(Capabilities.LOCAL_CONTROL, Capabilities.LOCAL_REENTRY_GUARD, Capabilities.LOCAL_RESUME_ROUTES, Capabilities.LOCAL_BOUNDARY_ROUTES, Capabilities.LOCAL_UNWIND_ALL, Capabilities.MEMORY_REGIONS, Capabilities.IBM1047, Capabilities.ENTRY_POSSIBILITIES, Capabilities.ENTRY_POSSIBILITIES_V2, Capabilities.TARGET_POSSIBILITIES, Capabilities.RESOURCE_BINDINGS).contains(capability) && !namePolicies.contains(capability))
             throw new AirJsonException(AirJsonException.Code.UNSUPPORTED_CAPABILITY,
                     "$.publication.capabilities", "Capability outside implemented transport profile");
         return object("name", capability.name(), "version", capability.version());
@@ -132,9 +147,11 @@ final class BindingWriter {
             if(!l.resumeRoutes().isEmpty())fields.put("resumeRoutes",array(l.resumeRoutes(),r->object("key",r.key(),"destination",id(r.destination()))));
             return new Obj(fields);
         }
-        if (t instanceof Operations.LocalBoundary l)
-            return object("kind", "local.boundary", "header", header(l.header()), "port", id(l.port()),
-                    "defaultDestination", id(l.defaultDestination()), "fallback", conservativeEnvelope(l.fallback()));
+        if (t instanceof Operations.LocalBoundary l) {
+            var fields=new java.util.LinkedHashMap<>((object("kind", "local.boundary", "header", header(l.header()), "port", id(l.port()),
+                    "defaultDestination", id(l.defaultDestination()), "fallback", conservativeEnvelope(l.fallback()))).fields());
+            l.resumeKey().ifPresent(k->fields.put("resumeKey",value(k)));return new Obj(fields);
+        }
         if (t instanceof Operations.LocalResume l) {
             var fields=new java.util.LinkedHashMap<>((object("kind","local.resume","header",header(l.header()),"fallback",conservativeEnvelope(l.fallback()))).fields());
             l.resumeKey().ifPresent(k->fields.put("resumeKey",value(k)));return new Obj(fields);

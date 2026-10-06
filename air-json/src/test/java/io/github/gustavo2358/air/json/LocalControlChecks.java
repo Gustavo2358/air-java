@@ -72,7 +72,7 @@ final class LocalControlChecks {
         equal(AirValidator.validate(p),AirValidator.validate(CODEC.decode(expected)));
     }
     static void roundTrips() {
-        var p=fixture();roundTrip(p);guardedInvocations();selectedResumes();
+        var p=fixture();roundTrip(p);guardedInvocations();selectedResumes();selectedBoundaries();
         var reversed=new ArrayList<>(p.units().getFirst().sequences());Collections.reverse(reversed);roundTrip(withSequences(p,reversed));
         // Empty port sets and cyclic references are legal transport, not a bounded stack policy.
         var sequences=new ArrayList<>(p.units().getFirst().sequences());
@@ -90,6 +90,37 @@ final class LocalControlChecks {
             u.body(),u.bodyUnavailable(),u.coverage(),u.origin()),p.capabilities()));
         var partial=CODEC.decodeForPartialAnalysis(golden());equal(p,partial.publication());
         equal(AirValidator.validate(p),partial.validation());bytes(golden(),CODEC.encodeForPartialAnalysis(p).bytes());
+    }
+    private static void selectedBoundaries() {
+        var p=fixture();var sequences=new ArrayList<>(p.units().getFirst().sequences());
+        var boundary=(Operations.LocalBoundary)sequences.get(2).terminator();
+        sequences.set(2,seq("shared",new Operations.LocalBoundary(boundary.header(),boundary.port(),boundary.defaultDestination(),boundary.fallback(),Optional.of("state/α"))));
+        var selected=withSequences(p,sequences);var missing=selected;
+        expect(INVALID_IR,()->CODEC.encode(missing),"I-43");
+        var caps=List.of(Capabilities.LOCAL_CONTROL,Capabilities.LOCAL_RESUME_ROUTES,Capabilities.LOCAL_BOUNDARY_ROUTES);
+        selected=withUnit(selected,selected.units().getFirst(),new Capabilities.Manifest(caps,caps));
+        roundTrip(selected);
+        var tree=Json.parse(CODEC.encode(selected),AirJson.Limits.defaults());
+        String path=BASE+"sequences.2.terminator.resumeKey";
+        equal("state/α",((Json.Text)at(tree,path)).value());
+        var literal=Json.parse(golden(),AirJson.Limits.defaults());
+        var literalCaps=new Json.Arr(List.of(
+            new Json.Obj(Map.of("name",Json.value("control.local"),"version",Json.value("1"))),
+            new Json.Obj(Map.of("name",Json.value("control.local.resume_routes"),"version",Json.value("1"))),
+            new Json.Obj(Map.of("name",Json.value("control.local.boundary_routes"),"version",Json.value("1")))));
+        literal=change(literal,"publication.capabilities.required",literalCaps);
+        literal=change(literal,"publication.capabilities.provided",literalCaps);
+        literal=change(literal,path,Json.value("state/α"));
+        equal(selected,CODEC.decode(Json.write(literal,AirJson.Limits.defaults())));
+
+        reject(INPUT_ERROR,change(tree,path,Json.value("")),null);
+        reject(INPUT_ERROR,change(tree,path,Json.value(true)),null);
+        for(var absent:caps) {
+            var remaining=caps.stream().filter(c->!c.equals(absent)).toList();
+            var invalid=withUnit(selected,selected.units().getFirst(),new Capabilities.Manifest(remaining,remaining));
+            expect(INVALID_IR,()->CODEC.encode(invalid),"I-43");
+        }
+        require(Arrays.equals(golden(),CODEC.encode(fixture())),"ordinary boundary wire changed");
     }
     private static void guardedInvocations() {
         var p=fixture();var sequences=new ArrayList<>(p.units().getFirst().sequences());

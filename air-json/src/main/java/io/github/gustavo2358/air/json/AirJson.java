@@ -12,7 +12,7 @@ import static io.github.gustavo2358.air.json.AirJsonException.Code.*;
 /**
  * Shared codec for analysis-ir-json 1.0.0 / AIR 2.0.0, DRAFT pin 2c7f31f1.
  * Implements the forms documented in docs/engineering/air-json.md; other forms fail explicitly.
- * Stateless and thread safe. No method exposes facts/bytes on failure. Partial transport is explicitly opt-in.
+ * Stateless and thread safe. Admission failures expose no facts/bytes; stream I/O failure may leave a prefix. Partial transport is opt-in.
  */
 public final class AirJson {
     /** Operational bounds, not AIR cardinality or integer validity rules. */
@@ -45,21 +45,54 @@ public final class AirJson {
         this.validationOptions = Objects.requireNonNull(validationOptions);
     }
     /** Canonical UTF-8 bytes after structural validation. Outstanding semantic obligations are not discharged. */
-    public byte[] encode(Publication publication) { return encode(publication,false).bytes(); }
+    public byte[] encode(Publication publication) { return encoded(publication,false).bytes(); }
     /** Canonical bytes and unchanged validation status; the byte array is defensively owned. */
     public record PartialOutput(byte[] bytes,ValidationResult validation) {
         public PartialOutput { bytes=bytes.clone();Objects.requireNonNull(validation); }
         @Override public byte[] bytes() { return bytes.clone(); }
     }
     public PartialOutput encodeForPartialAnalysis(Publication publication) { return encode(publication,true); }
+    private record Encoded(byte[] bytes,ValidationResult validation) { }
     private PartialOutput encode(Publication publication,boolean partialAnalysis) {
+        var result=encoded(publication,partialAnalysis);
+        return new PartialOutput(result.bytes(),result.validation());
+    }
+    private Encoded encoded(Publication publication,boolean partialAnalysis) {
         Objects.requireNonNull(publication, "publication");
         if (!publication.airVersion().equals(SemanticVersion.AIR_2_0_0))
             throw new AirJsonException(VERSION_MISMATCH, "$.airVersion", "Expected AIR 2.0.0");
         // Map coverage first so an unimplemented valid form is never blamed on the Validator.
         Json.Value wire = new BindingWriter().envelope(publication);
         var validation=validate(publication,partialAnalysis);
-        return new PartialOutput(Json.write(wire, limits),validation);
+        return new Encoded(Json.write(wire, limits),validation);
+    }
+    /** Prepared immutable mapping: no emitted bytes or whole publication JSON tree. */
+    public static final class PreparedOutput {
+        private final Json.Value wire;private final Limits limits;private final ValidationResult validation;
+        private PreparedOutput(Json.Value wire,Limits limits,ValidationResult validation){this.wire=wire;this.limits=limits;this.validation=validation;}
+        public ValidationResult validation(){return validation;}
+        /** I/O failure may leave a prefix; file callers must stage and atomically publish. Caller owns the stream. */
+        public void writeTo(java.io.OutputStream output)throws java.io.IOException {Json.emit(wire,limits,Objects.requireNonNull(output,"output"));}
+    }
+    public PreparedOutput prepareWrite(Publication publication){return prepareWrite(publication,false);}
+    public PreparedOutput prepareWriteForPartialAnalysis(Publication publication){return prepareWrite(publication,true);}
+    private PreparedOutput prepareWrite(Publication publication,boolean partialAnalysis) {
+        Objects.requireNonNull(publication,"publication");
+        if(!publication.airVersion().equals(SemanticVersion.AIR_2_0_0))throw new AirJsonException(VERSION_MISMATCH,"$.airVersion","Expected AIR 2.0.0");
+        // Same typed coverage walk/order as the eager writer, with no retained fact tree.
+        new BindingWriter(true,false).envelope(publication);
+        var validation=validate(publication,partialAnalysis);
+        var wire=new BindingWriter(false,true).envelope(publication);
+        Json.measure(wire,limits);
+        return new PreparedOutput(wire,limits,validation);
+    }
+    /** Checks admission and physical budgets before emitting bytes. Caller owns the stream. */
+    public void write(Publication publication,java.io.OutputStream output)throws java.io.IOException {
+        Objects.requireNonNull(output,"output");prepareWrite(publication).writeTo(output);
+    }
+    /** Opt-in partial transport with unchanged structural validation status and caller ownership. */
+    public ValidationResult writeForPartialAnalysis(Publication publication,java.io.OutputStream output)throws java.io.IOException {
+        Objects.requireNonNull(output,"output");var prepared=prepareWriteForPartialAnalysis(publication);prepared.writeTo(output);return prepared.validation();
     }
     /** Decode exact facts, then check AIR closure. Throws a typed failure, never a partial Publication. */
     public Publication decode(byte[] bytes) { return decode(bytes,false).publication(); }
@@ -87,7 +120,7 @@ public final class AirJson {
         var names = io.github.gustavo2358.air.model.NamePolicies.extensions(publication);
         for (var capabilities : java.util.List.of(publication.capabilities().required(), publication.capabilities().provided()))
             for (var capability : capabilities)
-                if (!java.util.List.of(io.github.gustavo2358.air.model.Capabilities.LOCAL_CONTROL, io.github.gustavo2358.air.model.Capabilities.LOCAL_REENTRY_GUARD, io.github.gustavo2358.air.model.Capabilities.LOCAL_RESUME_ROUTES, io.github.gustavo2358.air.model.Capabilities.LOCAL_UNWIND_ALL, io.github.gustavo2358.air.model.Capabilities.MEMORY_REGIONS, io.github.gustavo2358.air.model.Capabilities.IBM1047, io.github.gustavo2358.air.model.Capabilities.ENTRY_POSSIBILITIES, io.github.gustavo2358.air.model.Capabilities.ENTRY_POSSIBILITIES_V2, io.github.gustavo2358.air.model.Capabilities.TARGET_POSSIBILITIES, io.github.gustavo2358.air.model.Capabilities.RESOURCE_BINDINGS).contains(capability) && !names.contains(capability))
+                if (!java.util.List.of(io.github.gustavo2358.air.model.Capabilities.LOCAL_CONTROL, io.github.gustavo2358.air.model.Capabilities.LOCAL_REENTRY_GUARD, io.github.gustavo2358.air.model.Capabilities.LOCAL_RESUME_ROUTES, io.github.gustavo2358.air.model.Capabilities.LOCAL_BOUNDARY_ROUTES, io.github.gustavo2358.air.model.Capabilities.LOCAL_UNWIND_ALL, io.github.gustavo2358.air.model.Capabilities.MEMORY_REGIONS, io.github.gustavo2358.air.model.Capabilities.IBM1047, io.github.gustavo2358.air.model.Capabilities.ENTRY_POSSIBILITIES, io.github.gustavo2358.air.model.Capabilities.ENTRY_POSSIBILITIES_V2, io.github.gustavo2358.air.model.Capabilities.TARGET_POSSIBILITIES, io.github.gustavo2358.air.model.Capabilities.RESOURCE_BINDINGS).contains(capability) && !names.contains(capability))
                     throw new AirJsonException(UNSUPPORTED_CAPABILITY,"$.publication.capabilities","Capability outside implemented transport profile");
         var checked = AirValidator.check(publication, validationOptions);
         admit(checked.result(), partialAnalysis);

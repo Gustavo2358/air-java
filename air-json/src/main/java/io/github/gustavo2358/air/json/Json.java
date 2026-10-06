@@ -19,7 +19,7 @@ final class Json {
     private Json() {}
     sealed interface Value permits Obj, Arr, Text, Bool, Nil, Utf8Input.Node {}
     record Obj(Map<String, Value> fields) implements Value { Obj { fields = Map.copyOf(fields); } }
-    record Arr(List<Value> values) implements Value { Arr { values = List.copyOf(values); } }
+    record Arr(List<Value> values) implements Value { Arr { if(!(values instanceof MappedArray<?>))values = List.copyOf(values); } }
     record Text(String value) implements Value {}
     record Bool(boolean value) implements Value {}
     enum Nil implements Value { INSTANCE }
@@ -194,6 +194,14 @@ final class Json {
     static <T> Arr array(List<T> items, Function<T, Value> mapper) {
         return new Arr(items.stream().map(mapper).toList());
     }
+    /** Private immutable owner; never caches the expanded JSON inventory. */
+    private static final class MappedArray<T> extends java.util.AbstractList<Value> implements java.util.RandomAccess {
+        private final List<T> source;private final Function<T,Value> mapping;
+        MappedArray(List<T> source,Function<T,Value> mapping){this.source=List.copyOf(source);this.mapping=mapping;}
+        @Override public int size(){return source.size();}
+        @Override public Value get(int index){return mapping.apply(source.get(index));}
+    }
+    static <T> Arr lazyArray(List<T> source,Function<T,Value> mapping){return new Arr(new MappedArray<>(source,mapping));}
     static <T> Value optional(java.util.Optional<T> item, Function<T, Value> mapper) {
         return item.map(mapper).orElse(Nil.INSTANCE);
     }
@@ -208,14 +216,30 @@ final class Json {
     }
     static byte[] write(Value value, AirJson.Limits limits) {
         // First pass validates scalars/depth and counts exact escaped UTF-8 bytes.
-        var measure=new Writer(limits,null); measure.write(value);
+        var measure=new Writer(limits,null,null); measure.write(value);
         byte[] bytes=new byte[Math.toIntExact(measure.position)];
-        new Writer(limits,bytes).write(value);
+        new Writer(limits,bytes,null).write(value);
         return bytes;
+    }
+    static void measure(Value value,AirJson.Limits limits){new Writer(limits,null,null).write(value);}
+    static void emit(Value value,AirJson.Limits limits,java.io.OutputStream output)throws java.io.IOException {
+        try{new Writer(limits,null,output).write(value);}
+        catch(java.io.UncheckedIOException failure){throw failure.getCause();}
+    }
+    /** Maximal literal ASCII run; controls and escape/UTF-8 boundaries stay scalar. */
+    static int asciiRunEnd(String text,int start) {
+        int end=start;
+        while(end<text.length()) {
+            char value=text.charAt(end);
+            if(value<0x20||value>0x7f||value=='"'||value=='\\')break;
+            end++;
+        }
+        return end;
     }
     private static final class Writer {
         private final AirJson.Limits limits;
         private final byte[] output;
+        private final java.io.OutputStream stream;private final byte[] pending;private int pendingCount;
         private long position;
         private static final class Frame {
             final Value node;
@@ -229,7 +253,12 @@ final class Json {
                 } else children=((Arr)node).values().iterator();
             }
         }
-        Writer(AirJson.Limits limits,byte[] output) { this.limits=limits; this.output=output; }
+        Writer(AirJson.Limits limits,byte[] output,java.io.OutputStream stream) { this.limits=limits;this.output=output;this.stream=stream;pending=stream==null?null:new byte[8192]; }
+        private void flush() {
+            if(pendingCount==0)return;
+            try{stream.write(pending,0,pendingCount);pendingCount=0;}
+            catch(java.io.IOException failure){throw new java.io.UncheckedIOException(failure);}
+        }
         void write(Value root) {
             var stack=new ArrayDeque<Frame>();
             node(root,0,stack);
@@ -245,6 +274,7 @@ final class Json {
                 } else child=(Value)frame.children.next();
                 node(child,stack.size(),stack);
             }
+            flush();
         }
         void node(Value value,int depth,ArrayDeque<Frame> stack) {
             if(depth>limits.maximumDepth()) throw resource("$","Output depth limit exceeded");
@@ -260,9 +290,27 @@ final class Json {
         void octet(int value) {
             if(position>=limits.maximumDocumentBytes()) throw resource("$","Output byte limit exceeded");
             if(output!=null) output[(int)position]=(byte)value;
+            if(pending!=null){pending[pendingCount++]=(byte)value;if(pendingCount==pending.length)flush();}
             position++;
         }
-        void ascii(String text) { for(int i=0;i<text.length();i++) octet(text.charAt(i)); }
+        void ascii(String text) { ascii(text,0,text.length()); }
+        void ascii(String text,int start,int end) {
+            int length=end-start;
+            if(length>limits.maximumDocumentBytes()-position)throw resource("$","Output byte limit exceeded");
+            if(output!=null) {
+                int offset=(int)position;
+                for(int n=0;n<length;n++)output[offset+n]=(byte)text.charAt(start+n);
+            } else if(pending!=null) {
+                int cursor=start;
+                while(cursor<end) {
+                    int count=Math.min(end-cursor,pending.length-pendingCount);
+                    for(int n=0;n<count;n++)pending[pendingCount+n]=(byte)text.charAt(cursor+n);
+                    pendingCount+=count;cursor+=count;
+                    if(pendingCount==pending.length)flush();
+                }
+            }
+            position+=length;
+        }
         void scalar(int value) {
             if(value<0x80) octet(value);
             else if(value<0x800) { octet(0xc0 | value >> 6); octet(0x80 | value & 63); }
@@ -276,6 +324,8 @@ final class Json {
         void string(String text) {
             scalars(text,"$"); octet('"');
             for(int i=0;i<text.length();) {
+                int end=asciiRunEnd(text,i);
+                if(end>i){ascii(text,i,end);i=end;continue;}
                 int c=text.codePointAt(i); i+=Character.charCount(c);
                 switch(c) {
                     case '"' -> ascii("\\\""); case '\\' -> ascii("\\\\");

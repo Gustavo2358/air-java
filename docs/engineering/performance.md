@@ -55,3 +55,15 @@ Os dois usam cópias/classes temporárias e JVMs isoladas; não Maven install/de
 Séries normais integram semantic/transport; probes maiores são opt-in e atravessam
 2.000.000 entidades e 16 MiB de bytes reais. Esperados são fixos por construção.
 Não se usa tempo como limite semântico. Heap configurado não é heap medido.
+
+## Safe ASCII runs in the bounded emitter (pre-code)
+
+The maximal contiguous string run with scalars U+0020..U+007F except quote and
+backslash can be counted/copied as a run. All other scalars use the same existing
+JSON escaping and UTF-8 paths. Scalar validation precedes counting; exact byte
+and depth limits, canonical ordering, failure precedence and stream ownership
+remain unchanged. Output stays in a single 8192-byte private buffer; no whole
+string byte array, encoded-string cache or publication history is introduced.
+Independent literal bytes, all delimiter/control/non-ASCII boundaries and runs
+across buffer lengths define the oracle before implementation. Byte and streaming
+APIs use the same run rule, then whole-output digest and runtime comparisons.

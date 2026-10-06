@@ -17,6 +17,16 @@ import static io.github.gustavo2358.air.json.AirJsonException.Code.*;
 /** Binding shape checks precede model construction; closure is a separate Validator step. */
 final class BindingReader {
     private final OrderedBlocks blocks;
+    // One owner per envelope read; parallel blocks share only immutable exact scopes.
+    private final java.util.concurrent.ConcurrentHashMap<String, PublicationId> publications = new java.util.concurrent.ConcurrentHashMap<>();
+    private record UnitScopeKey(PublicationId publication, String local) {}
+    private final java.util.concurrent.ConcurrentHashMap<UnitScopeKey, UnitId> units = new java.util.concurrent.ConcurrentHashMap<>();
+    private PublicationId publicationScope(String local) {
+        return publications.computeIfAbsent(local, PublicationId::new);
+    }
+    private UnitId unitScope(PublicationId publication, String local) {
+        return units.computeIfAbsent(new UnitScopeKey(publication, local), key -> new UnitId(key.publication(), key.local()));
+    }
     BindingReader() { this(null); }
     BindingReader(OrderedBlocks blocks) { this.blocks = blocks; }
 
@@ -25,6 +35,7 @@ final class BindingReader {
         private final At parent;
         private final String field;
         private final int index;
+        private volatile java.util.Map<String,Json.Value> cachedObject;
         At(Json.Value value, At parent, String field, int index) {
             this.value = value; this.parent = parent; this.field = field; this.index = index;
         }
@@ -41,8 +52,9 @@ final class BindingReader {
             return result.toString();
         }
         java.util.Map<String,Json.Value> object() {
-            if (value instanceof Json.Obj o) return o.fields();
-            if (value instanceof Utf8Input.Node n && n.object()) return n.fields();
+            var known=cachedObject;if(known!=null)return known;
+            if (value instanceof Json.Obj o) return cachedObject=o.fields();
+            if (value instanceof Utf8Input.Node n && n.object()) return cachedObject=n.fields();
             throw Json.input(path(), "Expected object");
         }
         At child(String key) {
@@ -310,7 +322,7 @@ final class BindingReader {
             case "opaque" -> "observedKind,knownOperands,valueResults,envelope";
             case "copy_bytes" -> "destination,source,length,fallback";
             case "local.invoke" -> "entry,completionPorts,resume,fallback" + (a.object().containsKey("reentryGuard") ? ",reentryGuard" : "") + (a.object().containsKey("resumeRoutes") ? ",resumeRoutes" : "");
-            case "local.boundary" -> "port,defaultDestination,fallback"; case "local.resume" -> "fallback" + (a.object().containsKey("resumeKey") ? ",resumeKey" : "");
+            case "local.boundary" -> "port,defaultDestination,fallback" + (a.object().containsKey("resumeKey") ? ",resumeKey" : ""); case "local.resume" -> "fallback" + (a.object().containsKey("resumeKey") ? ",resumeKey" : "");
             case "local.unwind" -> "count,destination,fallback" + (a.object().containsKey("all") ? ",all" : ""); case "indirect.jump" -> "target,within,fallback";
             default -> throw Json.input(a.path(), "Unknown Operation kind");
         };
@@ -341,7 +353,8 @@ final class BindingReader {
                 a.object().containsKey("reentryGuard") ? Optional.of(reentryGuard(a.child("reentryGuard"))) : Optional.empty(),
                 a.object().containsKey("resumeRoutes") ? a.child("resumeRoutes").list(this::resumeRoute) : List.of());
         if (kind.equals("local.boundary")) return new Operations.LocalBoundary(header(a.child("header")), typedId(a.child("port"), CompletionPortId.class),
-                labelId(a.child("defaultDestination")), conservativeEnvelope(a.child("fallback")));
+                labelId(a.child("defaultDestination")), conservativeEnvelope(a.child("fallback")),
+                a.object().containsKey("resumeKey") ? Optional.of(resumeText(a.child("resumeKey"))) : Optional.empty());
         if (kind.equals("local.resume")) return new Operations.LocalResume(header(a.child("header")), conservativeEnvelope(a.child("fallback")),
                 a.object().containsKey("resumeKey") ? Optional.of(resumeText(a.child("resumeKey"))) : Optional.empty());
         if (kind.equals("local.unwind")) return new Operations.LocalUnwind(header(a.child("header")), natural(a.child("count")),
@@ -924,7 +937,7 @@ final class BindingReader {
         String domain = a.child("domain").text();
         if (domain.equals("publication")) {
             a.fields("domain", "localId"); String local = a.child("localId").modelText();
-            return a.construct(() -> new PublicationId(local));
+            return a.construct(() -> publicationScope(local));
         }
         boolean owned = Set.of("entry", "label", "operation", "object", "completion_port", "operand").contains(domain);
         if (!owned && !Set.of("artifact", "relation", "unit", "storage", "resource", "origin", "uncertainty", "premise").contains(domain))
@@ -933,13 +946,13 @@ final class BindingReader {
         else if (owned) a.fields("domain", "publication", "unit", "localId");
         else a.fields("domain", "publication", "localId");
         String namespace = a.child("publication").modelText(); String local = a.child("localId").modelText();
-        var publication = a.construct(() -> new PublicationId(namespace));
+        var publication = a.construct(() -> publicationScope(namespace));
         String unitName = owned ? a.child("unit").modelText() : null;
-        UnitId unit = owned ? a.construct(() -> new UnitId(publication, unitName)) : null;
+        UnitId unit = owned ? a.construct(() -> unitScope(publication, unitName)) : null;
         OperandOwner operandOwner = domain.equals("operand") ? operandOwner(a.child("owner"), unit) : null;
         return a.construct(() -> switch (domain) {
             case "artifact" -> new ArtifactId(publication, local); case "relation" -> new ArtifactRelationId(publication, local);
-            case "unit" -> new UnitId(publication, local); case "storage" -> new StorageId(publication, local);
+            case "unit" -> unitScope(publication, local); case "storage" -> new StorageId(publication, local);
             case "resource" -> new ResourceId(publication, local); case "origin" -> new OriginId(publication, local);
             case "uncertainty" -> new UncertaintyId(publication, local); case "premise" -> new PremiseId(publication, local);
             case "entry" -> new EntryId(unit, local); case "label" -> new LabelId(unit, local);
