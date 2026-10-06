@@ -2,5 +2,10 @@
   "id": "WORK-MEMORY-GENERAL-001",
   "title": "General memory correction",
   "status": "IN_PROGRESS",
-  "scope": "typed boundary selection, capability validation and lossless codec"
+  "scope": [
+    "typed boundary selection and capability validation",
+    "lossless closed codec",
+    "incremental admitted AIR output and immutable transport ownership"
+  ],
+  "notes": "Implementation qualified locally; human review and merge pending. Work status remains IN_PROGRESS until the repository merge rule is met."
 }
