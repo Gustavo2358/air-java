@@ -187,8 +187,12 @@ public final class Operations {
         }
         @Override public String kind() { return "local.invoke"; }
     }
-    public record LocalBoundary(Header header, CompletionPortId port, LabelId defaultDestination, Envelopes.Envelope fallback) implements Terminator {
+    public record LocalBoundary(Header header, CompletionPortId port, LabelId defaultDestination, Envelopes.Envelope fallback, Optional<String> resumeKey) implements Terminator {
+        public LocalBoundary(Header header, CompletionPortId port, LabelId defaultDestination, Envelopes.Envelope fallback) {
+            this(header,port,defaultDestination,fallback,Optional.empty());
+        }
         public LocalBoundary {
+            resumeKey=Objects.requireNonNull(resumeKey,"resumeKey").map(k->text(k,"resumeKey"));
             header = Objects.requireNonNull(header, "header");
             port = Objects.requireNonNull(port, "port");
             defaultDestination = Objects.requireNonNull(defaultDestination, "defaultDestination");

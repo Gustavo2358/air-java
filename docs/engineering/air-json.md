@@ -5,6 +5,15 @@ A autoridade vigente é o commit de `analysis-ir` fixado em
 As seções históricas abaixo registram subsets adicionados progressivamente;
 a suíte atual e seus limites são o inventário de implementação.
 
+## Conclusão local com rota selecionada
+
+`control.local.boundary_routes@1` admite `local.boundary.resumeKey` opcional,
+com exigência conjunta de `control.local@1` e `control.local.resume_routes@1`.
+O modelo mantém a chave não vazia, porta, default e fallback. Validator verifica
+uso das três capacidades e fechamento; codec mantém os campos sem executar a
+pilha. Sem chave, o golden antigo permanece idêntico. O oracle independente
+LOCAL-BOUNDARY-ROUTE-01 e os negativos integram LocalControlChecks/CodecSuite.
+
 ## Formatação decimal — catálogo JSON canônico
 
 `format_decimal.parts[].kind` usa exatamente `DIGITS`, `SUPPRESS_SPACE`,

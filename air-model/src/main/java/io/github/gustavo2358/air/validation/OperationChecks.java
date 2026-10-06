@@ -180,6 +180,10 @@ final class OperationChecks {
                 refs.envelope(local.fallback(),id,false);
             }
             case Operations.LocalBoundary local -> {
+                if(local.resumeKey().isPresent()) {
+                    c.capability(Capabilities.LOCAL_BOUNDARY_ROUTES,id);
+                    c.capability(Capabilities.LOCAL_RESUME_ROUTES,id);
+                }
                 c.capability(Capabilities.LOCAL_CONTROL,id); c.ref(local.port(),id);
                 if(!local.port().unit().equals(id.unit()))
                     c.error("I-02",id,"local completion port crosses unit");

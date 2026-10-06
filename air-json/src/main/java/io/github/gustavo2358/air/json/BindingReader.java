@@ -310,7 +310,7 @@ final class BindingReader {
             case "opaque" -> "observedKind,knownOperands,valueResults,envelope";
             case "copy_bytes" -> "destination,source,length,fallback";
             case "local.invoke" -> "entry,completionPorts,resume,fallback" + (a.object().containsKey("reentryGuard") ? ",reentryGuard" : "") + (a.object().containsKey("resumeRoutes") ? ",resumeRoutes" : "");
-            case "local.boundary" -> "port,defaultDestination,fallback"; case "local.resume" -> "fallback" + (a.object().containsKey("resumeKey") ? ",resumeKey" : "");
+            case "local.boundary" -> "port,defaultDestination,fallback" + (a.object().containsKey("resumeKey") ? ",resumeKey" : ""); case "local.resume" -> "fallback" + (a.object().containsKey("resumeKey") ? ",resumeKey" : "");
             case "local.unwind" -> "count,destination,fallback" + (a.object().containsKey("all") ? ",all" : ""); case "indirect.jump" -> "target,within,fallback";
             default -> throw Json.input(a.path(), "Unknown Operation kind");
         };
@@ -341,7 +341,8 @@ final class BindingReader {
                 a.object().containsKey("reentryGuard") ? Optional.of(reentryGuard(a.child("reentryGuard"))) : Optional.empty(),
                 a.object().containsKey("resumeRoutes") ? a.child("resumeRoutes").list(this::resumeRoute) : List.of());
         if (kind.equals("local.boundary")) return new Operations.LocalBoundary(header(a.child("header")), typedId(a.child("port"), CompletionPortId.class),
-                labelId(a.child("defaultDestination")), conservativeEnvelope(a.child("fallback")));
+                labelId(a.child("defaultDestination")), conservativeEnvelope(a.child("fallback")),
+                a.object().containsKey("resumeKey") ? Optional.of(resumeText(a.child("resumeKey"))) : Optional.empty());
         if (kind.equals("local.resume")) return new Operations.LocalResume(header(a.child("header")), conservativeEnvelope(a.child("fallback")),
                 a.object().containsKey("resumeKey") ? Optional.of(resumeText(a.child("resumeKey"))) : Optional.empty());
         if (kind.equals("local.unwind")) return new Operations.LocalUnwind(header(a.child("header")), natural(a.child("count")),
