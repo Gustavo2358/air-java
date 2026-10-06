@@ -35,6 +35,7 @@ final class BindingReader {
         private final At parent;
         private final String field;
         private final int index;
+        private volatile java.util.Map<String,Json.Value> cachedObject;
         At(Json.Value value, At parent, String field, int index) {
             this.value = value; this.parent = parent; this.field = field; this.index = index;
         }
@@ -51,8 +52,9 @@ final class BindingReader {
             return result.toString();
         }
         java.util.Map<String,Json.Value> object() {
-            if (value instanceof Json.Obj o) return o.fields();
-            if (value instanceof Utf8Input.Node n && n.object()) return n.fields();
+            var known=cachedObject;if(known!=null)return known;
+            if (value instanceof Json.Obj o) return cachedObject=o.fields();
+            if (value instanceof Utf8Input.Node n && n.object()) return cachedObject=n.fields();
             throw Json.input(path(), "Expected object");
         }
         At child(String key) {

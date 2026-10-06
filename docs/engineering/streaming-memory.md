@@ -50,3 +50,21 @@ ScopedIdentityChecks uses the independent physical golden and adversarial scope
 keys, checks reference ownership, complete facts and canonical bytes; parallel
 ownership is checked by DecodeSchedulingChecks. Cache space is O(distinct scopes),
 not O(all references), and there is no global string interning.
+
+## Per-record binding field index law (pre-code)
+
+A binding At owns one immutable physical-field lookup index, containing exact
+field names and tape token offsets. Repeated shape/child checks reuse that index
+instead of rebuilding a map and rescanning every field. No text, nested record,
+array or typed fact is materialized by indexing. Full physical parsing precedes
+binding; duplicate/UTF-8/escape failures and unknown-field diagnostic order remain
+owned by the existing reference parser/Map.copyOf rule. Index lifetime follows
+active binding records, not the whole decoded publication. The ownership oracle
+checks repeated lookup identity and all child facts; the independent physical
+parser differential corpus and complete CodecSuite govern admission and output.
+
+The physical field index uses primitive name-ordinal/token-offset slots for at
+most 64 fields. Name ordinals come from the exact parsed field vocabulary;
+collisions probe and compare ordinals, never hashes alone. Larger objects retain
+the original linear lookup and identical admission. This bounds auxiliary index
+space per active record without imposing any cardinality limit on JSON.

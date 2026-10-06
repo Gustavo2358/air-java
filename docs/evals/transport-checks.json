@@ -9,6 +9,7 @@
     "stream output golden admission and ownership",
     "decode scopes have exact per-read ownership",
     "decode scheduling preserves facts diagnostics and isolation",
+    "binding record field indexes have bounded ownership",
     "UTF-8 tape matches the physical parser and binding",
     "LOCAL shared body independent wire oracle",
     "LOCAL lossless variants and recursive references",
