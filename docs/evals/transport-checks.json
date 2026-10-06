@@ -6,6 +6,7 @@
   "analysis_ir_pin": "4f09e8b1b496bf8de2e0fb62532e7aa0b97b9c6e",
   "external_dependencies": [],
   "checks": [
+    "stream output golden admission and ownership",
     "decode scheduling preserves facts diagnostics and isolation",
     "UTF-8 tape matches the physical parser and binding",
     "LOCAL shared body independent wire oracle",

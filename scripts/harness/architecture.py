@@ -22,6 +22,10 @@ JSON_JDK_CLASSES = {"java.nio.ByteBuffer", "java.nio.CharBuffer", "java.nio.char
 # Operational dependencies are confined to the codec's scheduler/configuration.
 JSON_OPERATIONAL_CLASSES = {
     JSON + "AirJson$DecodeOptions": {"java.lang.Runtime"},
+    JSON + "AirJson": {"java.io.OutputStream", "java.io.IOException"},
+    JSON + "AirJson$PreparedOutput": {"java.io.OutputStream", "java.io.IOException"},
+    JSON + "Json": {"java.io.OutputStream", "java.io.IOException", "java.io.UncheckedIOException"},
+    JSON + "Json$Writer": {"java.io.OutputStream", "java.io.IOException", "java.io.UncheckedIOException"},
     JSON + "OrderedBlocks": {"java.util.concurrent." + name for name in (
         "Callable", "ExecutionException", "ExecutorService", "Executors", "Future", "ThreadFactory")},
 }

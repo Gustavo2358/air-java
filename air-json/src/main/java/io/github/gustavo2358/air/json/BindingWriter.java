@@ -10,6 +10,21 @@ import static io.github.gustavo2358.air.json.Json.*;
 
 /** Explicit semantic-to-wire mapping. Field names and variants come from the pinned binding. */
 final class BindingWriter {
+    private static final Obj COVERAGE_OBJECT=new Obj(java.util.Map.of());
+    private static final Arr COVERAGE_ARRAY=new Arr(List.of());
+    private final boolean checking,incremental;
+    BindingWriter(){this(false,false);}
+    BindingWriter(boolean checking,boolean incremental){this.checking=checking;this.incremental=incremental;}
+    private Obj object(Object... pairs){return checking?COVERAGE_OBJECT:Json.object(pairs);}
+    private <T> Arr array(List<T> source,java.util.function.Function<T,Value> mapping) {
+        if(checking){for(var value:source)mapping.apply(value);return COVERAGE_ARRAY;}
+        if(incremental)return Json.lazyArray(source,mapping);
+        return Json.array(source,mapping);
+    }
+    private <T> Value optional(java.util.Optional<T> source,java.util.function.Function<T,Value> mapping) {
+        if(checking){source.ifPresent(mapping::apply);return Nil.INSTANCE;}
+        return Json.optional(source,mapping);
+    }
     private static Arr empty(List<?> items, String path) {
         if (!items.isEmpty()) throw limit(path, "Binding form outside implemented 1A/4B coverage");
         return new Arr(List.of());

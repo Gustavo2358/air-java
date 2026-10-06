@@ -45,21 +45,54 @@ public final class AirJson {
         this.validationOptions = Objects.requireNonNull(validationOptions);
     }
     /** Canonical UTF-8 bytes after structural validation. Outstanding semantic obligations are not discharged. */
-    public byte[] encode(Publication publication) { return encode(publication,false).bytes(); }
+    public byte[] encode(Publication publication) { return encoded(publication,false).bytes(); }
     /** Canonical bytes and unchanged validation status; the byte array is defensively owned. */
     public record PartialOutput(byte[] bytes,ValidationResult validation) {
         public PartialOutput { bytes=bytes.clone();Objects.requireNonNull(validation); }
         @Override public byte[] bytes() { return bytes.clone(); }
     }
     public PartialOutput encodeForPartialAnalysis(Publication publication) { return encode(publication,true); }
+    private record Encoded(byte[] bytes,ValidationResult validation) { }
     private PartialOutput encode(Publication publication,boolean partialAnalysis) {
+        var result=encoded(publication,partialAnalysis);
+        return new PartialOutput(result.bytes(),result.validation());
+    }
+    private Encoded encoded(Publication publication,boolean partialAnalysis) {
         Objects.requireNonNull(publication, "publication");
         if (!publication.airVersion().equals(SemanticVersion.AIR_2_0_0))
             throw new AirJsonException(VERSION_MISMATCH, "$.airVersion", "Expected AIR 2.0.0");
         // Map coverage first so an unimplemented valid form is never blamed on the Validator.
         Json.Value wire = new BindingWriter().envelope(publication);
         var validation=validate(publication,partialAnalysis);
-        return new PartialOutput(Json.write(wire, limits),validation);
+        return new Encoded(Json.write(wire, limits),validation);
+    }
+    /** Prepared immutable mapping: no emitted bytes or whole publication JSON tree. */
+    public static final class PreparedOutput {
+        private final Json.Value wire;private final Limits limits;private final ValidationResult validation;
+        private PreparedOutput(Json.Value wire,Limits limits,ValidationResult validation){this.wire=wire;this.limits=limits;this.validation=validation;}
+        public ValidationResult validation(){return validation;}
+        /** I/O failure may leave a prefix; file callers must stage and atomically publish. Caller owns the stream. */
+        public void writeTo(java.io.OutputStream output)throws java.io.IOException {Json.emit(wire,limits,Objects.requireNonNull(output,"output"));}
+    }
+    public PreparedOutput prepareWrite(Publication publication){return prepareWrite(publication,false);}
+    public PreparedOutput prepareWriteForPartialAnalysis(Publication publication){return prepareWrite(publication,true);}
+    private PreparedOutput prepareWrite(Publication publication,boolean partialAnalysis) {
+        Objects.requireNonNull(publication,"publication");
+        if(!publication.airVersion().equals(SemanticVersion.AIR_2_0_0))throw new AirJsonException(VERSION_MISMATCH,"$.airVersion","Expected AIR 2.0.0");
+        // Same typed coverage walk/order as the eager writer, with no retained fact tree.
+        new BindingWriter(true,false).envelope(publication);
+        var validation=validate(publication,partialAnalysis);
+        var wire=new BindingWriter(false,true).envelope(publication);
+        Json.measure(wire,limits);
+        return new PreparedOutput(wire,limits,validation);
+    }
+    /** Checks admission and physical budgets before emitting bytes. Caller owns the stream. */
+    public void write(Publication publication,java.io.OutputStream output)throws java.io.IOException {
+        Objects.requireNonNull(output,"output");prepareWrite(publication).writeTo(output);
+    }
+    /** Opt-in partial transport with unchanged structural validation status and caller ownership. */
+    public ValidationResult writeForPartialAnalysis(Publication publication,java.io.OutputStream output)throws java.io.IOException {
+        Objects.requireNonNull(output,"output");var prepared=prepareWriteForPartialAnalysis(publication);prepared.writeTo(output);return prepared.validation();
     }
     /** Decode exact facts, then check AIR closure. Throws a typed failure, never a partial Publication. */
     public Publication decode(byte[] bytes) { return decode(bytes,false).publication(); }
