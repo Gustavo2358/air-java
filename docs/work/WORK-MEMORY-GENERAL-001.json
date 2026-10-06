@@ -6,7 +6,8 @@
     "typed boundary selection and capability validation",
     "lossless closed codec",
     "incremental admitted AIR output and immutable transport ownership",
-    "per-read exact immutable publication/unit scopes with parallel ownership"
+    "per-read exact immutable publication/unit scopes with parallel ownership",
+    "bounded ASCII run emission with exact byte parity"
   ],
   "notes": "Implementation qualified locally; human review and merge pending. Work status remains IN_PROGRESS until the repository merge rule is met."
 }

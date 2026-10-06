@@ -6,6 +6,7 @@
   "analysis_ir_pin": "4f09e8b1b496bf8de2e0fb62532e7aa0b97b9c6e",
   "external_dependencies": [],
   "checks": [
+    "bounded ASCII runs preserve literal bytes",
     "stream output golden admission and ownership",
     "decode scopes have exact per-read ownership",
     "decode scheduling preserves facts diagnostics and isolation",

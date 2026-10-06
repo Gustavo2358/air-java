@@ -226,6 +226,16 @@ final class Json {
         try{new Writer(limits,null,output).write(value);}
         catch(java.io.UncheckedIOException failure){throw failure.getCause();}
     }
+    /** Maximal literal ASCII run; controls and escape/UTF-8 boundaries stay scalar. */
+    static int asciiRunEnd(String text,int start) {
+        int end=start;
+        while(end<text.length()) {
+            char value=text.charAt(end);
+            if(value<0x20||value>0x7f||value=='"'||value=='\\')break;
+            end++;
+        }
+        return end;
+    }
     private static final class Writer {
         private final AirJson.Limits limits;
         private final byte[] output;
@@ -283,7 +293,24 @@ final class Json {
             if(pending!=null){pending[pendingCount++]=(byte)value;if(pendingCount==pending.length)flush();}
             position++;
         }
-        void ascii(String text) { for(int i=0;i<text.length();i++) octet(text.charAt(i)); }
+        void ascii(String text) { ascii(text,0,text.length()); }
+        void ascii(String text,int start,int end) {
+            int length=end-start;
+            if(length>limits.maximumDocumentBytes()-position)throw resource("$","Output byte limit exceeded");
+            if(output!=null) {
+                int offset=(int)position;
+                for(int n=0;n<length;n++)output[offset+n]=(byte)text.charAt(start+n);
+            } else if(pending!=null) {
+                int cursor=start;
+                while(cursor<end) {
+                    int count=Math.min(end-cursor,pending.length-pendingCount);
+                    for(int n=0;n<count;n++)pending[pendingCount+n]=(byte)text.charAt(cursor+n);
+                    pendingCount+=count;cursor+=count;
+                    if(pendingCount==pending.length)flush();
+                }
+            }
+            position+=length;
+        }
         void scalar(int value) {
             if(value<0x80) octet(value);
             else if(value<0x800) { octet(0xc0 | value >> 6); octet(0x80 | value & 63); }
@@ -297,6 +324,8 @@ final class Json {
         void string(String text) {
             scalars(text,"$"); octet('"');
             for(int i=0;i<text.length();) {
+                int end=asciiRunEnd(text,i);
+                if(end>i){ascii(text,i,end);i=end;continue;}
                 int c=text.codePointAt(i); i+=Character.charCount(c);
                 switch(c) {
                     case '"' -> ascii("\\\""); case '\\' -> ascii("\\\\");
