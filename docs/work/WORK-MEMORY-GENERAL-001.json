@@ -1,7 +1,7 @@
 {
   "id": "WORK-MEMORY-GENERAL-001",
   "title": "General memory correction",
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "scope": [
     "typed boundary selection and capability validation",
     "lossless closed codec",
@@ -9,5 +9,13 @@
     "per-read exact immutable publication/unit scopes with parallel ownership",
     "bounded ASCII run emission with exact byte parity"
   ],
-  "notes": "Implementation qualified locally; human review and merge pending. Work status remains IN_PROGRESS until the repository merge rule is met."
+  "notes": "Implementation approved by the user on 2026-10-06, required technical qualification passed, and product PR merged. Complete facts/dependencies and explicit partial states remain preserved. Performance claims stay limited to the measured operational controls; no universal corpus or OOM guarantee.",
+  "closure": {
+    "pull_request": "https://github.com/Gustavo2358/air-java/pull/28",
+    "approved_head": "c2f80b59b7c38fa6efb9a20f0fa79644c697d8a4",
+    "merge_commit": "8dc128c37d528b46296bd498c0ca9c1b51890447",
+    "approval": "Explicit user approval and merge authorization, 2026-10-06",
+    "validation": "Reused qualified approved content; merged tree exactly equals approved head. Documentary closeout validated separately.",
+    "evidence": "artefatos-e2e/memory-general-fix-20261005/review-f1-f2-20261006/REVIEW-REMEDIATION.md"
+  }
 }
