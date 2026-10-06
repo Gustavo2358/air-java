@@ -17,6 +17,16 @@ import static io.github.gustavo2358.air.json.AirJsonException.Code.*;
 /** Binding shape checks precede model construction; closure is a separate Validator step. */
 final class BindingReader {
     private final OrderedBlocks blocks;
+    // One owner per envelope read; parallel blocks share only immutable exact scopes.
+    private final java.util.concurrent.ConcurrentHashMap<String, PublicationId> publications = new java.util.concurrent.ConcurrentHashMap<>();
+    private record UnitScopeKey(PublicationId publication, String local) {}
+    private final java.util.concurrent.ConcurrentHashMap<UnitScopeKey, UnitId> units = new java.util.concurrent.ConcurrentHashMap<>();
+    private PublicationId publicationScope(String local) {
+        return publications.computeIfAbsent(local, PublicationId::new);
+    }
+    private UnitId unitScope(PublicationId publication, String local) {
+        return units.computeIfAbsent(new UnitScopeKey(publication, local), key -> new UnitId(key.publication(), key.local()));
+    }
     BindingReader() { this(null); }
     BindingReader(OrderedBlocks blocks) { this.blocks = blocks; }
 
@@ -925,7 +935,7 @@ final class BindingReader {
         String domain = a.child("domain").text();
         if (domain.equals("publication")) {
             a.fields("domain", "localId"); String local = a.child("localId").modelText();
-            return a.construct(() -> new PublicationId(local));
+            return a.construct(() -> publicationScope(local));
         }
         boolean owned = Set.of("entry", "label", "operation", "object", "completion_port", "operand").contains(domain);
         if (!owned && !Set.of("artifact", "relation", "unit", "storage", "resource", "origin", "uncertainty", "premise").contains(domain))
@@ -934,13 +944,13 @@ final class BindingReader {
         else if (owned) a.fields("domain", "publication", "unit", "localId");
         else a.fields("domain", "publication", "localId");
         String namespace = a.child("publication").modelText(); String local = a.child("localId").modelText();
-        var publication = a.construct(() -> new PublicationId(namespace));
+        var publication = a.construct(() -> publicationScope(namespace));
         String unitName = owned ? a.child("unit").modelText() : null;
-        UnitId unit = owned ? a.construct(() -> new UnitId(publication, unitName)) : null;
+        UnitId unit = owned ? a.construct(() -> unitScope(publication, unitName)) : null;
         OperandOwner operandOwner = domain.equals("operand") ? operandOwner(a.child("owner"), unit) : null;
         return a.construct(() -> switch (domain) {
             case "artifact" -> new ArtifactId(publication, local); case "relation" -> new ArtifactRelationId(publication, local);
-            case "unit" -> new UnitId(publication, local); case "storage" -> new StorageId(publication, local);
+            case "unit" -> unitScope(publication, local); case "storage" -> new StorageId(publication, local);
             case "resource" -> new ResourceId(publication, local); case "origin" -> new OriginId(publication, local);
             case "uncertainty" -> new UncertaintyId(publication, local); case "premise" -> new PremiseId(publication, local);
             case "entry" -> new EntryId(unit, local); case "label" -> new LabelId(unit, local);

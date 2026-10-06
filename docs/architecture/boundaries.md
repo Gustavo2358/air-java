@@ -42,7 +42,9 @@ de produto no root. O codec admite somente a cobertura declarada de 1A.
 O JSON acrescenta classes JDK de UTF-8/ByteBuffer e uma exceção operacional
 restrita: `DecodeOptions` pode consultar `Runtime.getRuntime().availableProcessors()`;
 `OrderedBlocks` pode usar Callable, ExecutionException, ExecutorService, Executors,
-Future e ThreadFactory. O gate verifica os métodos Runtime no bytecode e rejeita
+Future e ThreadFactory. `BindingReader` pode usar somente ConcurrentHashMap
+para escopos imutáveis de publicação/unidade compartilhados pelos workers de uma
+leitura; não há cache global, execução ou merge de fatos. O gate verifica os métodos Runtime no bytecode e rejeita
 processos, outras consultas Runtime e uso dessas exceções por outros owners.
 Não abre java.nio.file, filesystem ou bibliotecas externas. Model e validation
 conservam sua allowlist anterior. [Contrato do codec](../engineering/air-json.md).

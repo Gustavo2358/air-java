@@ -19,8 +19,10 @@ JSON = "io.github.gustavo2358.air.json."
 JSON_JDK_CLASSES = {"java.nio.ByteBuffer", "java.nio.CharBuffer", "java.nio.charset.Charset",
                     "java.nio.charset.CharsetDecoder", "java.nio.charset.CharacterCodingException",
                     "java.nio.charset.CodingErrorAction", "java.nio.charset.StandardCharsets"}
-# Operational dependencies are confined to the codec's scheduler/configuration.
+# Operational dependencies are confined to the codec scheduler/configuration
+# and its exact per-read immutable scope owner.
 JSON_OPERATIONAL_CLASSES = {
+    JSON + "BindingReader": {"java.util.concurrent.ConcurrentHashMap"},
     JSON + "AirJson$DecodeOptions": {"java.lang.Runtime"},
     JSON + "AirJson": {"java.io.OutputStream", "java.io.IOException"},
     JSON + "AirJson$PreparedOutput": {"java.io.OutputStream", "java.io.IOException"},

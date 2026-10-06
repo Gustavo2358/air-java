@@ -36,3 +36,17 @@ measurement before a file adapter touches its destination directory. The prepare
 owner retains only the immutable model/lazy mapping and validation result; writeTo
 emits the already checked mapping without repeated validation/measurement. It
 remains safe for independent caller streams; no mutable mapping cache exists.
+
+## Decode scope ownership law (before implementation)
+
+Each binding read owns canonical immutable publication and unit scopes, keyed by
+all exact scope fields, after the existing shape/text checks. Equal scopes within
+one read reuse identity; different namespace/local pairs (including hash
+collisions) remain distinct. Separate/concurrent reads share no scope cache.
+Leaf IDs, declarations, occurrences, evidence and validation are not memoized.
+Parallel binding workers use the same per-read owner. UTF-8, field/domain/role
+checks and diagnostic order remain unchanged even after an equal scope occurred.
+ScopedIdentityChecks uses the independent physical golden and adversarial scope
+keys, checks reference ownership, complete facts and canonical bytes; parallel
+ownership is checked by DecodeSchedulingChecks. Cache space is O(distinct scopes),
+not O(all references), and there is no global string interning.
