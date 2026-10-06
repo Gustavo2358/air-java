@@ -12,7 +12,7 @@ import static io.github.gustavo2358.air.json.AirJsonException.Code.*;
 /**
  * Shared codec for analysis-ir-json 1.0.0 / AIR 2.0.0, DRAFT pin 2c7f31f1.
  * Implements the forms documented in docs/engineering/air-json.md; other forms fail explicitly.
- * Stateless and thread safe. No method exposes facts/bytes on failure. Partial transport is explicitly opt-in.
+ * Stateless and thread safe. Admission failures expose no facts/bytes; stream I/O failure may leave a prefix. Partial transport is opt-in.
  */
 public final class AirJson {
     /** Operational bounds, not AIR cardinality or integer validity rules. */
