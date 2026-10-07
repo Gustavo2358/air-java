@@ -1,0 +1,12 @@
+{
+  "id": "WORK-AIR-PAGED",
+  "title": "Official immutable paged AIR access and incremental checked codec",
+  "status": "IN_PROGRESS",
+  "scope": [
+    "typed snapshot access with explicit lifetime and paged storage ports",
+    "Publication in-memory adapter and validation traversal",
+    "incremental official codec and complete structural admission",
+    "memory/paged semantic and diagnostic equivalence",
+    "architecture boundaries and consumer integration"
+  ]
+}
