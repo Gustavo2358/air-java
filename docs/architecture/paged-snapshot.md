@@ -32,3 +32,34 @@ The integration order is access/storage contracts → official validation/codec 
 producer tests → immutable AIR commit → consumer repin and boundary tests. Java 21
 without preview and existing model/codec dependency boundaries remain requirements;
 any deliberate boundary evolution is documented and tested, never bypassed.
+
+## Typed access checkpoint
+
+`AirShape` enumerates every shape reachable from `Publication`: 197 records,
+37 enums, 40 closed unions and 518 fields. Fixed metadata describes exact field
+types, list/optional element types, enum values and transitive subtype membership.
+An independent test reads the Java model's record components and sealed hierarchies
+to challenge the catalogue. Production access has explicit generated typed switches;
+it performs no reflection and does not interpret JSON tags. Computed helper types
+that are not publication facts do not enter this catalogue.
+
+`AirSnapshot` reads typed fields, 64-bit list/optional indices, primitive scalar
+values and bounded UTF-16 blocks. Unbounded integers use canonical signed decimal
+blocks instead of requiring a resident BigInteger. External storage implements the
+frozen `Source` port and transfers ownership of its lease to the snapshot. Closure
+detaches that owner and rejects further access. Concrete node handles are scoped to
+the source; equal model IDs may occupy different nodes, so full typed ID contents
+and namespaces remain the authority for semantic identity.
+
+The explicit `fromPublication` adapter retains the caller-owned Publication and lazy
+in-memory identity indexes. It computes a large integer's text once per model
+identity. It does not claim managed residency. The external-source tests exercise
+indices/text offsets above Integer.MAX_VALUE, not a valid giant AIR or a managed
+decoder/Validator execution.
+
+API impact is COMPATIBLE: these are additive access types; existing model, codec and
+validation signatures/semantics are unchanged. Access snapshots carry no validation
+status. In particular attaching typed storage, or wrapping a Publication with another
+AIR version, cannot produce a checked certificate. Incremental builder, paged storage,
+official codec and complete Validator migration remain pending; the consumer has not
+been repinned or integrated yet.

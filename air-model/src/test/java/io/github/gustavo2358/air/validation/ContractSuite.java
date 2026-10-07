@@ -14,6 +14,10 @@ public final class ContractSuite {
     private static int passed;
     private ContractSuite() {}
     public static void main(String[] args) throws Exception {
+        test("PAGED-ACCESS exact typed model facts",PagedAccessChecks::modelFacts);
+        test("PAGED-ACCESS unbounded integer facts",PagedAccessChecks::integerFacts);
+        test("PAGED-ACCESS long cursors and lifetime",PagedAccessChecks::longAccessAndLifetime);
+        test("PAGED-ACCESS complete independent model catalogue",PagedAccessChecks::completeCatalogue);
         test("PMT positive bases and diagnostic integrity",PositiveStorageChecks::run);
         test("PMT W3-R1 grounded executable bindings",BoundedBindingChecks::run);
         test("ST-W6 bounded regional fit codec proof",RegionalFitChecks::run);

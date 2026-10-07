@@ -2,6 +2,10 @@
   "baseline_commit": "6a4091e5394fc22b3d2ada9abbdb530eb3572a58",
   "source": "src/test/java/io/github/gustavo2358/air/validation/ContractSuite.java",
   "checks": [
+    "PAGED-ACCESS exact typed model facts",
+    "PAGED-ACCESS unbounded integer facts",
+    "PAGED-ACCESS long cursors and lifetime",
+    "PAGED-ACCESS complete independent model catalogue",
     "PMT positive bases and diagnostic integrity",
     "PMT W3-R1 grounded executable bindings",
     "ST-W6 bounded regional fit codec proof",
