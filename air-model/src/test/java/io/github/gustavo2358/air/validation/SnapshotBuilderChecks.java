@@ -32,6 +32,7 @@ final class SnapshotBuilderChecks {
         try (var builder = new AirSnapshotBuilder(storage); var original = AirSnapshot.fromPublication(f.build())) {
             long root = copy(original, original.root(), null, builder);
             long[] values = new long[4097]; long array;
+            long empty = builder.optional(AirShape.UNIT, 0);
             try (var list = builder.list(AirShape.SMALL_INTEGER)) {
                 for (int n = 0; n < values.length; n++) { values[n] = builder.scalar(AirShape.SMALL_INTEGER, n - 2048); list.add(values[n]); }
                 array = list.finish();
@@ -47,6 +48,7 @@ final class SnapshotBuilderChecks {
                 text.append(new char[]{'A', '\uD83D'}, 0, 2);
                 text.append(new char[]{'\uDE00', '\u0000', 'Z'}, 0, 3); unicode = text.finish();
             }
+            AirSnapshot.Cursor retained;
             try (var actual = builder.finish(root)) {
                 eq(4097L, actual.size(array)); var random = new Random(8087);
                 for (int n = 0; n < 512; n++) {
@@ -60,7 +62,26 @@ final class SnapshotBuilderChecks {
                 eq("-1000000", new String(block));
                 eq(8, actual.readCharacters(integer, 4089, block, 0, 8)); eq("00000000", new String(block));
                 eq("A\uD83D\uDE00\u0000Z", characters(actual, unicode));
+                long reads = storage.reads, capacity = storage.claimed;
+                try (var cursor = actual.elements(array, AirShape.SMALL_INTEGER)) {
+                    fails(java.util.NoSuchElementException.class, cursor::value);
+                    for (long expected : values) { eq(true, cursor.advance()); eq(expected, cursor.value()); }
+                    eq(false, cursor.advance()); eq(false, cursor.advance());
+                    fails(java.util.NoSuchElementException.class, cursor::value);
+                }
+                if (storage.reads - reads > values.length * 12L + 128)
+                    throw new AssertionError("sequential cursor repeated indexed searches");
+                eq(capacity, storage.claimed);
+                try (var cursor = actual.elements(empty, AirShape.UNIT)) { eq(false, cursor.advance()); eq(false, cursor.advance()); }
+                eq(capacity, storage.claimed);
+                storage.failReadLease = true;
+                fails(StoreDenied.class, () -> actual.elements(array, AirShape.SMALL_INTEGER));
+                eq(capacity, storage.claimed); eq(4097L, actual.size(array));
+                storage.failReadLease = false;
+                retained = actual.elements(array, AirShape.SMALL_INTEGER);
+                eq(true, retained.advance());
             }
+            fails(IllegalStateException.class, retained::advance); eq(0L, storage.claimed);
         }
         eq(0L, storage.claimed); eq(true, storage.closed);
     }
@@ -179,7 +200,7 @@ final class SnapshotBuilderChecks {
         private final HashMap<AirSnapshotBuilder.Column, HashMap<Long, Long>> tables = new HashMap<>();
         private final long limit;
         long claimed, reads, remainingWrites = Long.MAX_VALUE;
-        boolean closed, frozen, failStorageClose, failLeaseClose;
+        boolean closed, frozen, failStorageClose, failLeaseClose, failReadLease;
         Store(long limit) { this.limit = limit; }
         @Override public long get(AirSnapshotBuilder.Column column, long index) { reads++; return tables.computeIfAbsent(column, ignored -> new HashMap<>()).getOrDefault(index, 0L); }
         @Override public void set(AirSnapshotBuilder.Column column, long index, long value) {
@@ -189,6 +210,10 @@ final class SnapshotBuilderChecks {
         }
         @Override public AirSnapshotBuilder.Lease claim(long bytes) {
             if (frozen) throw new IllegalStateException("frozen test storage");
+            return capacity(bytes);
+        }
+        @Override public AirSnapshotBuilder.Lease readLease(long bytes) { if (failReadLease) throw new StoreDenied(); return capacity(bytes); }
+        private AirSnapshotBuilder.Lease capacity(long bytes) {
             if (bytes > limit - claimed) throw new StoreDenied(); claimed += bytes;
             return new AirSnapshotBuilder.Lease() { private boolean released; @Override public void close() { if (!released) {
                 released = true; claimed -= bytes; if (failLeaseClose) throw new StoreDenied();

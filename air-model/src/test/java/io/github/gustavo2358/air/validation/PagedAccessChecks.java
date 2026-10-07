@@ -21,6 +21,10 @@ final class PagedAccessChecks {
             long root = snapshot.root(); eq(AirShape.PUBLICATION, snapshot.shape(root));
             long units = snapshot.field(root, AirShape.PUBLICATION, 4); eq(1L, snapshot.size(units));
             long unit = snapshot.element(units, AirShape.UNIT, 0);
+            try (var cursor = snapshot.elements(units, AirShape.UNIT)) {
+                eq(true, cursor.advance()); eq(unit, cursor.value());
+                eq(false, cursor.advance()); eq(false, cursor.advance());
+            }
             long sequences = snapshot.field(unit, AirShape.UNIT, 5);
             long sequence = snapshot.element(sequences, AirShape.SEQUENCE, 0);
             long instructions = snapshot.field(sequence, AirShape.SEQUENCE, 1);

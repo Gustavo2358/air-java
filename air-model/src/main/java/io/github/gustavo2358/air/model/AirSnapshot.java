@@ -23,10 +23,18 @@ public final class AirSnapshot implements AutoCloseable {
         long child(long handle, long index);
         long scalar(long handle);
         int characters(long handle, long offset, char[] output, int start, int count);
+        /** Indexed convenience for resident/custom sources; paged sources override with a linear walk. */
+        default Elements elements(long handle) { return new IndexedElements(this, handle); }
+        @Override void close();
+    }
+    public interface Elements extends AutoCloseable {
+        boolean advance();
+        long value();
         @Override void close();
     }
     private Source source;
     private final long root;
+    private Cursor cursors;
 
     private AirSnapshot(Source source, long root) { this.source = source; this.root = root; }
 
@@ -94,6 +102,87 @@ public final class AirSnapshot implements AutoCloseable {
         return child;
     }
 
+    /** Sequential primitive cursor, owned by this snapshot; no row objects or collection materialization. */
+    public synchronized Cursor elements(long container, AirShape expected) {
+        Objects.requireNonNull(expected); size(container);
+        Elements raw = Objects.requireNonNull(source.elements(container));
+        try {
+            var cursor = new Cursor(this, raw, expected);
+            cursor.next = cursors; if (cursors != null) cursors.previous = cursor; cursors = cursor;
+            return cursor;
+        } catch (RuntimeException | Error exception) {
+            try { raw.close(); } catch (RuntimeException | Error cleanup) { if (cleanup != exception) exception.addSuppressed(cleanup); }
+            throw exception;
+        }
+    }
+
+    public static final class Cursor implements Elements {
+        private volatile AirSnapshot owner;
+        private Elements raw;
+        private final AirShape expected;
+        private Cursor previous, next;
+        private long current;
+        private boolean exhausted;
+        private Cursor(AirSnapshot owner, Elements raw, AirShape expected) { this.owner = owner; this.raw = raw; this.expected = expected; }
+        @Override public boolean advance() {
+            AirSnapshot snapshot = owner;
+            if (snapshot == null) {
+                if (exhausted) return false;
+                throw new IllegalStateException("AIR cursor is closed");
+            }
+            synchronized (snapshot) {
+                if (owner == null) throw new IllegalStateException("AIR cursor is closed");
+                snapshot.open();
+                try {
+                    if (!raw.advance()) { exhausted = true; close(); return false; }
+                    long value = raw.value();
+                    if (!expected.accepts(snapshot.shape(value))) throw new IllegalArgumentException("wrong AIR cursor element type");
+                    current = value; return true;
+                } catch (RuntimeException | Error exception) {
+                    try { close(); } catch (RuntimeException | Error cleanup) { if (cleanup != exception) exception.addSuppressed(cleanup); }
+                    throw exception;
+                }
+            }
+        }
+        @Override public long value() {
+            AirSnapshot snapshot = owner;
+            if (snapshot == null) {
+                if (exhausted) throw new java.util.NoSuchElementException("AIR cursor has no current element");
+                throw new IllegalStateException("AIR cursor is closed");
+            }
+            synchronized (snapshot) {
+                if (owner == null) throw new IllegalStateException("AIR cursor is closed");
+                snapshot.open();
+                if (current == 0) throw new java.util.NoSuchElementException("AIR cursor has no current element");
+                return current;
+            }
+        }
+        @Override public void close() {
+            AirSnapshot snapshot = owner; if (snapshot == null) return;
+            synchronized (snapshot) {
+                if (owner == null) return;
+                if (previous == null) snapshot.cursors = next; else previous.next = next;
+                if (next != null) next.previous = previous;
+                Elements iterator = raw; raw = null; owner = null; previous = null; next = null; current = 0;
+                iterator.close();
+            }
+        }
+    }
+
+    private static final class IndexedElements implements Elements {
+        private Source source;
+        private final long container, length;
+        private long index, current;
+        private IndexedElements(Source source, long container) { this.source = source; this.container = container; length = source.length(container); }
+        @Override public boolean advance() {
+            if (source == null) return false;
+            if (index == length) { close(); return false; }
+            current = source.child(container, index++); return true;
+        }
+        @Override public long value() { if (current == 0) throw new java.util.NoSuchElementException(); return current; }
+        @Override public void close() { source = null; current = 0; }
+    }
+
     /** Boolean 0/1, signed 32-bit value, or an enum ordinal. Large INTEGER is read by blocks. */
     public synchronized long scalar(long handle) {
         AirShape shape = shape(handle);
@@ -140,6 +229,14 @@ public final class AirSnapshot implements AutoCloseable {
     private void open() { if (source == null) throw new IllegalStateException("AIR snapshot is closed"); }
     @Override public synchronized void close() {
         if (source == null) return;
-        Source owner = source; source = null; owner.close();
+        Source owner = source; source = null; Throwable failure = null;
+        while (cursors != null) try { cursors.close(); } catch (RuntimeException | Error exception) {
+            if (failure == null) failure = exception; else if (failure != exception) failure.addSuppressed(exception);
+        }
+        try { owner.close(); } catch (RuntimeException | Error exception) {
+            if (failure == null) failure = exception; else if (failure != exception) failure.addSuppressed(exception);
+        }
+        if (failure instanceof RuntimeException exception) throw exception;
+        if (failure instanceof Error error) throw error;
     }
 }

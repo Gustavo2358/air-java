@@ -102,3 +102,12 @@ invariant checks and complete cross-reference Validator are still required. Froz
 typed storage alone remains insufficient for a checked validity certificate.
 The explicit `Storage.freeze` requirement corrects the unmerged builder prototype
 in place: callers cannot keep using a borrowed write port after ownership transfer.
+
+Sequential `AirSnapshot.elements` cursors yield primitive node handles. The paged
+source traverses each collection tree once with a fixed iterative stack, so visiting
+N items takes O(N) logical tree reads instead of N indexed searches. Cursor scratch
+leases are permitted after storage freeze; mutation leases remain forbidden. Empty
+and exhausted cursors release their leases, and snapshot close closes active cursors
+before storage. A denied cursor lease leaves input facts intact. The public indexed
+default supports caller-owned resident/custom sources; managed paged access overrides
+it. None of these cursors materializes a java.util.List or allocates a row per item.

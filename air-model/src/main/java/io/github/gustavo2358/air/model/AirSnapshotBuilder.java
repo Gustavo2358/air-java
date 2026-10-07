@@ -17,6 +17,8 @@ public final class AirSnapshotBuilder implements AutoCloseable {
         long get(Column column, long index);
         void set(Column column, long index, long value);
         Lease claim(long bytes);
+        /** Read-only cursor scratch; permitted after freeze and released by cursor/owner closure. */
+        Lease readLease(long bytes);
         /** Irreversibly reject future writes/claims; read access and closure remain available. */
         void freeze();
         @Override void close();
@@ -281,10 +283,66 @@ public final class AirSnapshotBuilder implements AutoCloseable {
             }
             return count;
         }
+        @Override public AirSnapshot.Elements elements(long handle) { baseChecked(handle); return new StoredElements(this, handle); }
         @Override public void close() {
             if (storage == null) return;
             Storage owner = storage; Lease reservation = control; storage = null; control = null;
             closeOwnership(owner, reservation);
+        }
+    }
+
+    private static final class StoredElements implements AirSnapshot.Elements {
+        private StoredSource owner;
+        private Lease lease;
+        private long[] pages;
+        private int[] next;
+        private final long container, length;
+        private final boolean list;
+        private int depth;
+        private long current, index;
+        private StoredElements(StoredSource owner, long container) {
+            this.owner = owner; this.container = container;
+            length = owner.length(container); list = owner.shape(container) == AirShape.LIST;
+            lease = Objects.requireNonNull(owner.storage.readLease(list && length != 0 ? 4096 : 256));
+            try {
+                if (list && length != 0) {
+                    pages = new long[128]; next = new int[128];
+                    pages[0] = owner.storage.get(Column.NODES, base(container) + 2);
+                } else depth = -1;
+            } catch (RuntimeException | Error exception) {
+                try { close(); } catch (RuntimeException | Error cleanup) { if (cleanup != exception) exception.addSuppressed(cleanup); }
+                throw exception;
+            }
+        }
+        @Override public boolean advance() {
+            if (owner == null) return false;
+            try {
+                if (!list) {
+                    if (index == length) { close(); return false; }
+                    current = owner.child(container, index++); return true;
+                }
+                while (depth >= 0) {
+                    long row = base(pages[depth]);
+                    if (next[depth] == 0) {
+                        long value = owner.storage.get(Column.ARRAY_TREE, row + 3);
+                        if (value != 0) { depth--; current = value; return true; }
+                    }
+                    if (next[depth] == 2) { depth--; continue; }
+                    long child = owner.storage.get(Column.ARRAY_TREE, row + next[depth]++);
+                    if (child == 0 || depth + 1 == pages.length) throw new IllegalStateException("invalid indexed AIR collection tree");
+                    depth++; pages[depth] = child; next[depth] = 0;
+                }
+                close(); return false;
+            } catch (RuntimeException | Error exception) {
+                try { close(); } catch (RuntimeException | Error cleanup) { if (cleanup != exception) exception.addSuppressed(cleanup); }
+                throw exception;
+            }
+        }
+        @Override public long value() { if (current == 0) throw new java.util.NoSuchElementException(); return current; }
+        @Override public void close() {
+            if (owner == null) return;
+            owner = null; pages = null; next = null; current = 0;
+            Lease capacity = lease; lease = null; capacity.close();
         }
     }
 
