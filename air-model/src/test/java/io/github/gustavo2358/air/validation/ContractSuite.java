@@ -18,6 +18,10 @@ public final class ContractSuite {
         test("PAGED-ACCESS unbounded integer facts",PagedAccessChecks::integerFacts);
         test("PAGED-ACCESS long cursors and lifetime",PagedAccessChecks::longAccessAndLifetime);
         test("PAGED-ACCESS complete independent model catalogue",PagedAccessChecks::completeCatalogue);
+        test("PAGED-BUILDER exact facts and ownership transfer",SnapshotBuilderChecks::completeFactsAndTransfer);
+        test("PAGED-BUILDER indexed arrays and streamed scalars",SnapshotBuilderChecks::indexedCollectionsAndStreamedScalars);
+        test("PAGED-BUILDER quotas abandonment and local shapes",SnapshotBuilderChecks::failuresAndLocalShapes);
+        test("PAGED-BUILDER operational abort and both cleanup failures",SnapshotBuilderChecks::operationalAbortAndCleanupFailures);
         test("PMT positive bases and diagnostic integrity",PositiveStorageChecks::run);
         test("PMT W3-R1 grounded executable bindings",BoundedBindingChecks::run);
         test("ST-W6 bounded regional fit codec proof",RegionalFitChecks::run);

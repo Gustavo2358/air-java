@@ -63,3 +63,39 @@ status. In particular attaching typed storage, or wrapping a Publication with an
 AIR version, cannot produce a checked certificate. Incremental builder, paged storage,
 official codec and complete Validator migration remain pending; the consumer has not
 been repinned or integrated yet.
+
+## Incremental storage builder checkpoint
+
+`AirSnapshotBuilder` owns four zero-default primitive column ports: node headers,
+fixed record references, indexed collection trees and packed UTF-16 data. Port
+implementations fund capacity/spill from the session ledger; the builder claims
+control-state leases before allocating its fixed buffers. The initial owner uses
+512 reserved bytes, each active list appender 1,024, and each character appender
+256. Those are coarse capacity reservations, not measured retained-heap totals.
+
+Record admission checks exact fields/subtypes and each container's declared element
+shape without repeatedly scanning its elements. Children exist before parents;
+forward semantic AIR references remain ID values that the complete Validator must
+resolve later. All offsets, counts and identity arithmetic are 64-bit and reject
+overflow before addressing storage.
+
+A list appender uses a 64-slot binary-counter forest. Appending N elements creates
+O(N) total tree nodes; indexed reads follow weighted child counts in O(log N).
+Array length never becomes an int-sized list. Character streams preserve surrogate
+pairs across blocks and canonical signed decimal integers. Four UTF-16 units share
+one primitive word; read blocks reuse each loaded word. Lists/records can be built
+between character blocks, but only one character stream owns the contiguous text
+append position at once.
+
+Successful finish transfers the frozen store/control lease to a snapshot and
+invalidates the builder. Unfinished writers prevent transfer; abandoning a writer
+aborts the builder instead of certifying a prefix. Partial storage writes abort it
+as well. Closing detaches owners and releases reservations, preserving both primary
+and suppressed cleanup failures. Independent tests confront all facts from a
+representative Publication, randomized array positions and streamed scalar blocks.
+The mutation that returns the first array element for every index is rejected.
+
+The producer tests use a map-backed test port; they do not establish bounded disk
+residency. The consumer page-backed port, incremental JSON binding, model-local
+invariant checks and complete cross-reference Validator are still required. Frozen
+typed storage alone remains insufficient for a checked validity certificate.
