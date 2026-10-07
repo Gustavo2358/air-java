@@ -17,6 +17,8 @@ public final class AirSnapshotBuilder implements AutoCloseable {
         long get(Column column, long index);
         void set(Column column, long index, long value);
         Lease claim(long bytes);
+        /** Irreversibly reject future writes/claims; read access and closure remain available. */
+        void freeze();
         @Override void close();
     }
     private static final AirShape[] SHAPES = AirShape.values();
@@ -104,6 +106,8 @@ public final class AirSnapshotBuilder implements AutoCloseable {
         open();
         if (writers != null) throw new IllegalStateException("unfinished AIR appenders");
         if (shape(publication) != AirShape.PUBLICATION) throw new IllegalArgumentException("AIR Publication root required");
+        try { storage.freeze(); }
+        catch (RuntimeException | Error exception) { failed = true; throw exception; }
         var source = new StoredSource(storage, control, nodes);
         closed = true; storage = null; control = null;
         return AirSnapshot.attach(source, publication);

@@ -87,7 +87,8 @@ one primitive word; read blocks reuse each loaded word. Lists/records can be bui
 between character blocks, but only one character stream owns the contiguous text
 append position at once.
 
-Successful finish transfers the frozen store/control lease to a snapshot and
+Successful finish irreversibly seals the storage write/claim port, then transfers
+the frozen store/control lease to a snapshot and
 invalidates the builder. Unfinished writers prevent transfer; abandoning a writer
 aborts the builder instead of certifying a prefix. Partial storage writes abort it
 as well. Closing detaches owners and releases reservations, preserving both primary
@@ -99,3 +100,5 @@ The producer tests use a map-backed test port; they do not establish bounded dis
 residency. The consumer page-backed port, incremental JSON binding, model-local
 invariant checks and complete cross-reference Validator are still required. Frozen
 typed storage alone remains insufficient for a checked validity certificate.
+The explicit `Storage.freeze` requirement corrects the unmerged builder prototype
+in place: callers cannot keep using a borrowed write port after ownership transfer.

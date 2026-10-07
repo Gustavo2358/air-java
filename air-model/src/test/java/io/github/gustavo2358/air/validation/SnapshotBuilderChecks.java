@@ -19,7 +19,8 @@ final class SnapshotBuilderChecks {
             long root = copy(original, original.root(), null, builder);
             try (var actual = builder.finish(root)) {
                 builder.close(); // Ownership was transferred: this must not close actual storage.
-                eq(false, storage.closed); compare(original, actual);
+                eq(false, storage.closed); eq(true, storage.frozen); compare(original, actual);
+                fails(IllegalStateException.class, () -> storage.set(AirSnapshotBuilder.Column.NODES, 0, 0));
                 fails(IllegalStateException.class, () -> builder.scalar(AirShape.BOOLEAN, 1));
             }
         }
@@ -178,19 +179,22 @@ final class SnapshotBuilderChecks {
         private final HashMap<AirSnapshotBuilder.Column, HashMap<Long, Long>> tables = new HashMap<>();
         private final long limit;
         long claimed, reads, remainingWrites = Long.MAX_VALUE;
-        boolean closed, failStorageClose, failLeaseClose;
+        boolean closed, frozen, failStorageClose, failLeaseClose;
         Store(long limit) { this.limit = limit; }
         @Override public long get(AirSnapshotBuilder.Column column, long index) { reads++; return tables.computeIfAbsent(column, ignored -> new HashMap<>()).getOrDefault(index, 0L); }
         @Override public void set(AirSnapshotBuilder.Column column, long index, long value) {
+            if (frozen) throw new IllegalStateException("frozen test storage");
             if (remainingWrites == 0) throw new StoreDenied(); remainingWrites--;
             tables.computeIfAbsent(column, ignored -> new HashMap<>()).put(index, value);
         }
         @Override public AirSnapshotBuilder.Lease claim(long bytes) {
+            if (frozen) throw new IllegalStateException("frozen test storage");
             if (bytes > limit - claimed) throw new StoreDenied(); claimed += bytes;
             return new AirSnapshotBuilder.Lease() { private boolean released; @Override public void close() { if (!released) {
                 released = true; claimed -= bytes; if (failLeaseClose) throw new StoreDenied();
             } } };
         }
+        @Override public void freeze() { frozen = true; }
         @Override public void close() { closed = true; tables.clear(); if (failStorageClose) throw new StoreDenied(); }
     }
 }
