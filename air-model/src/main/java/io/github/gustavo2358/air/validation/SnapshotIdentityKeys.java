@@ -83,7 +83,7 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
     }
     /** Cached intrinsic atom facts, not model-local or cross-reference validation. */
     public enum AtomFact {
-        CHARACTERS, UNICODE_SCALARS, INTEGER_SIGN, MAGNITUDE_MODULO_EIGHT
+        CHARACTERS, UNICODE_SCALARS, INTEGER_SIGN, MAGNITUDE_MODULO_EIGHT, NONBLANK
     }
     /** Exact TEXT/INTEGER content key; integer storage must use canonical signed decimal. */
     public long atomKey(long handle) {
@@ -106,7 +106,49 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
             if((fact==AtomFact.INTEGER_SIGN||fact==AtomFact.MAGNITUDE_MODULO_EIGHT)&&shape!=AirShape.INTEGER)
                 throw new IllegalArgumentException("integer atom fact requires INTEGER");
             long key=atom(handle,shape);
-            return storage.word(key,switch(fact){case CHARACTERS->3;case UNICODE_SCALARS->4;case INTEGER_SIGN->5;case MAGNITUDE_MODULO_EIGHT->6;});
+            if(fact==AtomFact.NONBLANK&&shape==AirShape.INTEGER)return 1;
+            return storage.word(key,switch(fact){case CHARACTERS->3;case UNICODE_SCALARS->4;case INTEGER_SIGN->5;case MAGNITUDE_MODULO_EIGHT->6;case NONBLANK->5;});
+        } catch(RuntimeException|Error failure){failed=true;throw failure;}
+        finally{Arrays.fill(forest,0);}
+    }
+    /**
+     * Exact canonical integer order: cached sign/length, then first unequal canonical subtree.
+     * Equal-length deterministic forests align; equal child keys skip entire shared prefixes.
+     * After atom construction this reads O(log characters) tuple words, never source characters.
+     */
+    public int compareIntegers(long firstHandle,long secondHandle) {
+        open();
+        try {
+            if(snapshot.shape(firstHandle)!=AirShape.INTEGER||snapshot.shape(secondHandle)!=AirShape.INTEGER)
+                throw new IllegalArgumentException("integer order requires INTEGER atoms");
+            long firstKey=atom(firstHandle,AirShape.INTEGER),secondKey=atom(secondHandle,AirShape.INTEGER);
+            if(firstKey==secondKey)return 0;
+            long sign=storage.word(firstKey,5),otherSign=storage.word(secondKey,5);
+            int order=Long.compare(sign,otherSign);if(order!=0)return order;
+            order=Long.compare(storage.word(firstKey,3),storage.word(secondKey,3));
+            if(order!=0)return sign<0?-order:order;
+            long firstTree=storage.word(firstKey,1),secondTree=storage.word(secondKey,1);
+            while(firstTree!=secondTree) {
+                long tag=storage.word(firstTree,0);
+                if(tag!=storage.word(secondTree,0))throw new IllegalStateException("canonical integer tree shape disagreement");
+                if(tag==TEXT_PAIR) {
+                    long left=storage.word(firstTree,1),otherLeft=storage.word(secondTree,1);
+                    if(left!=otherLeft){firstTree=left;secondTree=otherLeft;}
+                    else{firstTree=storage.word(firstTree,2);secondTree=storage.word(secondTree,2);}
+                    continue;
+                }
+                if(tag!=TEXT_LEAF)throw new IllegalStateException("canonical integer leaf required");
+                for(int column=3;column<=6;column++) {
+                    long word=storage.word(firstTree,column),otherWord=storage.word(secondTree,column);
+                    if(word==otherWord)continue;
+                    for(int shift=0;shift<64;shift+=16) {
+                        order=Long.compare((word>>>shift)&65535,(otherWord>>>shift)&65535);
+                        if(order!=0)return sign<0?-order:order;
+                    }
+                }
+                throw new IllegalStateException("canonical integer leaves disagree with exact interning");
+            }
+            return 0;
         } catch(RuntimeException|Error failure){failed=true;throw failure;}
         finally{Arrays.fill(forest,0);}
     }
@@ -121,15 +163,23 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
     }
     private long text(long handle,boolean integer) {
         Arrays.fill(forest,0);long length=snapshot.characterCount(handle),offset=0,leaves=0,scalars=0,digits=0;
-        boolean unicode=true,high=false,canonical=true,negative=false,firstZero=false;int modulo=0;
+        boolean unicode=true,nonblank=false,canonical=true,negative=false,firstZero=false;char high=0;int modulo=0;
         while(offset<length) {
             int count=snapshot.readCharacters(handle,offset,characters,0,(int)Math.min(characters.length,length-offset));
             for(int at=0;at<count;at+=16) {
                 int end=Math.min(count,at+16);long a=0,b=0,c=0,d=0;
                 for(int n=at;n<end;n++) {
-                    char character=characters[n];boolean pair=high&&Character.isLowSurrogate(character);
-                    if(high){if(pair)scalars++;else unicode=false;high=false;}
-                    if(!pair){if(Character.isHighSurrogate(character))high=true;else if(Character.isLowSurrogate(character))unicode=false;else scalars++;}
+                    char character=characters[n];boolean pair=high!=0&&Character.isLowSurrogate(character);
+                    if(high!=0) {
+                        if(pair){scalars++;nonblank|=!Character.isWhitespace(Character.toCodePoint(high,character));}
+                        else{unicode=false;nonblank=true;}
+                        high=0;
+                    }
+                    if(!pair) {
+                        if(Character.isHighSurrogate(character))high=character;
+                        else if(Character.isLowSurrogate(character)){unicode=false;nonblank=true;}
+                        else{scalars++;nonblank|=!Character.isWhitespace(character);}
+                    }
                     if(integer) {
                         if(offset+n==0&&character=='-')negative=true;
                         else if(character<'0'||character>'9')canonical=false;
@@ -148,12 +198,12 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
             offset+=count;
         }
         if(integer&&(!canonical||digits==0||negative&&firstZero))throw new IllegalStateException("noncanonical integer AIR storage");
-        if(high)unicode=false;
+        if(high!=0){unicode=false;nonblank=true;}
         long tree=0;
         for(int level=forest.length-1;level>=0;level--)if(forest[level]!=0)
             tree=tree==0?forest[level]:positive(storage.intern(TEXT_PAIR,tree,forest[level],0,0,0,0));
         long sign=integer?(firstZero?0:negative?-1:1):0;
-        long result=positive(storage.intern(integer?INTEGER_END:TEXT_END,tree,0,length,unicode?scalars:-1,sign,integer?modulo:0));
+        long result=positive(storage.intern(integer?INTEGER_END:TEXT_END,tree,0,length,unicode?scalars:-1,integer?sign:nonblank?1:0,integer?modulo:0));
         storage.remember(handle,result);return result;
     }
     private static long positive(long key) {if(key<=0)throw new IllegalStateException("positive canonical identity key required");return key;}

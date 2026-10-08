@@ -61,3 +61,23 @@ references, types/domains, capabilities and full paged admission remain incomple
 Independent laws cover split surrogate pairs, malformed UTF-16, exact trailing NULs,
 Unicode composition, a 100002-character integer, canonical-storage negatives and
 metadata-read failure preserving the borrowed source.
+
+The fused scan also caches Java21 blankness (including code-point whitespace and
+malformed-surrogate content facts). TEXT terminal column5 carries this intrinsic
+flag; INTEGER keeps its sign, with canonical decimal necessarily nonblank. No
+field-local nonblank requirement is inferred merely by computing the summary.
+
+Exact integer comparison uses cached sign and character length, then descends
+only the first unequal child of equal-length deterministic canonical trees. Equal
+child keys skip complete prefixes. One unequal16-character leaf determines ASCII
+digit order, reversed for negatives. After construction the work is O(log character
+length) tuple reads, no source character reads or BigInteger/String reconstruction.
+Repeated comparisons share canonical subtrees and the bounded backend page cache.
+No unbounded all-pairs answer cache is added. Lookup/I/O complexity is separate.
+
+Independent512-bit BigInteger oracle pairs, hand-written giant signed/common-prefix
+cases, Java String.isBlank oracles and metadata fault laws are covered. Five sizes
+16/256/4096/65536/262144 with256 cached queries enforce a logarithmic primitive-word
+bound and no additional source reads/intern requests. They are finite structural
+curves, not a universal end-to-end latency proof. Local constraints/full admission
+and managed consumer production integration still remain incomplete.

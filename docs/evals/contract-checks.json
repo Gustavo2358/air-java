@@ -9,6 +9,7 @@
     "PAGED-ATOMS exact Unicode and typed keys",
     "PAGED-ATOMS canonical huge integers and single source reads",
     "PAGED-ATOMS metadata failure and borrowed source",
+    "PAGED-ATOMS exact integer order and cached blankness",
     "PAGED-DECLARATIONS families and entry seeds",
     "PAGED-DECLARATIONS duplicates and complete ownership",
     "PAGED-DECLARATIONS deep frontier and failure lifetimes",
