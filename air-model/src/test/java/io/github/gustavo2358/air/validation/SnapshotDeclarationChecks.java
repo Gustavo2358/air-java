@@ -209,7 +209,7 @@ final class SnapshotDeclarationChecks {
         public AirSnapshotBuilder.Lease claim(long bytes){return () -> { };}
         public void close(){memo.clear();tuples.clear();rows.clear();}
     }
-    private static final class Store implements SnapshotDeclarations.Storage {
+    static final class Store implements SnapshotDeclarations.Storage {
         final Map<Long,long[]> facts=new HashMap<>(); final ArrayList<long[]> rows=new ArrayList<>(); final ArrayDeque<long[]> frontier=new ArrayDeque<>();
         final IllegalStateException failure=new IllegalStateException("injected store failure");
         long[] current; long claimed,remaining=Long.MAX_VALUE; int maxPending; boolean closed,deny,closeFailure,leaseFailure,frozen,freezeFailure;

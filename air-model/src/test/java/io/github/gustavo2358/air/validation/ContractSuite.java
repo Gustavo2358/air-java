@@ -27,6 +27,10 @@ public final class ContractSuite {
         test("PAGED-LOCAL decimal parts and formats without expanded arithmetic",SnapshotLocalChecks::decimalPartsAndFormatsWithoutExpandedArithmetic);
         test("PAGED-LOCAL label membership and shared fold cost",SnapshotLocalChecks::labelMembershipAndSharedFoldCost);
         test("PAGED-LOCAL whole graph dead content and failure ownership",SnapshotLocalChecks::wholeGraphDeadContentAndFailureOwnership);
+        test("PAGED-CYCLES exact nominal residual families",SnapshotCycleChecks::allNominalFamiliesPreserveCycleDependentResiduals);
+        test("PAGED-CYCLES linear repeated edge removal",SnapshotCycleChecks::chainDiamondRepeatedAndMissingParentsHaveLinearPrimitiveWork);
+        test("PAGED-CYCLES complete identity and sparse handles",SnapshotCycleChecks::nominalIdentityUsesCompleteKeysAndSparseHandles);
+        test("PAGED-CYCLES operational failure ownership",SnapshotCycleChecks::everyOperationalFailureClosesScratchWithoutOwningBorrowedIndices);
         test("PAGED-DECLARATIONS families and entry seeds",SnapshotDeclarationChecks::declarationFamiliesAndEntrySeeds);
         test("PAGED-DECLARATIONS duplicates and complete ownership",SnapshotDeclarationChecks::duplicatesAndCompleteOwnership);
         test("PAGED-DECLARATIONS deep frontier and failure lifetimes",SnapshotDeclarationChecks::deepFrontierAndFailureLifetimes);

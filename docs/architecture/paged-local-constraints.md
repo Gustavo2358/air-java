@@ -6,7 +6,7 @@ remain unchanged. SnapshotLocalConstraints composes with SnapshotGraphWalk and
 borrows the immutable snapshot and exact atom/identity index. It transfers local
 scratch and, through scan, graph scratch. Successful counts establish grammar and
 constructor-local predicates only. Full Validator, CheckedSnapshot, reference,
-visibility/nominal cycles, types/domains/premises, capabilities and operation
+visibility, types/domains/premises, capabilities and operation
 admission, streaming codec and managed CLI remain pending.
 
 The closed AirShape switch applies field-specific Unicode/nonblank rules, exact
@@ -65,3 +65,6 @@ passed the five focused laws before/after isolated compiled identity, membership
 and memo mutations. Source-identity and unconditional-membership mutations are
 also refined to reach their direct semantic duplicate/nonmember assertion before
 checking instrumentation; their initial failures remain preserved separately.
+
+[Nominal cycle residuals](paged-nominal-cycles.md) now provide a separate exact
+removal pass; this does not complete reference or executable-grounding admission.
