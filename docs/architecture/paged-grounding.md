@@ -46,3 +46,6 @@ Map-backed test ports are semantic/work oracles, not managed residence qualifica
 Missing API compilation RED is retained; compiled disabled-propagation and dropped
 remainder mutations fail direct truth assertions. Untouched focused laws pass.
 Consumer managed relation and executable owner diagnostic integration remain pending.
+
+[Shared signature position/membership facts](paged-signatures.md) qualify a separate
+I-08/I-02 frontier; neither fact index establishes complete admission.

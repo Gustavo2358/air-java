@@ -115,7 +115,7 @@ final class SnapshotAtomChecks {
         eq(0L,port.claimed);
     }
     private record Atom(AirShape shape,String value) { }
-    private static final class Source implements AirSnapshot.Source {
+    static final class Source implements AirSnapshot.Source {
         final Map<Long,Atom> atoms=new HashMap<>();final Map<Long,Long> reads=new HashMap<>();
         long issued=1L<<42,first,characters;boolean closed;
         long add(AirShape shape,String value){long handle=++issued;atoms.put(handle,new Atom(shape,value));if(first==0)first=handle;return handle;}

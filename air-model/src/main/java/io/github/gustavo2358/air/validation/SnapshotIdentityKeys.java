@@ -152,6 +152,39 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
         } catch(RuntimeException|Error failure){failed=true;throw failure;}
         finally{Arrays.fill(forest,0);}
     }
+    /**
+     * Exact arbitrary canonical INTEGER equality against a natural row ordinal, without narrowing
+     * the input or constructing decimal String/BigInteger/derived tuple state. A long ordinal has
+     * at most19 digits; cached length/sign reject larger inputs before reading any tree leaf.
+     * After atom construction at most two packed leaves are needed, independent of input size.
+     */
+    public boolean integerEqualsNatural(long handle,long natural) {
+        open();
+        try {
+            if(natural<0||snapshot.shape(handle)!=AirShape.INTEGER)throw new IllegalArgumentException("INTEGER and nonnegative natural ordinal required");
+            long key=atom(handle,AirShape.INTEGER);
+            if(storage.word(key,5)!=(natural==0?0:1))return false;
+            int digits=1;long divisor=1;
+            for(long rest=natural;rest>=10;rest/=10){digits++;divisor*=10;}
+            if(storage.word(key,3)!=digits)return false;
+            long tree=storage.word(key,1),first=tree,second=0;
+            if(digits>16) {
+                if(storage.word(tree,0)!=TEXT_PAIR)throw new IllegalStateException("canonical ordinal pair required");
+                first=storage.word(tree,1);second=storage.word(tree,2);
+            }
+            if(storage.word(first,0)!=TEXT_LEAF||(second!=0&&storage.word(second,0)!=TEXT_LEAF))throw new IllegalStateException("canonical ordinal leaves required");
+            long packed=0;
+            for(int at=0;at<digits;at++) {
+                int local=at&15;
+                if((local&3)==0)packed=storage.word(at<16?first:second,3+local/4);
+                long actual=(packed>>>((local&3)*16))&65535,expected='0'+natural/divisor;
+                if(actual!=expected)return false;
+                natural%=divisor;divisor/=10;
+            }
+            return true;
+        } catch(RuntimeException|Error failure){failed=true;throw failure;}
+        finally{Arrays.fill(forest,0);}
+    }
     private static void requireAtom(AirShape shape){if(shape!=AirShape.TEXT&&shape!=AirShape.INTEGER)throw new IllegalArgumentException("TEXT or INTEGER atom required");}
     private long atom(long handle,AirShape shape) {
         long known=storage.known(handle);

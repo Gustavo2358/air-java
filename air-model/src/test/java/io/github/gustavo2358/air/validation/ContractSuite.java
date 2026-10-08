@@ -22,6 +22,14 @@ public final class ContractSuite {
         test("PAGED-ATOMS canonical huge integers and single source reads",SnapshotAtomChecks::canonicalHugeIntegersAndSingleSourceReads);
         test("PAGED-ATOMS metadata failure and borrowed source",SnapshotAtomChecks::metadataReadFailureAbortsOwnerAndPreservesBorrowedSource);
         test("PAGED-ATOMS exact integer order and cached blankness",SnapshotAtomChecks::integerOrderAndBlanknessReuseCanonicalSubtrees);
+        test("PAGED-ORDINAL exact natural integer equality",SnapshotOrdinalChecks::exactNaturalOrdinalsIncludeLongBoundaryAndRejectHugePositions);
+        test("PAGED-ORDINAL bounded cached work and failure ownership",SnapshotOrdinalChecks::cachedOrdinalQueriesUseBoundedPrimitiveWordsAndFailureOwnership);
+        test("PAGED-SIGNATURE open and closed bad row union",SnapshotSignatureChecks::openAndClosedPositionsCountEachBadRowOnceWithIndependentOrder);
+        test("PAGED-SIGNATURE invalid shared lists and exact retained counts",SnapshotSignatureChecks::badSharedListsNeverReplayAndRetentionDoesNotStopExactCounts);
+        test("PAGED-SIGNATURE independent arbitrary integer and contextual lists",SnapshotSignatureChecks::independentIntegerListsAndContextKeysPreserveEveryBadOrdinal);
+        test("PAGED-SIGNATURE canonical initial parameter membership",SnapshotSignatureChecks::parameterInitialMembershipUsesCanonicalIntegersAndEntryOwner);
+        test("PAGED-SIGNATURE scratch and report failure ownership",SnapshotSignatureChecks::everyFoldAndReportFailurePoisonsScratchAndPreservesBorrowedInput);
+        test("PAGED-SIGNATURE source callback constructor and cleanup failures",SnapshotSignatureChecks::sourceCallbackConstructorAndCleanupFailuresPreserveOwnership);
         test("PAGED-LOCAL field specific text and number rules",SnapshotLocalChecks::fieldSpecificTextAndNumberRules);
         test("PAGED-LOCAL conditional collections and exact coordinates",SnapshotLocalChecks::conditionalCollectionsAndExactCoordinates);
         test("PAGED-LOCAL decimal parts and formats without expanded arithmetic",SnapshotLocalChecks::decimalPartsAndFormatsWithoutExpandedArithmetic);
