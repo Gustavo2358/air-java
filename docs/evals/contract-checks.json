@@ -2,6 +2,8 @@
   "baseline_commit": "6a4091e5394fc22b3d2ada9abbdb530eb3572a58",
   "source": "src/test/java/io/github/gustavo2358/air/validation/ContractSuite.java",
   "checks": [
+    "PAGED-IDENTITY complete namespaces and exact collision equality",
+    "PAGED-IDENTITY shared text and failure lifetimes",
     "PAGED-ACCESS exact typed model facts",
     "PAGED-ACCESS unbounded integer facts",
     "PAGED-ACCESS long cursors and lifetime",

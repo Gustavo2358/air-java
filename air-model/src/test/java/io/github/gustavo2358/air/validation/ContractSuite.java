@@ -14,6 +14,8 @@ public final class ContractSuite {
     private static int passed;
     private ContractSuite() {}
     public static void main(String[] args) throws Exception {
+        test("PAGED-IDENTITY complete namespaces and exact collision equality",SnapshotIdentityChecks::completeNamespaces);
+        test("PAGED-IDENTITY shared text and failure lifetimes",SnapshotIdentityChecks::sharedTextAndFailureLifetimes);
         test("PAGED-ACCESS exact typed model facts",PagedAccessChecks::modelFacts);
         test("PAGED-ACCESS unbounded integer facts",PagedAccessChecks::integerFacts);
         test("PAGED-ACCESS long cursors and lifetime",PagedAccessChecks::longAccessAndLifetime);

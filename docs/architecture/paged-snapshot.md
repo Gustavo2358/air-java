@@ -111,3 +111,11 @@ and exhausted cursors release their leases, and snapshot close closes active cur
 before storage. A denied cursor lease leaves input facts intact. The public indexed
 default supports caller-owned resident/custom sources; managed paged access overrides
 it. None of these cursors materializes a java.util.List or allocates a row per item.
+
+## Exact identity-key migration
+
+[Snapshot identity keys](paged-identity-keys.md) provide the first primitive
+identity-index layer for paged validation. They include the complete concrete
+domain and namespace, stream text into exact canonical primitive tuples and memoize
+source-node keys within one index lifetime. They issue no validation certificate.
+Complete cross-reference admission and the incremental codec remain pending.
