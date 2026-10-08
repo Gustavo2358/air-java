@@ -1,11 +1,12 @@
 package io.github.gustavo2358.air.json;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import io.github.gustavo2358.air.model.*;
-import io.github.gustavo2358.air.model.Ids.PublicationId;
+import io.github.gustavo2358.air.model.Ids.*;
 
 /** Independent physical JSON and complete existing binding/admission comparisons. */
 final class PagedInputChecks {
@@ -76,22 +77,134 @@ final class PagedInputChecks {
         }
         eq(true,snapshotStore.closed);eq(0L,snapshotStore.claimed);
 
-        byte[] goback=Files.readAllBytes(Path.of("src/test/resources/goback.canonical.json"));
-        var gobackInput=new Store();var gobackOutput=new SnapshotStore();
-        try(var expected=AirSnapshot.fromPublication(codec.decode(goback));
-            var actual=codec.decodeSnapshot(new ByteArrayInputStream(goback),gobackInput,gobackOutput)) {
-            compare(expected,expected.root(),actual,actual.root(),null);
-            eq(true,gobackInput.closed);eq(true,gobackOutput.frozen);eq(false,gobackOutput.closed);
+        for(String fixture:List.of("goback","scalar-assign","regional","local-control")) {
+            byte[] bytes=Files.readAllBytes(Path.of("src/test/resources/"+fixture+".canonical.json"));
+            compareDirect(codec,codec.decode(bytes));
         }
-        eq(true,gobackOutput.closed);eq(0L,gobackOutput.claimed);
+        for(Publication fixture:List.of(
+                InitialStateChecks.publication("literal"),InitialStateChecks.publication("preserve"),
+                InitialStateChecks.publication("external_unknown"),InitialStateChecks.publication("uninitialized"),
+                W2cOracle.publication("full"),W2cOracle.publication("premise"),
+                InvokeOracle.publication(false,false),InvokeOracle.publication(true,true),
+                ResourceBindingOracle.publication("A2"),ResourceBindingOracle.publication("A4"),
+                ResourceBindingOracle.publication("A6"),UnitVisibilityChecks.manual(),
+                ConservativeChecks.fixture(1,0),ConservativeChecks.fixture(1,1),
+                ConservativeChecks.fixture(1,2),ConservativeChecks.fixture(1,3)))
+            compareDirect(codec,fixture);
+        var coverageFixtures=directCoverageFixtures();
+        for(int index=0;index<coverageFixtures.size();index++) {
+            try { compareDirect(codec,coverageFixtures.get(index)); }
+            catch(RuntimeException failure) { throw new AssertionError("direct coverage fixture "+index,failure); }
+        }
 
         var unsupportedInput=new Store();var unsupportedOutput=new SnapshotStore();
-        var unsupported=fails(AirJsonException.class,()->decodeSnapshot(codec,raw.replace("\"storage\":[]","\"storage\":[null]"),unsupportedInput,unsupportedOutput));
+        var unsupported=fails(AirJsonException.class,()->decodeSnapshot(codec,raw.replace("\"artifactRelations\":[]","\"artifactRelations\":[null]"),unsupportedInput,unsupportedOutput));
         eq(AirJsonException.Code.IMPLEMENTATION_LIMIT,unsupported.code());eq(true,unsupportedInput.closed);eq(true,unsupportedOutput.closed);eq(0L,unsupportedOutput.claimed);
 
         var deniedInput=new Store();var deniedOutput=new SnapshotStore();deniedOutput.deny=true;
         eq(deniedOutput.failure,fails(IllegalStateException.class,()->decodeSnapshot(codec,raw,deniedInput,deniedOutput)));
         eq(true,deniedInput.closed);eq(true,deniedOutput.closed);eq(0L,deniedOutput.claimed);
+    }
+    private static void compareDirect(AirJson codec,Publication publication)throws IOException {
+        byte[] bytes=Json.write(new BindingWriter().envelope(publication),AirJson.Limits.defaults());var input=new Store();var output=new SnapshotStore();
+        try(var expected=AirSnapshot.fromPublication(publication);
+            var actual=codec.decodeSnapshot(new ByteArrayInputStream(bytes),input,output)) {
+            compare(expected,expected.root(),actual,actual.root(),null);
+            eq(true,input.closed);eq(true,output.frozen);eq(false,output.closed);
+        }
+        eq(true,output.closed);eq(0L,output.claimed);
+    }
+    private static List<Publication> directCoverageFixtures() {
+        var fixtures=new ArrayList<Publication>();
+        fixtures.add(RegionalChecks.ibmPublication());
+        var regional=RegionalChecks.regional();
+        Scopes.MemoryScope union=new Scopes.ObjectsMemory(List.of(regional.units().getFirst().objects().getFirst().id()));
+        for(int depth=0;depth<64;depth++) union=new Scopes.MemoryUnion(List.of(union,
+                new Scopes.StorageMemory(List.of(regional.storage().getFirst().header().id()))));
+        fixtures.add(MemoryScopeChecks.havoc(regional,union));
+        fixtures.add(choiceFixture());fixtures.add(signatureFixture());fixtures.add(includeFixture());
+        Expression nested=W2cOracle.read("if","nested-leaf",Operand.Role.VALUE_READ,W2cOracle.FLAG);
+        for(int depth=0;depth<600;depth++) nested=new Expressions.Unknown(
+                W2cOracle.operand("if","nested-"+depth,depth==599?Operand.Role.PREDICATE:Operand.Role.VALUE_READ,"predicate"),
+                Types.known(Types.Builtin.BOOL),List.of(nested),Scopes.NoMemory.INSTANCE,W2cOracle.gap("predicate-value-unknown"));
+        fixtures.add(W2cChecks.predicate(W2cOracle.publication("full"),nested));
+        for(String dimension:List.of("controls","dependencies","premises","members")) fixtures.add(W2cChecks.scaled(dimension,32));
+
+        var base=ScalarAssignOracle.publication(1,1);var assign=(Operations.Assign)base.units().getFirst().sequences().getFirst().instructions().getFirst();
+        java.util.function.Function<String,Operand.Header> h=name->new Operand.Header(
+                new OperandId(new OperationOwner(assign.header().id()),name),Operand.Role.VALUE_READ,assign.header().origin());
+        var decimal=new Expressions.Literal(h.apply("decimal"),new Values.DecimalValue(BigInteger.valueOf(-12345),BigInteger.TWO));
+        var fitted=new Expressions.FitDecimal(h.apply("fit-decimal"),decimal,BigInteger.valueOf(5),BigInteger.valueOf(-2),true);
+        var multiplied=new Expressions.Binary(h.apply("multiply"),Expressions.BinaryOperator.MUL,
+                new Expressions.Unary(h.apply("absolute"),Expressions.UnaryOperator.ABS,fitted),
+                new Expressions.Literal(h.apply("factor"),new Values.IntValue(BigInteger.TEN)));
+        fixtures.add(withAssignValue(base,new Expressions.Unary(h.apply("to-decimal"),Expressions.UnaryOperator.TO_DECIMAL,
+                new Expressions.WrapInteger(h.apply("wrap"),multiplied,BigInteger.valueOf(16),true))));
+        fixtures.add(withAssignValue(base,new Expressions.ParseInteger(h.apply("parse"),
+                new Expressions.Literal(h.apply("digits"),new Values.TextValue("00052")),
+                new Expressions.Literal(h.apply("fallback"),new Values.IntValue(BigInteger.valueOf(7))))));
+        fixtures.add(withAssignValue(base,new Expressions.FormatDecimal(h.apply("format"),decimal,List.of(
+                new DecimalText.Part(DecimalText.Kind.SIGN,BigInteger.ONE,"+","-"),
+                new DecimalText.Part(DecimalText.Kind.DIGITS,BigInteger.valueOf(4),"",""),
+                new DecimalText.Part(DecimalText.Kind.RADIX,BigInteger.ONE,".",""),
+                new DecimalText.Part(DecimalText.Kind.DIGITS,BigInteger.TWO,"","")))));
+        var fitText=new Expressions.FitText(h.apply("fit-text"),assign.value(),BigInteger.valueOf(8)," ");
+        var slice=new Expressions.SliceText(h.apply("slice"),fitText,
+                new Expressions.Literal(h.apply("start"),new Values.IntValue(BigInteger.ONE)),
+                new Expressions.Literal(h.apply("count"),new Values.IntValue(BigInteger.TWO)));
+        fixtures.add(withAssignValue(base,new Expressions.Unary(h.apply("not"),Expressions.UnaryOperator.NOT,
+                new Expressions.Binary(h.apply("equal"),Expressions.BinaryOperator.EQ,slice,
+                        new Expressions.FillText(h.apply("fill"),new Expressions.Literal(h.apply("char"),new Values.TextValue("😀")),BigInteger.TWO)))));
+        fixtures.add(withAssignValue(base,new Expressions.IntegerDigits(h.apply("integer-digits"),
+                new Expressions.Literal(h.apply("negative"),new Values.IntValue(BigInteger.valueOf(-23))),BigInteger.valueOf(5))));
+        fixtures.add(codecFixture(regional,Memory.AsciiText.INSTANCE,Types.known(Types.Builtin.TEXT)));
+        fixtures.add(codecFixture(regional,new Memory.BinaryCodec(true,BigInteger.valueOf(32),Memory.ByteOrder.LITTLE),Types.known(Types.Builtin.INT)));
+        return fixtures;
+    }
+    private static Publication withAssignValue(Publication p,Expression value) {
+        var u=p.units().getFirst();var s=u.sequences().getFirst();var old=(Operations.Assign)s.instructions().getFirst();
+        var instructions=new ArrayList<Instruction>(s.instructions());instructions.set(0,new Operations.Assign(old.header(),old.destination(),value));
+        var unit=new Unit(u.id(),u.containingUnit(),u.objects(),u.visibleObjects(),u.entries(),List.of(new Sequence(s.label(),instructions,s.terminator(),s.origin())),u.completionPorts(),u.body(),u.bodyUnavailable(),u.coverage(),u.origin());
+        return new Publication(p.id(),p.airVersion(),p.capabilities(),p.artifacts(),List.of(unit),p.storage(),p.resources(),p.artifactRelations(),p.origins(),p.coverage(),p.uncertainties(),p.premises());
+    }
+    private static Publication choiceFixture() {
+        var invoke=InvokeOracle.invoke(true,false);var gap=new UncertaintyId(InvokeOracle.PUB,"choice-domain");
+        var choice=new Places.Choice(InvokeOracle.operand("choice",Operand.Role.VALUE_READ,"place"),List.of(
+                new Places.ObjectPlace(InvokeOracle.operand("choice-a",Operand.Role.VALUE_READ,"place"),InvokeOracle.OBJECT),
+                new Places.ObjectPlace(InvokeOracle.operand("choice-b",Operand.Role.VALUE_READ,"place"),InvokeOracle.OTHER)),
+                new Scopes.WithinMemory(new Scopes.AllMemory(InvokeOracle.PUB,true)),new Types.UnknownType(gap));
+        var computed=new Interactions.ComputedTarget("program","fixture.resources",
+                new Expressions.Read(InvokeOracle.operand("choice-read",Operand.Role.CALL_TARGET,"expression"),choice),
+                Interactions.ExactName.INSTANCE,InvokeOracle.origin("target"));
+        var p=InvokeOracle.publication(new Operations.Invoke(invoke.header(),invoke.action(),computed,invoke.arguments(),invoke.results(),invoke.signature(),invoke.effectOperands(),invoke.effectBound(),invoke.outcomes(),invoke.contract()));
+        var gaps=new ArrayList<>(p.uncertainties());gaps.add(new Evidence.Uncertainty(gap,"TYPE_UNKNOWN",List.of(Evidence.Dimension.VALUES),new Scopes.UnitScope(InvokeOracle.UNIT),"Remaining target domain unproved",InvokeOracle.origin("target")));
+        return new Publication(p.id(),p.airVersion(),new Capabilities.Manifest(List.of(Capabilities.TARGET_POSSIBILITIES),List.of()),p.artifacts(),p.units(),p.storage(),p.resources(),p.artifactRelations(),p.origins(),p.coverage(),gaps,p.premises());
+    }
+    private static Publication signatureFixture() {
+        var invoke=InvokeOracle.invoke(false,false);var parameter=new Interactions.Parameter(BigInteger.ZERO,
+                new Interactions.KnownMode(Interactions.PassingMode.REFERENCE),Types.known(Types.Builtin.TEXT),
+                Interactions.ExternalBinding.INSTANCE,InvokeOracle.origin("signature"));
+        var signature=new Interactions.ExternalSignature(new Interactions.Signature(
+                new Interactions.ParameterInventory(List.of(parameter),Interactions.NoRemainder.INSTANCE),
+                new Interactions.ResultInventory(List.of(),Interactions.NoRemainder.INSTANCE),InvokeOracle.origin("signature")));
+        var argument=new Interactions.ReferenceArgument(new Places.ObjectPlace(
+                InvokeOracle.operand("argument",Operand.Role.ARGUMENT_REFERENCE,"place"),InvokeOracle.OTHER));
+        return InvokeOracle.publication(new Operations.Invoke(invoke.header(),invoke.action(),invoke.target(),List.of(argument),invoke.results(),signature,invoke.effectOperands(),invoke.effectBound(),invoke.outcomes(),invoke.contract()));
+    }
+    private static Publication codecFixture(Publication p,Memory.Codec codec,Types.TypeRef type) {
+        var u=p.units().getFirst();var objects=new ArrayList<>(u.objects());var object=objects.getFirst();
+        var view=(Memory.ViewBinding)object.storage();objects.set(0,new Memory.ObjectDeclaration(object.id(),object.displayName(),type,
+                new Memory.ViewBinding(view.region(),view.offset(),view.extent(),codec),object.visibility(),object.origin(),object.coverage(),object.precision()));
+        var unit=new Unit(u.id(),u.containingUnit(),objects,u.visibleObjects(),u.entries(),u.sequences(),u.completionPorts(),u.body(),u.bodyUnavailable(),u.coverage(),u.origin());
+        return new Publication(p.id(),p.airVersion(),p.capabilities(),p.artifacts(),List.of(unit),p.storage(),p.resources(),p.artifactRelations(),p.origins(),p.coverage(),p.uncertainties(),p.premises());
+    }
+    private static Publication includeFixture() {
+        var p=ScalarAssignOracle.publication();var artifacts=new ArrayList<>(p.artifacts());
+        var included=new ArtifactId(p.id(),"included");artifacts.add(new Origins.Artifact(included,"included.cpy",Optional.empty()));
+        var origins=new ArrayList<Origins.Origin>(p.origins());var first=(Origins.Written)origins.getFirst();
+        origins.set(0,new Origins.Written(first.id(),first.artifact(),first.location(),
+                List.of(new Origins.IncludeFrame(first.artifact(),included,"INCLUDED",Optional.empty())),first.exact()));
+        return new Publication(p.id(),p.airVersion(),p.capabilities(),artifacts,p.units(),p.storage(),p.resources(),p.artifactRelations(),origins,p.coverage(),p.uncertainties(),p.premises());
     }
     private static void decodeSnapshot(AirJson codec,String raw,Store input,SnapshotStore output) {
         try(var snapshot=codec.decodeSnapshot(new ByteArrayInputStream(raw.getBytes(StandardCharsets.UTF_8)),input,output)) { snapshot.root(); }

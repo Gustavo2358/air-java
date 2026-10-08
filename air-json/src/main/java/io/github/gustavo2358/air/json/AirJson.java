@@ -153,8 +153,9 @@ public final class AirJson {
     }
     /**
      * Builds official typed storage directly from managed physical staging, without constructing a
-     * Publication. This initial vertical admits empty publications and the minimal return-program
-     * profile; other AIR variants fail explicitly until their complete typed mappings are implemented.
+     * Publication. The direct binder covers every wire form admitted by the resident binding reader;
+     * unsupported binding forms retain explicit implementation-limit outcomes. The returned snapshot
+     * is typed storage, not a validation certificate; callers must run complete snapshot admission.
      */
     public AirSnapshot decodeSnapshot(java.io.InputStream input,InputStorage inputStorage,
                                       AirSnapshotBuilder.Storage snapshotStorage)throws java.io.IOException {

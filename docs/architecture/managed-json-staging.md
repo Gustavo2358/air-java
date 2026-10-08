@@ -21,20 +21,21 @@ BigIntegers. Conversion scratch is guarded, but returned model ownership is not
 funded by this staging lease. SnapshotAnnotationTemplates supplies context-free
 fact-scope/claim/precision/coverage recipes, not all validation or CheckedSnapshot.
 The additive `decodeSnapshot` route now transfers the same physical staging into the
-official builder without creating a `Publication` for empty publications and the
-independent minimal-return GOBACK profile. Its whole-tree equality law compares every
-typed node, scalar and collection with the resident projection; ownership laws cover
-success, unsupported inventory and denied builder capacity. This is a real direct
-binding vertical, not complete codec coverage: other already admitted variants still
-fail explicitly and the route issues no validation certificate.
+official builder without creating a `Publication` for the complete catalogue already
+admitted by the resident binding. Whole-tree equality laws compare every typed node,
+scalar and collection with the resident projection across canonical fixtures, calls,
+resources, premises, entry state, conservative operations, codecs, choices, signatures,
+numeric/text expressions and deep/list-scaled structures. Ownership laws cover success,
+unsupported inventory and denied builder capacity. The route still issues no validation
+certificate.
 
-Full typed builder binding coverage, complete snapshot rules and downstream snapshot
-CFG/planner/domain/output ownership remain required. A successful checked resident
+Complete snapshot rules and downstream snapshot CFG/planner/domain/output ownership
+remain required. A successful checked resident
 Publication retains the complete original Validator result; partial checks cannot
 issue it. No end-to-end memory bound or global dependencies completion is claimed.
 
-Focused laws compare all four canonical binding fixtures and unchanged full
-admission results; independent physical cases cover decoded name equality, strict
+Focused laws compare all four canonical binding fixtures, the resident admitted form
+catalogue and unchanged full admission results; independent physical cases cover decoded name equality, strict
 Unicode, arbitrary order, zero progress,20000depth,16..4096indexed arrays, byte/depth
 limits, every primitive staging fault, caller stream ownership and0leases.
 
