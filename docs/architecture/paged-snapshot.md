@@ -134,3 +134,7 @@ whole-publication structural validation.
 [Primitive declaration inventory](paged-declarations.md) checks complete namespace,
 duplicate occurrence and owner relations through an owned storage port. It is one
 indexing pass, not full paged admission.
+
+The [ordered primitive graph walk](paged-graph-walk.md) covers complete typed
+grammar reachability and contextual collection memoization; model-local and full
+semantic validation remain separate obligations.

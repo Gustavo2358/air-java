@@ -2,6 +2,10 @@
   "baseline_commit": "6a4091e5394fc22b3d2ada9abbdb530eb3572a58",
   "source": "src/test/java/io/github/gustavo2358/air/validation/ContractSuite.java",
   "checks": [
+    "PAGED-GRAPH exact preorder and contextual sharing",
+    "PAGED-GRAPH deep and wide sequential traversal",
+    "PAGED-GRAPH cycles limits and failure cleanup",
+    "PAGED-GRAPH malformed storage and cursor failure",
     "PAGED-ATOMS exact Unicode and typed keys",
     "PAGED-ATOMS canonical huge integers and single source reads",
     "PAGED-ATOMS metadata failure and borrowed source",

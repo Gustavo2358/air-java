@@ -14,6 +14,10 @@ public final class ContractSuite {
     private static int passed;
     private ContractSuite() {}
     public static void main(String[] args) throws Exception {
+        test("PAGED-GRAPH exact preorder and contextual sharing",SnapshotGraphChecks::exactPreorderAndContextualCollectionSharing);
+        test("PAGED-GRAPH deep and wide sequential traversal",SnapshotGraphChecks::deepAndWideSequentialTraversal);
+        test("PAGED-GRAPH cycles limits and failure cleanup",SnapshotGraphChecks::cyclesGrammarLimitsAndFailureCleanup);
+        test("PAGED-GRAPH malformed storage and cursor failure",SnapshotGraphChecks::malformedStorageAndCursorFailureNeverProduceCounts);
         test("PAGED-ATOMS exact Unicode and typed keys",SnapshotAtomChecks::exactUnicodeAndTypedAtomKeys);
         test("PAGED-ATOMS canonical huge integers and single source reads",SnapshotAtomChecks::canonicalHugeIntegersAndSingleSourceReads);
         test("PAGED-ATOMS metadata failure and borrowed source",SnapshotAtomChecks::metadataReadFailureAbortsOwnerAndPreservesBorrowedSource);
