@@ -86,6 +86,37 @@ final class PagedAccessChecks {
         fails(IllegalArgumentException.class, () -> AirSnapshot.attach(invalid, 4)); eq(1, invalid.closed);
     }
 
+    static void cursorCardinalityAndCleanup() {
+        for(long[] pair:new long[][]{{0,1},{1,0},{3,2},{2,3},{Long.MAX_VALUE,0}}) {
+            var source=new CardinalitySource(pair[0],pair[1]);
+            try(var snapshot=AirSnapshot.attach(source,1);var cursor=snapshot.elements(2,AirShape.UNIT)) {
+                long prefix=Math.min(pair[0],pair[1]);
+                for(long n=0;n<prefix;n++){eq(true,cursor.advance());eq(3L,cursor.value());}
+                fails(IllegalStateException.class,cursor::advance);eq(0,source.active);eq(1,source.cursorClosed);
+                eq(pair[0],snapshot.size(2));eq(AirShape.PUBLICATION,snapshot.shape(1));
+            }
+            eq(1,source.closed);eq(1,source.cursorClosed);
+        }
+        for(long count:new long[]{0,1,16}) {
+            var source=new CardinalitySource(count,count);
+            try(var snapshot=AirSnapshot.attach(source,1);var cursor=snapshot.elements(2,AirShape.UNIT)) {
+                for(long n=0;n<count;n++)eq(true,cursor.advance());
+                eq(false,cursor.advance());eq(false,cursor.advance());eq(0,source.active);
+            }
+        }
+        var huge=new CardinalitySource(Long.MAX_VALUE,Long.MAX_VALUE);
+        try(var snapshot=AirSnapshot.attach(huge,1)) {
+            try(var cursor=snapshot.elements(2,AirShape.UNIT)){eq(true,cursor.advance());eq(true,cursor.advance());}
+            eq(0,huge.active);eq(Long.MAX_VALUE,snapshot.size(2));
+        }
+        var failing=new CardinalitySource(1,0);failing.failClose=true;
+        try(var snapshot=AirSnapshot.attach(failing,1);var cursor=snapshot.elements(2,AirShape.UNIT)) {
+            try {cursor.advance();throw new AssertionError("short collection accepted");}
+            catch(IllegalStateException failure){eq(1,failure.getSuppressed().length);eq(failing.cleanup,failure.getSuppressed()[0]);}
+            eq(0,failing.active);eq(1,failing.cursorClosed);
+        }
+    }
+
     static void completeCatalogue() {
         // The Java model is an independent representation authority. Reflection is test-only.
         var seen = new HashSet<Class<?>>(); var pending = new ArrayDeque<Class<?>>(); pending.add(Publication.class);
@@ -148,6 +179,23 @@ final class PagedAccessChecks {
             throw new AssertionError("unexpected exception", exception);
         }
         throw new AssertionError("expected " + type.getName());
+    }
+    private static final class CardinalitySource implements AirSnapshot.Source {
+        final long declared,actual;final IllegalArgumentException cleanup=new IllegalArgumentException("controlled cursor cleanup");
+        int active,cursorClosed,closed;boolean failClose;
+        CardinalitySource(long declared,long actual){this.declared=declared;this.actual=actual;}
+        public AirShape shape(long handle){return handle==1?AirShape.PUBLICATION:handle==2?AirShape.LIST:AirShape.UNIT;}
+        public long length(long handle){return handle==1?12:handle==2?declared:11;}
+        public long child(long handle,long index){throw new AssertionError("cursor must not use indexed reads");}
+        public long scalar(long handle){throw new AssertionError();}
+        public int characters(long handle,long offset,char[] output,int start,int count){throw new AssertionError();}
+        public AirSnapshot.Elements elements(long handle){active++;return new AirSnapshot.Elements(){
+            long seen;boolean released;
+            public boolean advance(){if(seen==actual)return false;seen++;return true;}
+            public long value(){return 3;}
+            public void close(){if(released)return;released=true;active--;cursorClosed++;if(failClose)throw cleanup;}
+        };}
+        public void close(){closed++;}
     }
     private static final class HugeSource implements AirSnapshot.Source {
         int closed;

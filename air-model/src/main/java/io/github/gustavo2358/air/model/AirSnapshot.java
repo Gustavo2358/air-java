@@ -104,10 +104,10 @@ public final class AirSnapshot implements AutoCloseable {
 
     /** Sequential primitive cursor, owned by this snapshot; no row objects or collection materialization. */
     public synchronized Cursor elements(long container, AirShape expected) {
-        Objects.requireNonNull(expected); size(container);
+        Objects.requireNonNull(expected); long length = size(container);
         Elements raw = Objects.requireNonNull(source.elements(container));
         try {
-            var cursor = new Cursor(this, raw, expected);
+            var cursor = new Cursor(this, raw, expected, length);
             cursor.next = cursors; if (cursors != null) cursors.previous = cursor; cursors = cursor;
             return cursor;
         } catch (RuntimeException | Error exception) {
@@ -120,10 +120,14 @@ public final class AirSnapshot implements AutoCloseable {
         private volatile AirSnapshot owner;
         private Elements raw;
         private final AirShape expected;
+        private final long length;
+        private long visited;
         private Cursor previous, next;
         private long current;
         private boolean exhausted;
-        private Cursor(AirSnapshot owner, Elements raw, AirShape expected) { this.owner = owner; this.raw = raw; this.expected = expected; }
+        private Cursor(AirSnapshot owner, Elements raw, AirShape expected, long length) {
+            this.owner = owner; this.raw = raw; this.expected = expected; this.length = length;
+        }
         @Override public boolean advance() {
             AirSnapshot snapshot = owner;
             if (snapshot == null) {
@@ -134,10 +138,14 @@ public final class AirSnapshot implements AutoCloseable {
                 if (owner == null) throw new IllegalStateException("AIR cursor is closed");
                 snapshot.open();
                 try {
-                    if (!raw.advance()) { exhausted = true; close(); return false; }
+                    if (!raw.advance()) {
+                        if (visited != length) throw new IllegalStateException("premature end of frozen AIR collection storage");
+                        exhausted = true; close(); return false;
+                    }
+                    if (visited == length) throw new IllegalStateException("frozen AIR collection exceeds declared cardinality");
                     long value = raw.value();
                     if (!expected.accepts(snapshot.shape(value))) throw new IllegalArgumentException("wrong AIR cursor element type");
-                    current = value; return true;
+                    current = value; visited++; return true;
                 } catch (RuntimeException | Error exception) {
                     try { close(); } catch (RuntimeException | Error cleanup) { if (cleanup != exception) exception.addSuppressed(cleanup); }
                     throw exception;

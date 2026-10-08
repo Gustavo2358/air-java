@@ -119,3 +119,14 @@ identity-index layer for paged validation. They include the complete concrete
 domain and namespace, stream text into exact canonical primitive tuples and memoize
 source-node keys within one index lifetime. They issue no validation certificate.
 Complete cross-reference admission and the incremental codec remain pending.
+
+Sequential cursors also verify their exact 64-bit declared cardinality. A premature
+end or extra row fails operational storage access and closes the cursor; it cannot
+become a successful truncated inventory. Early caller closure remains permitted,
+and exact empty/large collections retain their semantics. The cardinality fault
+law was RED before this guard, including zero/short/extra/Long.MAX_VALUE sources
+and a second cleanup failure. This access check still issues no AIR certificate.
+
+Direct operation roots and operand children are available through
+[typed primitive traversal](paged-operand-traversal.md). This does not certify
+whole-publication structural validation.
