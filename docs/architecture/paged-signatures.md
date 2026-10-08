@@ -45,3 +45,6 @@ interruptions, source/cardinality/cursor failures, all report steps, reentrancy,
 construction denial and combined cleanup. Map-backed test ports establish semantic
 and primitive-work laws only. Managed paged ports, complete admission and production
 CLI integration remain separately qualified frontiers.
+
+[Shared ordered diagnostic templates](paged-diagnostic-templates.md) generalize
+counted ordered occurrences for nested annotation recipes; full admission is pending.

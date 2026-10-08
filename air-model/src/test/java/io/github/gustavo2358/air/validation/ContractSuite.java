@@ -22,6 +22,10 @@ public final class ContractSuite {
         test("PAGED-ATOMS canonical huge integers and single source reads",SnapshotAtomChecks::canonicalHugeIntegersAndSingleSourceReads);
         test("PAGED-ATOMS metadata failure and borrowed source",SnapshotAtomChecks::metadataReadFailureAbortsOwnerAndPreservesBorrowedSource);
         test("PAGED-ATOMS exact integer order and cached blankness",SnapshotAtomChecks::integerOrderAndBlanknessReuseCanonicalSubtrees);
+        test("PAGED-DIAGNOSTICS independent ordered kind counts and owner",SnapshotDiagnosticChecks::independentSequencesPreserveKindsOrderMultiplicityAndOwner);
+        test("PAGED-DIAGNOSTICS random subtree parenthesizations",SnapshotDiagnosticChecks::randomSubtreeJoinsMatchIndependentFlatParenthesizations);
+        test("PAGED-DIAGNOSTICS geometric and giant shared sequences",SnapshotDiagnosticChecks::geometricChainsAndGiantRepeatedSubtreesHaveBoundedStructuralWork);
+        test("PAGED-DIAGNOSTICS storage report and cleanup ownership",SnapshotDiagnosticChecks::everyStorageReportAndCleanupFailureAbortsOwnedTemplates);
         test("PAGED-ORDINAL exact natural integer equality",SnapshotOrdinalChecks::exactNaturalOrdinalsIncludeLongBoundaryAndRejectHugePositions);
         test("PAGED-ORDINAL bounded cached work and failure ownership",SnapshotOrdinalChecks::cachedOrdinalQueriesUseBoundedPrimitiveWordsAndFailureOwnership);
         test("PAGED-SIGNATURE open and closed bad row union",SnapshotSignatureChecks::openAndClosedPositionsCountEachBadRowOnceWithIndependentOrder);
