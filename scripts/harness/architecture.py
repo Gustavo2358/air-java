@@ -24,7 +24,8 @@ JSON_JDK_CLASSES = {"java.nio.ByteBuffer", "java.nio.CharBuffer", "java.nio.char
 JSON_OPERATIONAL_CLASSES = {
     JSON + "BindingReader": {"java.util.concurrent.ConcurrentHashMap"},
     JSON + "AirJson$DecodeOptions": {"java.lang.Runtime"},
-    JSON + "AirJson": {"java.io.OutputStream", "java.io.IOException"},
+    JSON + "AirJson": {"java.io.InputStream", "java.io.OutputStream", "java.io.IOException"},
+    JSON + "PagedJson": {"java.io.InputStream", "java.io.IOException"},
     JSON + "AirJson$PreparedOutput": {"java.io.OutputStream", "java.io.IOException"},
     JSON + "Json": {"java.io.OutputStream", "java.io.IOException", "java.io.UncheckedIOException"},
     JSON + "Json$Writer": {"java.io.OutputStream", "java.io.IOException", "java.io.UncheckedIOException"},

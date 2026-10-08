@@ -33,6 +33,7 @@ public final class CodecSuite {
         tree = Json.parse(golden, AirJson.Limits.defaults());
         check("bounded ASCII runs preserve literal bytes", AsciiRunOutputChecks::run);
         check("stream output golden admission and ownership", StreamingOutputChecks::run);
+        check("managed stream input physical binding admission and ownership", PagedInputChecks::run);
         check("decode scopes have exact per-read ownership", ScopedIdentityChecks::run);
         check("decode scheduling preserves facts diagnostics and isolation", DecodeSchedulingChecks::run);
         check("binding record field indexes have bounded ownership", FieldIndexOwnershipChecks::run);

@@ -8,6 +8,7 @@
   "checks": [
     "bounded ASCII runs preserve literal bytes",
     "stream output golden admission and ownership",
+    "managed stream input physical binding admission and ownership",
     "decode scopes have exact per-read ownership",
     "decode scheduling preserves facts diagnostics and isolation",
     "binding record field indexes have bounded ownership",

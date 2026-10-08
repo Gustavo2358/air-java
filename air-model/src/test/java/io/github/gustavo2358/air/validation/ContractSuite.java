@@ -22,6 +22,12 @@ public final class ContractSuite {
         test("PAGED-ATOMS canonical huge integers and single source reads",SnapshotAtomChecks::canonicalHugeIntegersAndSingleSourceReads);
         test("PAGED-ATOMS metadata failure and borrowed source",SnapshotAtomChecks::metadataReadFailureAbortsOwnerAndPreservesBorrowedSource);
         test("PAGED-ATOMS exact integer order and cached blankness",SnapshotAtomChecks::integerOrderAndBlanknessReuseCanonicalSubtrees);
+        test("PAGED-ANNOTATIONS precision dimensions and shared claims",SnapshotAnnotationChecks::precisionDimensionsAndSharedEmptyClaimsPreserveOwner);
+        test("PAGED-ANNOTATIONS coverage keys and simultaneous item rules",SnapshotAnnotationChecks::coverageDuplicateKeysAndBothItemErrorsKeepExactOrder);
+        test("PAGED-ANNOTATIONS actual scope reason output elimination references",SnapshotAnnotationChecks::actualScopeReasonOutputAndEliminationReferencesStayOrdered);
+        test("PAGED-ANNOTATIONS independent randomized coverage oracle",SnapshotAnnotationChecks::independentRandomCoverageListsPreserveEveryOccurrence);
+        test("PAGED-ANNOTATIONS shared fold and zero query history",SnapshotAnnotationChecks::sharedCoverageHasOneFoldAndNoOwnerQueryHistory);
+        test("PAGED-ANNOTATIONS memo membership cursor failure ownership",SnapshotAnnotationChecks::everyMemoMemberAndCursorFailureAbortsOnlyOwnedState);
         test("PAGED-REFERENCES missing occurrences and successful empty memo",SnapshotReferenceChecks::exactMissingOccurrencesAndSuccessfulEmptyRootsPreserveOwners);
         test("PAGED-REFERENCES independent mixed identity families",SnapshotReferenceChecks::independentRandomReferenceListsKeepAllOccurrencesAcrossFamilies);
         test("PAGED-REFERENCES linear carry forest and shared valid invalid lists",SnapshotReferenceChecks::carryForestUsesLinearTuplesAndCachesInvalidAndValidLists);

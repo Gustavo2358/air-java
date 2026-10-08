@@ -735,3 +735,5 @@ O codec transporta LT/LE/GT/GE já definidos na AIR 2.0 / binding 1.0,
 com tokens explícitos, frames iterativos e validação de domínio pelo Validator
 existente. Nenhuma versão ou variante mudou. `OrderedComparisonChecks` verifica
 inteiros maiores que 64 bits, roundtrip exato, canonicalização e rejeições.
+
+[Managed incremental physical input and current resident-model limit](../architecture/managed-json-staging.md) documents the new checked InputStream route.
