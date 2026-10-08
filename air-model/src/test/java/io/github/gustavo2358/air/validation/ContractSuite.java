@@ -27,6 +27,11 @@ public final class ContractSuite {
         test("PAGED-LOCAL decimal parts and formats without expanded arithmetic",SnapshotLocalChecks::decimalPartsAndFormatsWithoutExpandedArithmetic);
         test("PAGED-LOCAL label membership and shared fold cost",SnapshotLocalChecks::labelMembershipAndSharedFoldCost);
         test("PAGED-LOCAL whole graph dead content and failure ownership",SnapshotLocalChecks::wholeGraphDeadContentAndFailureOwnership);
+        test("PAGED-GROUNDING seeded and unseeded cycles",SnapshotGroundingChecks::seededAndUnseededCyclesPreserveOrSemanticsAcrossInventoryOrder);
+        test("PAGED-GROUNDING independent finite reachability",SnapshotGroundingChecks::independentTinyReachabilityOracleMatchesEveryObject);
+        test("PAGED-GROUNDING shared cyclic queries and deep scopes",SnapshotGroundingChecks::sharedCyclicQueriesAndDeepScopesHaveLinearEquationWork);
+        test("PAGED-GROUNDING empty typed scopes",SnapshotGroundingChecks::emptyTypedScopesAndClosedAlternativesRemainFalse);
+        test("PAGED-GROUNDING operational failure ownership",SnapshotGroundingChecks::operationalFailuresNeverPublishGroundingAndPreserveBorrowedInput);
         test("PAGED-CYCLES exact nominal residual families",SnapshotCycleChecks::allNominalFamiliesPreserveCycleDependentResiduals);
         test("PAGED-CYCLES linear repeated edge removal",SnapshotCycleChecks::chainDiamondRepeatedAndMissingParentsHaveLinearPrimitiveWork);
         test("PAGED-CYCLES complete identity and sparse handles",SnapshotCycleChecks::nominalIdentityUsesCompleteKeysAndSparseHandles);

@@ -35,3 +35,6 @@ edges and visit each node once. Map-backed test ports establish semantics and wo
 not bounded-memory admission. Compiled mutations dropping later input parents and
 adding absent parents respectively lose and invent a residual; the original passes
 all four focused laws. Managed consumer integration remains pending at this point.
+
+[Shared location grounding](paged-grounding.md) now provides the separate positive
+fixed-point fact index; executable owner/reference admission remains pending.
