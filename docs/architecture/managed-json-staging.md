@@ -20,7 +20,15 @@ AIR admission. BindingReader still creates Publication, lists, Strings and
 BigIntegers. Conversion scratch is guarded, but returned model ownership is not
 funded by this staging lease. SnapshotAnnotationTemplates supplies context-free
 fact-scope/claim/precision/coverage recipes, not all validation or CheckedSnapshot.
-Full typed builder binding, complete snapshot rules and downstream snapshot
+The additive `decodeSnapshot` route now transfers the same physical staging into the
+official builder without creating a `Publication` for empty publications and the
+independent minimal-return GOBACK profile. Its whole-tree equality law compares every
+typed node, scalar and collection with the resident projection; ownership laws cover
+success, unsupported inventory and denied builder capacity. This is a real direct
+binding vertical, not complete codec coverage: other already admitted variants still
+fail explicitly and the route issues no validation certificate.
+
+Full typed builder binding coverage, complete snapshot rules and downstream snapshot
 CFG/planner/domain/output ownership remain required. A successful checked resident
 Publication retains the complete original Validator result; partial checks cannot
 issue it. No end-to-end memory bound or global dependencies completion is claimed.

@@ -2,6 +2,8 @@ package io.github.gustavo2358.air.json;
 
 import io.github.gustavo2358.air.model.Publication;
 import io.github.gustavo2358.air.model.SemanticVersion;
+import io.github.gustavo2358.air.model.AirSnapshot;
+import io.github.gustavo2358.air.model.AirSnapshotBuilder;
 import io.github.gustavo2358.air.validation.AirValidator;
 import io.github.gustavo2358.air.validation.ValidationIssue;
 import io.github.gustavo2358.air.validation.ValidationOptions;
@@ -147,6 +149,25 @@ public final class AirJson {
     private AirValidator.CheckedPublication decodeChecked(java.io.InputStream input,InputStorage storage,boolean partialAnalysis)throws java.io.IOException {
         try(var staged=PagedJson.parse(input,limits,storage);var blocks=new OrderedBlocks(decodeOptions.bindingParallelism())) {
             return checkBound(new BindingReader(blocks).envelope(staged.node(staged.root())),partialAnalysis);
+        }
+    }
+    /**
+     * Builds official typed storage directly from managed physical staging, without constructing a
+     * Publication. This initial vertical admits empty publications and the minimal return-program
+     * profile; other AIR variants fail explicitly until their complete typed mappings are implemented.
+     */
+    public AirSnapshot decodeSnapshot(java.io.InputStream input,InputStorage inputStorage,
+                                      AirSnapshotBuilder.Storage snapshotStorage)throws java.io.IOException {
+        Objects.requireNonNull(input,"input");Objects.requireNonNull(inputStorage,"inputStorage");
+        Objects.requireNonNull(snapshotStorage,"snapshotStorage");
+        AirSnapshotBuilder builder;
+        try { builder=new AirSnapshotBuilder(snapshotStorage); }
+        catch(RuntimeException|Error failure) {
+            try { inputStorage.close(); } catch(RuntimeException|Error cleanup) { if(cleanup!=failure)failure.addSuppressed(cleanup); }
+            throw failure;
+        }
+        try(builder;var staged=PagedJson.parse(input,limits,inputStorage)) {
+            return new SnapshotBindingReader(builder).envelope(staged.node(staged.root()));
         }
     }
     private AirValidator.CheckedPublication checkBound(Publication publication,boolean partialAnalysis) {
