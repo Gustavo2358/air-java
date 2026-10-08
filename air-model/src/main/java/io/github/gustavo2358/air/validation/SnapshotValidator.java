@@ -496,7 +496,7 @@ public final class SnapshotValidator {
         private boolean directInvoke(long invoke,SnapshotTypes types,SnapshotDeclarations declarations) {
             long target=snapshot.field(invoke,OPERATIONS_INVOKE,2);if(snapshot.shape(target)!=INTERACTIONS_COMPUTED_TARGET)return false;
             long name=snapshot.field(target,INTERACTIONS_COMPUTED_TARGET,2);if(snapshot.shape(name)!=EXPRESSIONS_READ||snapshot.shape(snapshot.field(name,EXPRESSIONS_READ,1))!=PLACES_OBJECT_PLACE||!types.is(types.ofNode(name),Types.Builtin.TEXT))return false;
-            long namespace=snapshot.field(target,INTERACTIONS_COMPUTED_TARGET,1);return equal(namespace,"cobol.program")||equal(namespace,"cics.program");
+            long namespace=snapshot.field(target,INTERACTIONS_COMPUTED_TARGET,1);return equal(namespace,"cobol.program");
         }
 
         /** Complete, deliberately narrow diamond used by the first relational dependency slice. */

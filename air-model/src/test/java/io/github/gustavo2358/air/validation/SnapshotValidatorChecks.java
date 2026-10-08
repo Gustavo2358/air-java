@@ -95,6 +95,12 @@ final class SnapshotValidatorChecks {
         }
     }
 
+    static void cicsNamesCannotBorrowTheCobolDependencyCertificate() {
+        try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(directVariableCall(false,"cics.program")),ValidationOptions.defaults(),new Stores())) {
+            eq(ValidationResult.Status.INCOMPLETE_VALIDATION,checked.result().status());eq(false,checked.result().diagnostics().traversalCompleted());
+        }
+    }
+
     static void correlatedConcatDiamondCanIssueAValidCertificate() {
         try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(correlatedConcatDiamond()),ValidationOptions.defaults(),new Stores())) {
             eq(ValidationResult.Status.STRUCTURALLY_VALID,checked.result().status());
@@ -120,12 +126,13 @@ final class SnapshotValidatorChecks {
         f.sequence("join",List.of(assign),invoke);f.sequence("end",List.of(),f.halt("halt"));return f.build();
     }
 
-    private static Publication directVariableCall(boolean duplicateDefinition) {
+    private static Publication directVariableCall(boolean duplicateDefinition) {return directVariableCall(duplicateDefinition,"cobol.program");}
+    private static Publication directVariableCall(boolean duplicateDefinition,String namespace) {
         var f=new Fixtures();var target=f.object("target",Fixtures.known(Types.Builtin.TEXT));
         var set=f.op("set");var assign=new Operations.Assign(f.header(set),f.place(set,"destination",target,Operand.Role.VALUE_WRITE),f.text(set,"value","PROGA"));
         var call=f.op("call");var contract=f.uncertainty("contract","CONTRACT_UNKNOWN");
         var invoke=new Operations.Invoke(f.header(call),"call",
-            new Interactions.ComputedTarget("program","cobol.program",f.read(call,"name",target,Operand.Role.CALL_TARGET),Interactions.ExactName.INSTANCE,f.origin),
+            new Interactions.ComputedTarget("program",namespace,f.read(call,"name",target,Operand.Role.CALL_TARGET),Interactions.ExactName.INSTANCE,f.origin),
             List.of(),List.of(),new Interactions.ExternalSignature(f.signature(List.of(),List.of())),List.of(),f.effects(),
             new Control.InvocationOutcomes(List.of(new Control.Normal(f.label("end")),new Control.AnyException(Control.Propagate.INSTANCE),Control.HaltAlternative.INSTANCE,Control.Diverge.INSTANCE),Scopes.NoControl.INSTANCE),
             new Interactions.UnknownContract(contract));

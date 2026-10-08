@@ -64,6 +64,7 @@ public final class ContractSuite {
         test("PAGED-ADMISSION bottom-up operand type resolution",SnapshotValidatorChecks::operandTypesResolveBottomUpWithoutResidentOperands);
         test("PAGED-ADMISSION direct variable call valid certificate",SnapshotValidatorChecks::directVariableCallProfileCanIssueAValidCertificate);
         test("PAGED-ADMISSION direct profile rejects multiple reaching definitions",SnapshotValidatorChecks::multipleDefinitionsCannotBorrowTheDirectCertificate);
+        test("PAGED-ADMISSION COBOL profile rejects CICS name semantics",SnapshotValidatorChecks::cicsNamesCannotBorrowTheCobolDependencyCertificate);
         test("PAGED-ADMISSION correlated concat diamond valid certificate",SnapshotValidatorChecks::correlatedConcatDiamondCanIssueAValidCertificate);
         test("PAGED-VISIBILITY declared and imported exact membership",SnapshotVisibleChecks::declaredAndImportedObjectsShareExactNamespacedMembership);
         test("PAGED-CAPABILITIES exact manifest classification",SnapshotCapabilityChecks::duplicateProfilesUnsupportedAndMissingUsesStayClassified);
