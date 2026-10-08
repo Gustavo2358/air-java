@@ -130,3 +130,7 @@ and a second cleanup failure. This access check still issues no AIR certificate.
 Direct operation roots and operand children are available through
 [typed primitive traversal](paged-operand-traversal.md). This does not certify
 whole-publication structural validation.
+
+[Primitive declaration inventory](paged-declarations.md) checks complete namespace,
+duplicate occurrence and owner relations through an owned storage port. It is one
+indexing pass, not full paged admission.

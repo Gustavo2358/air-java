@@ -2,6 +2,10 @@
   "baseline_commit": "6a4091e5394fc22b3d2ada9abbdb530eb3572a58",
   "source": "src/test/java/io/github/gustavo2358/air/validation/ContractSuite.java",
   "checks": [
+    "PAGED-DECLARATIONS families and entry seeds",
+    "PAGED-DECLARATIONS duplicates and complete ownership",
+    "PAGED-DECLARATIONS deep frontier and failure lifetimes",
+    "PAGED-DECLARATIONS wide frontier and abort scopes",
     "PAGED-TRAVERSAL closed occurrence variants",
     "PAGED-TRAVERSAL streaming and failure lifetimes",
     "PAGED-IDENTITY complete namespaces and exact collision equality",

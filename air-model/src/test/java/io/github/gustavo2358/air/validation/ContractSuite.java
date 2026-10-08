@@ -14,6 +14,10 @@ public final class ContractSuite {
     private static int passed;
     private ContractSuite() {}
     public static void main(String[] args) throws Exception {
+        test("PAGED-DECLARATIONS families and entry seeds",SnapshotDeclarationChecks::declarationFamiliesAndEntrySeeds);
+        test("PAGED-DECLARATIONS duplicates and complete ownership",SnapshotDeclarationChecks::duplicatesAndCompleteOwnership);
+        test("PAGED-DECLARATIONS deep frontier and failure lifetimes",SnapshotDeclarationChecks::deepFrontierAndFailureLifetimes);
+        test("PAGED-DECLARATIONS wide frontier and abort scopes",SnapshotDeclarationChecks::wideFrontierAndAbortScopes);
         test("PAGED-TRAVERSAL closed occurrence variants",SnapshotTraversalChecks::closedVariants);
         test("PAGED-TRAVERSAL streaming and failure lifetimes",SnapshotTraversalChecks::streamingAndFailureLifetimes);
         test("PAGED-IDENTITY complete namespaces and exact collision equality",SnapshotIdentityChecks::completeNamespaces);
