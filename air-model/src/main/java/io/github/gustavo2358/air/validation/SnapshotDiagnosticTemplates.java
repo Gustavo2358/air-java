@@ -33,22 +33,57 @@ public final class SnapshotDiagnosticTemplates implements AutoCloseable {
         void occurrences(ValidationIssue.Kind kind,long ownerSource,long count);
         void retain(ValidationIssue.Kind kind,int rule,long ownerSource,long anchorSource,int field,long detailSource);
     }
+    /**
+     * Borrowed frozen admission relation, matching recipe/relation/context and cached counts.
+     * Resolves only a requested zero-based occurrence into five fixed output words:
+     * kind ordinal, positive rule token, source anchor, field(-1 absent), detail source.
+     * Must write every word, preserve exact order/multiplicity, and propagate operational faults.
+     * The template owner neither closes nor mutates this relation. No admission is inferred.
+     */
+    @FunctionalInterface public interface Projection {
+        void occurrence(int recipe,long relation,long context,long ordinal,long[] output);
+    }
     private static final ValidationIssue.Kind[] KINDS=ValidationIssue.Kind.values();
     private static final Word[] COUNT_WORDS={Word.INVALID,Word.UNSUPPORTED,Word.OBLIGATION,Word.VALIDATION_LIMIT,Word.RESOURCE_LIMIT};
     // AVL min leaves follow Fibonacci: height92 already needs >Long.MAX_VALUE occurrences.
     //96 provides conservative fixed scratch; checked counts and balanced joins enforce the proof.
     private static final int MAX_HEIGHT=96;
+    private static final int PROJECTED=8;
+    private final Projection projection;
     private Storage storage;
     private AirSnapshotBuilder.Lease control;
-    private long[] staged,path;
+    private long[] staged,path,projected;
     private boolean busy,failed;
 
-    public SnapshotDiagnosticTemplates(Storage storage) {
+    public SnapshotDiagnosticTemplates(Storage storage) {this(storage,null);}
+    /** Transfers storage; projection is optional for literal-only use and always borrowed. */
+    public SnapshotDiagnosticTemplates(Storage storage,Projection projection) {
+        this.projection=projection;
         this.storage=Objects.requireNonNull(storage);
         try {
             if(KINDS.length!=5)throw new IllegalStateException("diagnostic kind schema changed");
-            control=Objects.requireNonNull(storage.claim(2048));staged=new long[14];path=new long[MAX_HEIGHT];
+            control=Objects.requireNonNull(storage.claim(2048));staged=new long[14];path=new long[MAX_HEIGHT];projected=new long[5];
         } catch(RuntimeException|Error failure){closeSuppressed(failure);throw failure;}
+    }
+    /**
+     * Lazy ordered chunk from a frozen exact relation. Copy five cached kind counts into a single
+     * height-one tuple; an all-zero chunk is empty. No occurrence or per-context error array is
+     * materialized. The semantic relation owner proves these counts before calling this method.
+     */
+    public long projected(int recipe,long relation,long context,long[] counts) {
+        enter();
+        try {
+            if(projection==null)throw new IllegalStateException("projected diagnostic relation unavailable");
+            Objects.requireNonNull(counts);
+            if(recipe<=0||relation<=0||context<0||counts.length!=5)throw new IllegalArgumentException("projection recipe/relation/context and five counts required");
+            long total=0;
+            for(int n=0;n<5;n++){if(counts[n]<0)throw new IllegalArgumentException("nonnegative projected counts required");total=Math.addExact(total,counts[n]);staged[COUNT_WORDS[n].ordinal()]=counts[n];}
+            if(total==0)return 0;
+            staged[Word.HEIGHT.ordinal()]=1;staged[Word.TOTAL.ordinal()]=total;staged[Word.KIND.ordinal()]=PROJECTED;
+            staged[Word.RULE.ordinal()]=recipe;staged[Word.ANCHOR.ordinal()]=relation;staged[Word.DETAIL.ordinal()]=context;
+            return positive(storage.intern(staged));
+        } catch(RuntimeException|Error failure){failed=true;throw failure;}
+        finally{leave();}
     }
     /** Empty sequence is0; external rule token positive, anchor/detail0 permitted, field-1 is absent. */
     public long leaf(ValidationIssue.Kind kind,int rule,long anchor,int field,long detail) {
@@ -117,6 +152,18 @@ public final class SnapshotDiagnosticTemplates implements AutoCloseable {
                     if(depth>MAX_HEIGHT-2)throw new IllegalStateException("diagnostic cursor height exceeds capacity");
                     long left=child(node,Word.LEFT),right=child(node,Word.RIGHT);
                     path[depth++]=right;path[depth++]=left;
+                } else if(kind==PROJECTED) {
+                    if(projection==null)throw new IllegalStateException("projected diagnostic relation unavailable");
+                    long length=total(node),recipe=storage.word(node,Word.RULE),relation=storage.word(node,Word.ANCHOR),context=storage.word(node,Word.DETAIL);
+                    if(recipe<=0||recipe>Integer.MAX_VALUE||relation<=0||context<0)throw new IllegalStateException("invalid projected descriptor");
+                    long prefix=Math.min(length,retained-emitted);
+                    for(long at=0;at<prefix;at++) {
+                        Arrays.fill(projected,Long.MIN_VALUE);projection.occurrence((int)recipe,relation,context,at,projected);
+                        long actualKind=projected[0],rule=projected[1],anchor=projected[2],field=projected[3],detail=projected[4];
+                        if(actualKind<0||actualKind>=KINDS.length||rule<=0||rule>Integer.MAX_VALUE||anchor<0||field< -1||field>Integer.MAX_VALUE||detail<0)
+                            throw new IllegalStateException("incomplete or invalid projected occurrence");
+                        reports.retain(KINDS[(int)actualKind],(int)rule,owner,anchor,(int)field,detail);emitted++;
+                    }
                 } else {
                     if(kind<1||kind>KINDS.length||total(node)!=1)throw new IllegalStateException("invalid diagnostic leaf");
                     int rule=Math.toIntExact(storage.word(node,Word.RULE)),field=Math.toIntExact(storage.word(node,Word.FIELD));
@@ -158,14 +205,14 @@ public final class SnapshotDiagnosticTemplates implements AutoCloseable {
     private static long positive(long value){if(value<=0)throw new IllegalStateException("positive diagnostic handle/count required");return value;}
     private static void nonnegative(long value){if(value<0)throw new IllegalArgumentException("nonnegative diagnostic handle/anchor required");}
     private void enter(){if(storage==null||failed||busy)throw new IllegalStateException("diagnostic owner unavailable");busy=true;}
-    private void leave(){if(staged!=null)Arrays.fill(staged,0);if(path!=null)Arrays.fill(path,0);busy=false;}
+    private void leave(){if(staged!=null)Arrays.fill(staged,0);if(path!=null)Arrays.fill(path,0);if(projected!=null)Arrays.fill(projected,0);busy=false;}
     private void closeSuppressed(Throwable failure){try{close();}catch(RuntimeException|Error cleanup){if(cleanup!=failure)failure.addSuppressed(cleanup);}}
     @Override public void close() {
         if(busy)throw new IllegalStateException("cannot close diagnostic owner during callback");
         Storage owner=storage;storage=null;AirSnapshotBuilder.Lease lease=control;control=null;Throwable failure=null;
         try{if(owner!=null)owner.close();}catch(RuntimeException|Error error){failure=error;}
         try{if(lease!=null)lease.close();}catch(RuntimeException|Error error){if(failure==null)failure=error;else if(error!=failure)failure.addSuppressed(error);}
-        staged=path=null;
+        staged=path=projected=null;
         if(failure instanceof RuntimeException error)throw error;if(failure instanceof Error error)throw error;
     }
 }

@@ -22,6 +22,9 @@ public final class ContractSuite {
         test("PAGED-ATOMS canonical huge integers and single source reads",SnapshotAtomChecks::canonicalHugeIntegersAndSingleSourceReads);
         test("PAGED-ATOMS metadata failure and borrowed source",SnapshotAtomChecks::metadataReadFailureAbortsOwnerAndPreservesBorrowedSource);
         test("PAGED-ATOMS exact integer order and cached blankness",SnapshotAtomChecks::integerOrderAndBlanknessReuseCanonicalSubtrees);
+        test("PAGED-PROJECTION mixed kinds exact contexts and zero retention",SnapshotProjectionChecks::mixedProjectedChunksPreserveExactContextOrderAndBulkKinds);
+        test("PAGED-PROJECTION trillion prefix and incomplete callback failure",SnapshotProjectionChecks::trillionOccurrencesReadOnlyRequestedPrefixAndRejectEveryProjectionFault);
+        test("PAGED-PROJECTION storage report and reentrant ownership",SnapshotProjectionChecks::everyProjectedStorageReportAndReentrantFailurePreservesBorrowedRelation);
         test("PAGED-DIAGNOSTICS independent ordered kind counts and owner",SnapshotDiagnosticChecks::independentSequencesPreserveKindsOrderMultiplicityAndOwner);
         test("PAGED-DIAGNOSTICS random subtree parenthesizations",SnapshotDiagnosticChecks::randomSubtreeJoinsMatchIndependentFlatParenthesizations);
         test("PAGED-DIAGNOSTICS geometric and giant shared sequences",SnapshotDiagnosticChecks::geometricChainsAndGiantRepeatedSubtreesHaveBoundedStructuralWork);

@@ -36,10 +36,40 @@ all measured storage calls and report/constructor/reentrant/cleanup failures.
 62shared doubling joins represent2^62diagnostic occurrences with63tuples/height63
 and emit only three anchors.100000empty forwards create no tuples; the overflowing
 next doubling fails and poisons the owner. Map ports qualify semantic/work laws
-only; managed consumer storage and complete reference recipe integration are pending.
+only; the literal managed backend is separately qualified in analysis-cfg. Complete
+reference recipes and projected-context backend integration remain pending.
 
 Compiled repeated-child collapse loses ordered occurrences, and dropped right-child
 traversal cannot emit the requested prefix; both mutations RED, original GREEN.
 Required tuple payload grows with constructed joins, not expanded occurrences.
 This does not qualify full admission, external diagnostic rendering, managed decode,
 dependencies or global AS-W00–W10 completion. Those frontiers remain explicit.
+
+
+## Lazy projected chunks
+
+A borrowed Projection relation can resolve a frozen exact recipe/relation/context
+into requested primitive occurrence anchors. A projected chunk stores all five kind
+counts and their checked sum in one height-one tuple, regardless of represented
+occurrences. Mixed kinds/rules preserve actual occurrence order. Concatenation and
+literal behavior keep the same14word schema; node kind8 denotes projection, recipe/
+relation/context occupy literal payload columns. Positive chunk counts preserve the
+height proof. The borrowed relation owner proves descriptor counts and lifetime;
+the partial template API does not certify those claims or complete AIR admission.
+
+Only a retained chunk prefix calls the projector. Zero retention makes no projected
+call. Fixed five-word output staging is included in the2048B control reservation;
+Long.MIN_VALUE sentinels detect every unwritten word without masking an absent field
+or zero source anchor. Kind/rule/source/field/detail bounds reject incomplete output,
+missing projector, bad descriptor counts, overflow and wrong context. Projection/
+report/metadata failure poisons the template owner, never falls back to missing/valid.
+The borrowed projector is not closed. Reentrant calls/closure are rejected.
+
+Three additional independent laws cover different contexts on the same relation,
+mixed literal/projected/repeated chunks, defensive count copying,4096zero-retention
+owner uses without projected reads/interning, a trillion occurrences in one tuple
+with three projected reads, every incomplete output field/invalid kind/rule, missing
+projector/count-length/sign/overflow, every storage interruption, report and projector
+failures/reentrancy/borrowed lifetime. Compiled dropped-context and zero-quota-query
+mutations fail independent assertions. Managed projected context/reference index
+integration is still pending; the literal consumer checkpoint does not qualify it.
