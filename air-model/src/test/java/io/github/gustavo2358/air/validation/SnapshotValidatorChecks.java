@@ -95,6 +95,31 @@ final class SnapshotValidatorChecks {
         }
     }
 
+    static void correlatedConcatDiamondCanIssueAValidCertificate() {
+        try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(correlatedConcatDiamond()),ValidationOptions.defaults(),new Stores())) {
+            eq(ValidationResult.Status.STRUCTURALLY_VALID,checked.result().status());
+            eq(true,checked.result().diagnostics().traversalCompleted());eq(List.of(),checked.result().issues());
+        }
+    }
+
+    private static Publication correlatedConcatDiamond() {
+        var f=new Fixtures();var x=f.object("x",Fixtures.known(Types.Builtin.TEXT));var y=f.object("y",Fixtures.known(Types.Builtin.TEXT));var z=f.object("z",Fixtures.known(Types.Builtin.TEXT));var conditionObject=f.object("condition",Fixtures.known(Types.Builtin.BOOL));
+        var reason=f.uncertainty("branch-input","VALUE_UNKNOWN");var initialPlace=new Places.ObjectPlace(f.entryOperand("condition",Operand.Role.VALUE_WRITE),conditionObject);
+        f.state=new Entries.EntryState(List.of(new Entries.InitialCondition(initialPlace,new Entries.ExternalUnknown(reason),f.origin,List.of())),List.of(reason));
+        var choose=f.op("choose");var condition=f.read(choose,"condition",conditionObject,Operand.Role.PREDICATE);
+        f.sequence("start",List.of(),new Operations.Branch(f.header(choose),condition,f.label("left"),f.label("right")));
+        f.sequence("left",List.of(f.assign("seed-A",x,f.text(f.op("seed-A"),"value","A")),f.assign("seed-X",y,f.text(f.op("seed-X"),"value","X"))),new Operations.Jump(f.header(f.op("left-jump")),f.label("join")));
+        f.sequence("right",List.of(f.assign("seed-B",x,f.text(f.op("seed-B"),"value","B")),f.assign("seed-Y",y,f.text(f.op("seed-Y"),"value","Y"))),new Operations.Jump(f.header(f.op("right-jump")),f.label("join")));
+        var fit=f.op("fit-concat");var left=f.read(fit,"x",x,Operand.Role.VALUE_READ);var right=f.read(fit,"y",y,Operand.Role.VALUE_READ);
+        var concat=new Expressions.Binary(f.operand(fit,"concat",Operand.Role.VALUE_READ),Expressions.BinaryOperator.CONCAT,left,right);
+        var value=new Expressions.FitText(f.operand(fit,"fit",Operand.Role.VALUE_READ),concat,BigInteger.valueOf(2)," ");
+        var assign=f.assign("fit-concat",z,value);var call=f.op("call");var contract=f.uncertainty("contract","CONTRACT_UNKNOWN");
+        var invoke=new Operations.Invoke(f.header(call),"call",new Interactions.ComputedTarget("program","cobol.program",f.read(call,"name",z,Operand.Role.CALL_TARGET),Interactions.ExactName.INSTANCE,f.origin),
+            List.of(),List.of(),new Interactions.ExternalSignature(f.signature(List.of(),List.of())),List.of(),f.effects(),
+            new Control.InvocationOutcomes(List.of(new Control.Normal(f.label("end")),new Control.AnyException(Control.Propagate.INSTANCE),Control.HaltAlternative.INSTANCE,Control.Diverge.INSTANCE),Scopes.NoControl.INSTANCE),new Interactions.UnknownContract(contract));
+        f.sequence("join",List.of(assign),invoke);f.sequence("end",List.of(),f.halt("halt"));return f.build();
+    }
+
     private static Publication directVariableCall(boolean duplicateDefinition) {
         var f=new Fixtures();var target=f.object("target",Fixtures.known(Types.Builtin.TEXT));
         var set=f.op("set");var assign=new Operations.Assign(f.header(set),f.place(set,"destination",target,Operand.Role.VALUE_WRITE),f.text(set,"value","PROGA"));

@@ -4,8 +4,10 @@ import io.github.gustavo2358.air.model.AirShape;
 import io.github.gustavo2358.air.model.AirSnapshot;
 import io.github.gustavo2358.air.model.Ids;
 import io.github.gustavo2358.air.model.Evidence;
+import io.github.gustavo2358.air.model.Expressions;
 import io.github.gustavo2358.air.model.Operand;
 import io.github.gustavo2358.air.model.Types;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
@@ -131,7 +133,8 @@ public final class SnapshotValidator {
                     referenceAdmission(keys,declarations,grounding,visible,signatures,tape,refs,labels,annotations,capabilities,distinct,context,types);
                     // A deliberately narrow directly-analyzable profile has every mandatory rule
                     // discharged here. All other AIR remains explicit incomplete validation.
-                    traversalCompleted=directDependencyProfile(keys,declarations,types);
+                    traversalCompleted=directDependencyProfile(keys,declarations,types)
+                        ||correlatedConcatDependencyProfile(keys,declarations,types);
                 }
             } catch(SnapshotDeclarations.Limit limit) {
                 resourceLimit(limit.getMessage());
@@ -496,6 +499,99 @@ public final class SnapshotValidator {
             long namespace=snapshot.field(target,INTERACTIONS_COMPUTED_TARGET,1);return equal(namespace,"cobol.program")||equal(namespace,"cics.program");
         }
 
+        /** Complete, deliberately narrow diamond used by the first relational dependency slice. */
+        private boolean correlatedConcatDependencyProfile(SnapshotIdentityKeys keys,SnapshotDeclarations declarations,SnapshotTypes types) {
+            long root=snapshot.root(),manifest=snapshot.field(root,PUBLICATION,2),units=snapshot.field(root,PUBLICATION,4);
+            if(snapshot.size(snapshot.field(manifest,CAPABILITIES_MANIFEST,0))!=0
+                    ||snapshot.size(snapshot.field(manifest,CAPABILITIES_MANIFEST,1))!=0
+                    ||snapshot.size(snapshot.field(root,PUBLICATION,6))!=0
+                    ||snapshot.size(snapshot.field(root,PUBLICATION,7))!=0
+                    ||snapshot.size(snapshot.field(root,PUBLICATION,11))!=0
+                    ||snapshot.size(units)!=1)return false;
+            try(var rows=snapshot.elements(snapshot.field(root,PUBLICATION,5),MEMORY_STORAGE)) {
+                while(rows.advance()){long storage=rows.value();if(snapshot.shape(storage)!=MEMORY_CELL)return false;long type=snapshot.field(storage,MEMORY_CELL,1);if(!types.is(types.fromRef(type),Types.Builtin.TEXT)&&!types.is(types.fromRef(type),Types.Builtin.BOOL))return false;}
+            }
+            long unit=snapshot.element(units,UNIT,0),entryList=snapshot.field(unit,UNIT,4),sequences=snapshot.field(unit,UNIT,5);
+            if(snapshot.size(entryList)!=1||snapshot.size(sequences)!=5)return false;
+            try(var objects=snapshot.elements(snapshot.field(unit,UNIT,2),MEMORY_OBJECT_DECLARATION)) {
+                while(objects.advance()){long object=objects.value(),type=snapshot.field(object,MEMORY_OBJECT_DECLARATION,2);if((!types.is(types.fromRef(type),Types.Builtin.TEXT)&&!types.is(types.fromRef(type),Types.Builtin.BOOL))||snapshot.shape(snapshot.field(object,MEMORY_OBJECT_DECLARATION,3))!=MEMORY_CELL_BINDING)return false;}
+            }
+            long entry=snapshot.element(entryList,ENTRIES_ENTRY,0),initialOptional=snapshot.field(entry,ENTRIES_ENTRY,1);
+            long conditionObject=correlatedEntryCondition(entry,keys,types);if(snapshot.size(initialOptional)!=1||conditionObject==0)return false;
+            long initial=snapshot.element(initialOptional,IDS_LABEL_ID,0),head=sequenceByLabel(sequences,keys.key(initial),keys);
+            if(head==0||snapshot.size(snapshot.field(head,SEQUENCE,1))!=0)return false;
+            long branch=snapshot.field(head,SEQUENCE,2);if(snapshot.shape(branch)!=OPERATIONS_BRANCH)return false;
+            long predicate=snapshot.field(branch,OPERATIONS_BRANCH,1);
+            if(readObject(predicate,keys)!=conditionObject)return false;
+            long left=sequenceByLabel(sequences,keys.key(snapshot.field(branch,OPERATIONS_BRANCH,2)),keys);
+            long right=sequenceByLabel(sequences,keys.key(snapshot.field(branch,OPERATIONS_BRANCH,3)),keys);
+            if(left==0||right==0||left==right)return false;
+            var leftArm=literalArm(left,keys);var rightArm=literalArm(right,keys);
+            if(leftArm==null||rightArm==null||leftArm.joinLabel()!=rightArm.joinLabel()
+                    ||leftArm.firstObject()!=rightArm.firstObject()||leftArm.secondObject()!=rightArm.secondObject())return false;
+            long join=sequenceByLabel(sequences,leftArm.joinLabel(),keys);if(join==0||join==head||join==left||join==right)return false;
+            long instructions=snapshot.field(join,SEQUENCE,1);if(snapshot.size(instructions)!=1)return false;
+            long assignment=snapshot.element(instructions,INSTRUCTION,0);if(snapshot.shape(assignment)!=OPERATIONS_ASSIGN)return false;
+            long destination=snapshot.field(assignment,OPERATIONS_ASSIGN,1),expression=snapshot.field(assignment,OPERATIONS_ASSIGN,2);
+            if(snapshot.shape(destination)!=PLACES_OBJECT_PLACE||!fitConcatReads(expression,leftArm.firstObject(),leftArm.secondObject(),keys))return false;
+            long targetObject=keys.key(snapshot.field(destination,PLACES_OBJECT_PLACE,1));
+            if(targetObject==leftArm.firstObject()||targetObject==leftArm.secondObject())return false;
+            long invoke=snapshot.field(join,SEQUENCE,2);if(!directInvoke(invoke,types,declarations))return false;
+            long target=snapshot.field(invoke,OPERATIONS_INVOKE,2),read=snapshot.field(target,INTERACTIONS_COMPUTED_TARGET,2);
+            if(keys.key(snapshot.field(snapshot.field(read,EXPRESSIONS_READ,1),PLACES_OBJECT_PLACE,1))!=targetObject)return false;
+            long end=remainingSequence(sequences,head,left,right,join);
+            if(end==0||snapshot.size(snapshot.field(end,SEQUENCE,1))!=0)return false;long terminator=snapshot.field(end,SEQUENCE,2);
+            return snapshot.shape(terminator)==OPERATIONS_HALT||snapshot.shape(terminator)==OPERATIONS_RETURN&&snapshot.size(snapshot.field(terminator,OPERATIONS_RETURN,1))==0;
+        }
+        private long correlatedEntryCondition(long entry,SnapshotIdentityKeys keys,SnapshotTypes types) {
+            long signature=snapshot.field(entry,ENTRIES_ENTRY,2),parameters=snapshot.field(signature,INTERACTIONS_SIGNATURE,0),results=snapshot.field(signature,INTERACTIONS_SIGNATURE,1),state=snapshot.field(entry,ENTRIES_ENTRY,3);
+            if(snapshot.size(snapshot.field(parameters,INTERACTIONS_PARAMETER_INVENTORY,0))!=0
+                ||snapshot.shape(snapshot.field(parameters,INTERACTIONS_PARAMETER_INVENTORY,1))!=INTERACTIONS_NO_REMAINDER
+                ||snapshot.size(snapshot.field(results,INTERACTIONS_RESULT_INVENTORY,0))!=0
+                ||snapshot.shape(snapshot.field(results,INTERACTIONS_RESULT_INVENTORY,1))!=INTERACTIONS_NO_REMAINDER
+                ||snapshot.size(snapshot.field(state,ENTRIES_ENTRY_STATE,0))!=1)return 0;
+            long condition=snapshot.element(snapshot.field(state,ENTRIES_ENTRY_STATE,0),ENTRIES_INITIAL_CONDITION,0),place=snapshot.field(condition,ENTRIES_INITIAL_CONDITION,0),value=snapshot.field(condition,ENTRIES_INITIAL_CONDITION,1);
+            if(snapshot.shape(place)!=PLACES_OBJECT_PLACE||snapshot.shape(value)!=ENTRIES_EXTERNAL_UNKNOWN)return 0;
+            long object=snapshot.field(place,PLACES_OBJECT_PLACE,1);return types.is(types.ofNode(place),Types.Builtin.BOOL)?keys.key(object):0;
+        }
+        private record LiteralArm(long firstObject,long secondObject,long joinLabel) { }
+        private LiteralArm literalArm(long sequence,SnapshotIdentityKeys keys) {
+            long instructions=snapshot.field(sequence,SEQUENCE,1);if(snapshot.size(instructions)!=2)return null;
+            long[] objects=new long[2];
+            for(int i=0;i<2;i++){
+                long assignment=snapshot.element(instructions,INSTRUCTION,i);if(snapshot.shape(assignment)!=OPERATIONS_ASSIGN)return null;
+                long destination=snapshot.field(assignment,OPERATIONS_ASSIGN,1),value=snapshot.field(assignment,OPERATIONS_ASSIGN,2);
+                if(snapshot.shape(destination)!=PLACES_OBJECT_PLACE||snapshot.shape(value)!=EXPRESSIONS_LITERAL
+                        ||snapshot.shape(snapshot.field(value,EXPRESSIONS_LITERAL,1))!=VALUES_TEXT_VALUE)return null;
+                objects[i]=keys.key(snapshot.field(destination,PLACES_OBJECT_PLACE,1));
+            }
+            if(objects[0]==objects[1])return null;
+            long terminator=snapshot.field(sequence,SEQUENCE,2);if(snapshot.shape(terminator)!=OPERATIONS_JUMP)return null;
+            return objects[0]<objects[1]?new LiteralArm(objects[0],objects[1],keys.key(snapshot.field(terminator,OPERATIONS_JUMP,1)))
+                :new LiteralArm(objects[1],objects[0],keys.key(snapshot.field(terminator,OPERATIONS_JUMP,1)));
+        }
+        private boolean fitConcatReads(long expression,long first,long second,SnapshotIdentityKeys keys) {
+            if(snapshot.shape(expression)!=EXPRESSIONS_FIT_TEXT)return false;
+            long length=snapshot.field(expression,EXPRESSIONS_FIT_TEXT,2);
+            // The current detached dependency product uses a Java String. This is a profile
+            // representability boundary on the explicit FitText result, never on TEXT in general
+            // or on the (projected, non-materialized) CONCAT intermediate.
+            try{if(new BigInteger(text(length)).bitLength()>31)return false;}catch(NumberFormatException malformed){return false;}
+            long binary=snapshot.field(expression,EXPRESSIONS_FIT_TEXT,1);
+            if(snapshot.shape(binary)!=EXPRESSIONS_BINARY||snapshot.scalar(snapshot.field(binary,EXPRESSIONS_BINARY,1))!=Expressions.BinaryOperator.CONCAT.ordinal())return false;
+            long left=readObject(snapshot.field(binary,EXPRESSIONS_BINARY,2),keys),right=readObject(snapshot.field(binary,EXPRESSIONS_BINARY,3),keys);
+            return left!=0&&right!=0&&left!=right&&((left==first&&right==second)||(left==second&&right==first));
+        }
+        private long readObject(long expression,SnapshotIdentityKeys keys) {
+            if(snapshot.shape(expression)!=EXPRESSIONS_READ)return 0;long place=snapshot.field(expression,EXPRESSIONS_READ,1);
+            return snapshot.shape(place)==PLACES_OBJECT_PLACE?keys.key(snapshot.field(place,PLACES_OBJECT_PLACE,1)):0;
+        }
+        private long sequenceByLabel(long sequences,long label,SnapshotIdentityKeys keys) {
+            try(var rows=snapshot.elements(sequences,SEQUENCE)){while(rows.advance()){long sequence=rows.value();if(keys.key(snapshot.field(sequence,SEQUENCE,0))==label)return sequence;}}return 0;
+        }
+        private long remainingSequence(long sequences,long... used) {
+            try(var rows=snapshot.elements(sequences,SEQUENCE)){outer:while(rows.advance()){long sequence=rows.value();for(long value:used)if(sequence==value)continue outer;return sequence;}}return 0;
+        }
         private void contextReference(long node,long owner,long kind,long type,long depth,SnapshotIdentityKeys keys,
                 SnapshotDeclarations declarations,SnapshotDiagnosticTemplates tape,SnapshotReferenceLists refs,
                 SnapshotCapabilities capabilities,SnapshotContextWalk context) {
