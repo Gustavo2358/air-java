@@ -44,3 +44,20 @@ initial shape read occurred outside the abort scope and a later call could reuse
 previous key. All source reads now participate in the same fail-closed key scope.
 The exact first operational failure propagates; owner closure still releases every
 fixed lease even if storage and lease cleanup both fail. No certificate is issued.
+
+Atom keys extend the same owned index to TEXT and INTEGER. One fused character
+pass computes exact content, UTF-16 length, Unicode scalar count (or -1 for malformed
+UTF-16), and canonical integer sign/magnitude modulo eight. The scalar count carries
+a pending high surrogate across blocks. INTEGER storage is canonical signed decimal;
+noncanonical storage aborts the owner rather than returning an invented numeric fact.
+Transport normalization remains the codec's responsibility. TEXT and INTEGER have
+different terminal tags. No String or BigInteger proportional to input is constructed.
+
+Immutable tuple columns expose cached summaries through the storage port. Repeated
+requests do not reread characters or reintern leaves, including text already visited
+for namespace identity. Summaries are content facts only: they do not enforce all
+field-local restrictions or certify structural validity. Local grammar, graph cycles,
+references, types/domains, capabilities and full paged admission remain incomplete.
+Independent laws cover split surrogate pairs, malformed UTF-16, exact trailing NULs,
+Unicode composition, a 100002-character integer, canonical-storage negatives and
+metadata-read failure preserving the borrowed source.

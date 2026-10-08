@@ -201,12 +201,13 @@ final class SnapshotDeclarationChecks {
     private static String text(AirSnapshot s,long node) { char[] chars=new char[Math.toIntExact(s.characterCount(node))];s.readCharacters(node,0,chars,0,chars.length);return new String(chars); }
     private record Tuple(long tag,long left,long right,long a,long b,long c,long d) { }
     private static final class Keys implements SnapshotIdentityKeys.Storage {
-        final Map<Long,Long> memo=new HashMap<>();final Map<Tuple,Long> tuples=new HashMap<>();long issued;
+        final Map<Long,Long> memo=new HashMap<>();final Map<Tuple,Long> tuples=new HashMap<>();final Map<Long,Tuple> rows=new HashMap<>();long issued;
         public long known(long node){return memo.getOrDefault(node,0L);}
         public void remember(long node,long key){memo.put(node,key);}
-        public long intern(long tag,long l,long r,long a,long b,long c,long d){return tuples.computeIfAbsent(new Tuple(tag,l,r,a,b,c,d),ignored -> ++issued);}
+        public long intern(long tag,long l,long r,long a,long b,long c,long d){return tuples.computeIfAbsent(new Tuple(tag,l,r,a,b,c,d),tuple -> {long key=++issued;rows.put(key,tuple);return key;});}
+        public long word(long key,int column){var row=rows.get(key);return switch(column){case 0->row.tag();case 1->row.left();case 2->row.right();case 3->row.a();case 4->row.b();case 5->row.c();case 6->row.d();default->throw new IllegalArgumentException("tuple column");};}
         public AirSnapshotBuilder.Lease claim(long bytes){return () -> { };}
-        public void close(){memo.clear();tuples.clear();}
+        public void close(){memo.clear();tuples.clear();rows.clear();}
     }
     private static final class Store implements SnapshotDeclarations.Storage {
         final Map<Long,long[]> facts=new HashMap<>(); final ArrayList<long[]> rows=new ArrayList<>(); final ArrayDeque<long[]> frontier=new ArrayDeque<>();

@@ -23,10 +23,12 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
         long known(long sourceHandle);
         void remember(long sourceHandle,long key);
         long intern(long tag,long left,long right,long a,long b,long c,long d);
+        /** Immutable exact tuple column: tag,left,right,a,b,c,d are columns0..6. */
+        long word(long key,int column);
         AirSnapshotBuilder.Lease claim(long bytes);
         @Override void close();
     }
-    private static final long TEXT_LEAF=1,TEXT_PAIR=2,TEXT_END=3,RECORD_BASE=16;
+    private static final long TEXT_LEAF=1,TEXT_PAIR=2,TEXT_END=3,INTEGER_END=4,RECORD_BASE=16;
     // OperandId -> OperandOwner -> EntryId/OperationId -> UnitId -> PublicationId.
     private static final int NAMESPACE_DEPTH=5;
     private final AirSnapshot snapshot;
@@ -60,7 +62,7 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
                     long child=snapshot.field(node,shape,position);AirShape childShape=snapshot.shape(child);
                     long childKey=storage.known(child);
                     if(childKey==0) {
-                        if(childShape==AirShape.TEXT)childKey=text(child);
+                        if(childShape==AirShape.TEXT)childKey=text(child,false);
                         else {
                             if(!identity(childShape)||depth+1==NAMESPACE_DEPTH)
                                 throw new IllegalStateException("identity namespace shape exceeds official schema");
@@ -79,14 +81,64 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
         } catch(RuntimeException|Error failure) {failed=true;throw failure;}
         finally {Arrays.fill(nodes,0);Arrays.fill(first,0);Arrays.fill(second,0);}
     }
-    private long text(long handle) {
-        Arrays.fill(forest,0);long length=snapshot.characterCount(handle),offset=0,leaves=0;
+    /** Cached intrinsic atom facts, not model-local or cross-reference validation. */
+    public enum AtomFact {
+        CHARACTERS, UNICODE_SCALARS, INTEGER_SIGN, MAGNITUDE_MODULO_EIGHT
+    }
+    /** Exact TEXT/INTEGER content key; integer storage must use canonical signed decimal. */
+    public long atomKey(long handle) {
+        open();
+        try {
+            AirShape shape=snapshot.shape(handle);requireAtom(shape);
+            return atom(handle,shape);
+        } catch(RuntimeException|Error failure){failed=true;throw failure;}
+        finally{Arrays.fill(forest,0);}
+    }
+    /**
+     * Unicode scalar count is -1 for malformed UTF-16 (a content fact, never a validity certificate).
+     * Sign and magnitude modulo8 require INTEGER; arbitrary precision is never materialized.
+     * The source character stream is scanned once, shared with namespace key interning.
+     */
+    public long atomFact(long handle,AtomFact fact) {
+        open();Objects.requireNonNull(fact);
+        try {
+            AirShape shape=snapshot.shape(handle);requireAtom(shape);
+            if((fact==AtomFact.INTEGER_SIGN||fact==AtomFact.MAGNITUDE_MODULO_EIGHT)&&shape!=AirShape.INTEGER)
+                throw new IllegalArgumentException("integer atom fact requires INTEGER");
+            long key=atom(handle,shape);
+            return storage.word(key,switch(fact){case CHARACTERS->3;case UNICODE_SCALARS->4;case INTEGER_SIGN->5;case MAGNITUDE_MODULO_EIGHT->6;});
+        } catch(RuntimeException|Error failure){failed=true;throw failure;}
+        finally{Arrays.fill(forest,0);}
+    }
+    private static void requireAtom(AirShape shape){if(shape!=AirShape.TEXT&&shape!=AirShape.INTEGER)throw new IllegalArgumentException("TEXT or INTEGER atom required");}
+    private long atom(long handle,AirShape shape) {
+        long known=storage.known(handle);
+        if(known==0)return text(handle,shape==AirShape.INTEGER);
+        known=positive(known);
+        if(storage.word(known,0)!=(shape==AirShape.TEXT?TEXT_END:INTEGER_END))
+            throw new IllegalStateException("immutable AIR atom memo changed kind");
+        return known;
+    }
+    private long text(long handle,boolean integer) {
+        Arrays.fill(forest,0);long length=snapshot.characterCount(handle),offset=0,leaves=0,scalars=0,digits=0;
+        boolean unicode=true,high=false,canonical=true,negative=false,firstZero=false;int modulo=0;
         while(offset<length) {
             int count=snapshot.readCharacters(handle,offset,characters,0,(int)Math.min(characters.length,length-offset));
             for(int at=0;at<count;at+=16) {
                 int end=Math.min(count,at+16);long a=0,b=0,c=0,d=0;
                 for(int n=at;n<end;n++) {
-                    long value=(long)characters[n]<<((n-at)%4*16);
+                    char character=characters[n];boolean pair=high&&Character.isLowSurrogate(character);
+                    if(high){if(pair)scalars++;else unicode=false;high=false;}
+                    if(!pair){if(Character.isHighSurrogate(character))high=true;else if(Character.isLowSurrogate(character))unicode=false;else scalars++;}
+                    if(integer) {
+                        if(offset+n==0&&character=='-')negative=true;
+                        else if(character<'0'||character>'9')canonical=false;
+                        else {
+                            if(digits==0)firstZero=character=='0';else if(firstZero)canonical=false;
+                            digits++;modulo=(modulo*10+character-'0')&7;
+                        }
+                    }
+                    long value=(long)character<<((n-at)%4*16);
                     switch((n-at)/4) {case 0->a|=value;case 1->b|=value;case 2->c|=value;case 3->d|=value;default->throw new AssertionError();}
                 }
                 long tree=positive(storage.intern(TEXT_LEAF,0,0,a,b,c,d));int level=0;long carry=leaves++;
@@ -95,10 +147,14 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
             }
             offset+=count;
         }
+        if(integer&&(!canonical||digits==0||negative&&firstZero))throw new IllegalStateException("noncanonical integer AIR storage");
+        if(high)unicode=false;
         long tree=0;
         for(int level=forest.length-1;level>=0;level--)if(forest[level]!=0)
             tree=tree==0?forest[level]:positive(storage.intern(TEXT_PAIR,tree,forest[level],0,0,0,0));
-        long result=positive(storage.intern(TEXT_END,tree,0,length,0,0,0));storage.remember(handle,result);return result;
+        long sign=integer?(firstZero?0:negative?-1:1):0;
+        long result=positive(storage.intern(integer?INTEGER_END:TEXT_END,tree,0,length,unicode?scalars:-1,sign,integer?modulo:0));
+        storage.remember(handle,result);return result;
     }
     private static long positive(long key) {if(key<=0)throw new IllegalStateException("positive canonical identity key required");return key;}
     private static boolean identity(AirShape shape) {return AirShape.IDS_ID.accepts(shape)||AirShape.IDS_OPERAND_OWNER.accepts(shape);}

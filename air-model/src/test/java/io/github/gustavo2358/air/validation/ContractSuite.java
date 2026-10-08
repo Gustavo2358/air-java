@@ -14,6 +14,9 @@ public final class ContractSuite {
     private static int passed;
     private ContractSuite() {}
     public static void main(String[] args) throws Exception {
+        test("PAGED-ATOMS exact Unicode and typed keys",SnapshotAtomChecks::exactUnicodeAndTypedAtomKeys);
+        test("PAGED-ATOMS canonical huge integers and single source reads",SnapshotAtomChecks::canonicalHugeIntegersAndSingleSourceReads);
+        test("PAGED-ATOMS metadata failure and borrowed source",SnapshotAtomChecks::metadataReadFailureAbortsOwnerAndPreservesBorrowedSource);
         test("PAGED-DECLARATIONS families and entry seeds",SnapshotDeclarationChecks::declarationFamiliesAndEntrySeeds);
         test("PAGED-DECLARATIONS duplicates and complete ownership",SnapshotDeclarationChecks::duplicatesAndCompleteOwnership);
         test("PAGED-DECLARATIONS deep frontier and failure lifetimes",SnapshotDeclarationChecks::deepFrontierAndFailureLifetimes);
