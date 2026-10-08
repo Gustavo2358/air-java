@@ -57,6 +57,15 @@ public final class ContractSuite {
         test("PAGED-LOCAL decimal parts and formats without expanded arithmetic",SnapshotLocalChecks::decimalPartsAndFormatsWithoutExpandedArithmetic);
         test("PAGED-LOCAL label membership and shared fold cost",SnapshotLocalChecks::labelMembershipAndSharedFoldCost);
         test("PAGED-LOCAL whole graph dead content and failure ownership",SnapshotLocalChecks::wholeGraphDeadContentAndFailureOwnership);
+        test("PAGED-LOCAL whole graph collects independent failures",SnapshotLocalChecks::wholeGraphCollectsIndependentLocalFailures);
+        test("PAGED-ADMISSION checked snapshot binding and incomplete safety",SnapshotValidatorChecks::checkedSnapshotIsBoundAndIncompletePassesCannotCertify);
+        test("PAGED-ADMISSION invalid diagnostics without false completion",SnapshotValidatorChecks::duplicateAndLocalFailuresRemainInvalidWithoutFalseCompletion);
+        test("PAGED-ADMISSION contextual resource signature and type references",SnapshotValidatorChecks::contextualResourcesSignaturesAndTypesAreAdmittedTogether);
+        test("PAGED-ADMISSION bottom-up operand type resolution",SnapshotValidatorChecks::operandTypesResolveBottomUpWithoutResidentOperands);
+        test("PAGED-ADMISSION direct variable call valid certificate",SnapshotValidatorChecks::directVariableCallProfileCanIssueAValidCertificate);
+        test("PAGED-ADMISSION direct profile rejects multiple reaching definitions",SnapshotValidatorChecks::multipleDefinitionsCannotBorrowTheDirectCertificate);
+        test("PAGED-VISIBILITY declared and imported exact membership",SnapshotVisibleChecks::declaredAndImportedObjectsShareExactNamespacedMembership);
+        test("PAGED-CAPABILITIES exact manifest classification",SnapshotCapabilityChecks::duplicateProfilesUnsupportedAndMissingUsesStayClassified);
         test("PAGED-GROUNDING seeded and unseeded cycles",SnapshotGroundingChecks::seededAndUnseededCyclesPreserveOrSemanticsAcrossInventoryOrder);
         test("PAGED-GROUNDING independent finite reachability",SnapshotGroundingChecks::independentTinyReachabilityOracleMatchesEveryObject);
         test("PAGED-GROUNDING shared cyclic queries and deep scopes",SnapshotGroundingChecks::sharedCyclicQueriesAndDeepScopesHaveLinearEquationWork);

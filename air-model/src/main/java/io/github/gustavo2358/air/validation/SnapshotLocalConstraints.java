@@ -13,6 +13,11 @@ import static io.github.gustavo2358.air.validation.SnapshotIdentityKeys.AtomFact
  * predicates use exact required index state supplied by the owned, managed storage port.
  */
 public final class SnapshotLocalConstraints implements SnapshotGraphWalk.Visitor,AutoCloseable {
+    /** Receives constructor-local diagnostics while a whole-graph scan continues. */
+    @FunctionalInterface
+    public interface Issues {
+        void report(Rule rule,long node,int field);
+    }
     /**
      * Empty on transfer. Facts are keyed by exact source handle and kind; label membership uses
      * the source LIST handle and complete canonical LabelId key from the borrowed key owner.
@@ -47,13 +52,18 @@ public final class SnapshotLocalConstraints implements SnapshotGraphWalk.Visitor
     }
     private final AirSnapshot snapshot;
     private final SnapshotIdentityKeys keys;
+    private final Issues issues;
     private Storage storage;
     private AirSnapshotBuilder.Lease control;
     private boolean failed;
 
     /** Transfers storage, borrows input and keys. Only fixed primitive control remains resident. */
     public SnapshotLocalConstraints(AirSnapshot snapshot,SnapshotIdentityKeys keys,Storage storage) {
+        this(snapshot,keys,storage,null);
+    }
+    private SnapshotLocalConstraints(AirSnapshot snapshot,SnapshotIdentityKeys keys,Storage storage,Issues issues) {
         this.snapshot=snapshot;this.keys=keys;this.storage=Objects.requireNonNull(storage);
+        this.issues=issues;
         try {Objects.requireNonNull(snapshot).root();Objects.requireNonNull(keys);control=Objects.requireNonNull(storage.claim(256));}
         catch(RuntimeException|Error failure){closeSuppressed(failure);throw failure;}
     }
@@ -63,8 +73,17 @@ public final class SnapshotLocalConstraints implements SnapshotGraphWalk.Visitor
      */
     public static SnapshotGraphWalk.Counts scan(AirSnapshot snapshot,SnapshotIdentityKeys keys,Storage storage,
                                                 SnapshotGraphWalk.Storage graph,long maximumNodes,long maximumDepth) {
+        return scan(snapshot,keys,storage,graph,maximumNodes,maximumDepth,null);
+    }
+    /**
+     * As above, but constructor-local failures are reported and traversal continues. The callback
+     * is borrowed and must retain only bounded diagnostics; callback failure poisons the owner.
+     */
+    public static SnapshotGraphWalk.Counts scan(AirSnapshot snapshot,SnapshotIdentityKeys keys,Storage storage,
+                                                SnapshotGraphWalk.Storage graph,long maximumNodes,long maximumDepth,
+                                                Issues issues) {
         SnapshotLocalConstraints check;
-        try {check=new SnapshotLocalConstraints(snapshot,keys,storage);}
+        try {check=new SnapshotLocalConstraints(snapshot,keys,storage,issues);}
         catch(RuntimeException|Error failure){try{Objects.requireNonNull(graph).close();}catch(RuntimeException|Error cleanup){if(cleanup!=failure)failure.addSuppressed(cleanup);}throw failure;}
         try(check){return SnapshotGraphWalk.scan(snapshot,graph,maximumNodes,maximumDepth,check);}
     }
@@ -147,7 +166,11 @@ public final class SnapshotLocalConstraints implements SnapshotGraphWalk.Visitor
                 case EXPRESSIONS_FORMAT_DECIMAL -> format(node);
                 default -> { } // Other shapes have only grammar/null/ownership constructor restrictions.
             }
-        } catch(Invalid invalid){throw invalid;}
+        } catch(Invalid invalid){
+            if(issues==null)throw invalid;
+            try {issues.report(invalid.rule(),invalid.node(),invalid.field());}
+            catch(RuntimeException|Error failure){failed=true;throw failure;}
+        }
         catch(RuntimeException|Error failure){failed=true;throw failure;}
     }
     private long field(long node,AirShape shape,int at){return snapshot.field(node,shape,at);}

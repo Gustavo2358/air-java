@@ -170,6 +170,30 @@ final class SnapshotLocalChecks {
             var counts=SnapshotLocalConstraints.scan(snapshot,keys,new Store(),new SnapshotGraphChecks.Store(),10_000,1000);eq(true,counts.nodes()>50);
         }
     }
+    static void wholeGraphCollectsIndependentLocalFailures() {
+        var s=new SnapshotGraphChecks.Source();var f=new SnapshotGraphChecks.Fixture(s);
+        long first=s.record(CAPABILITIES_CAPABILITY,s.text(" "),s.text("1"));
+        long second=s.record(CAPABILITIES_CAPABILITY,s.text("ok"),s.text(""));
+        long manifest=s.child(f.root,2);s.replaceField(manifest,0,s.list(first,second));
+        var found=new ArrayList<String>();
+        try(var snapshot=AirSnapshot.attach(s,f.root);var keys=new SnapshotIdentityKeys(snapshot,new SnapshotAtomChecks.Store())) {
+            var counts=SnapshotLocalConstraints.scan(snapshot,keys,new Store(),new SnapshotGraphChecks.Store(),1000,1000,
+                (rule,node,field)->found.add(rule+":"+node+":"+field));
+            eq(true,counts.nodes()>2);
+        }
+        eq(List.of(NONBLANK+":"+first+":0",NONBLANK+":"+second+":1"),found);
+
+        var input=new SnapshotGraphChecks.Source();var fixture=new SnapshotGraphChecks.Fixture(input);
+        long invalid=input.record(CAPABILITIES_CAPABILITY,input.text(" "),input.text("1"));
+        input.replaceField(input.child(fixture.root,2),0,input.list(invalid));
+        var callbackFailure=new IllegalStateException("diagnostic sink failure");
+        var owner=new Store();
+        try(var snapshot=AirSnapshot.attach(input,fixture.root);var keys=new SnapshotIdentityKeys(snapshot,new SnapshotAtomChecks.Store())) {
+            eq(callbackFailure,fails(IllegalStateException.class,()->SnapshotLocalConstraints.scan(snapshot,keys,owner,
+                new SnapshotGraphChecks.Store(),1000,1000,(rule,node,field)->{throw callbackFailure;})));
+        }
+        eq(true,owner.closed);eq(0L,owner.claimed);
+    }
     private static void add(List<TextField> fields,AirShape shape,int...slots){for(int slot:slots)fields.add(new TextField(shape,slot));}
     private static long part(SnapshotGraphChecks.Source s,int kind,String count,String text,String negative){return s.record(DECIMAL_TEXT_PART,s.scalar(DECIMAL_TEXT_KIND,kind),s.integer(count),s.text(text),s.text(negative));}
     private static long record(SnapshotGraphChecks.Source s,AirShape shape){long[] fields=new long[shape.fieldCount()];for(int i=0;i<fields.length;i++)fields[i]=placeholder(s,shape.field(i).value());return s.record(shape,fields);}
