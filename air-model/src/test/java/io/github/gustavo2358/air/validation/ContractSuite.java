@@ -22,6 +22,11 @@ public final class ContractSuite {
         test("PAGED-ATOMS canonical huge integers and single source reads",SnapshotAtomChecks::canonicalHugeIntegersAndSingleSourceReads);
         test("PAGED-ATOMS metadata failure and borrowed source",SnapshotAtomChecks::metadataReadFailureAbortsOwnerAndPreservesBorrowedSource);
         test("PAGED-ATOMS exact integer order and cached blankness",SnapshotAtomChecks::integerOrderAndBlanknessReuseCanonicalSubtrees);
+        test("PAGED-REFERENCES missing occurrences and successful empty memo",SnapshotReferenceChecks::exactMissingOccurrencesAndSuccessfulEmptyRootsPreserveOwners);
+        test("PAGED-REFERENCES independent mixed identity families",SnapshotReferenceChecks::independentRandomReferenceListsKeepAllOccurrencesAcrossFamilies);
+        test("PAGED-REFERENCES linear carry forest and shared valid invalid lists",SnapshotReferenceChecks::carryForestUsesLinearTuplesAndCachesInvalidAndValidLists);
+        test("PAGED-REFERENCES memo cursor and borrowed template faults",SnapshotReferenceChecks::everyMemoCursorAndBorrowedTemplateFaultFailsClosed);
+        test("PAGED-REFERENCES constructor and combined cleanup ownership",SnapshotReferenceChecks::constructorAndCombinedCleanupFailuresPreserveAllBorrowedOwners);
         test("PAGED-LABELS exact namespaces duplicates and owner",SnapshotLabelChecks::danglingAndForeignReferencesPreserveNamespacesMultiplicityAndOwner);
         test("PAGED-LABELS independent randomized two rule relation",SnapshotLabelChecks::randomTinyRelationsMatchIndependentTwoRuleOracle);
         test("PAGED-LABELS shared complement fold and zero retention",SnapshotLabelChecks::sharedRelationsFoldOnceAndZeroRetentionDoesNotSelectComplements);

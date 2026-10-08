@@ -41,3 +41,6 @@ lists are rejected. The test-only flat storage is an oracle, not the managed
 production backend. Managed postings qualification and full reference/visibility,
 type/domain/premise/capability/operation admission, diagnostic lifetime retirement,
 CheckedSnapshot and incremental production CLI remain pending.
+
+[Context-free actual references](paged-reference-lists.md) share successful empty
+and missing-reference templates; they do not replace this contextual Unit relation.
