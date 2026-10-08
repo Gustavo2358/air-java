@@ -128,6 +128,10 @@ final class SnapshotDeclarationChecks {
         try(var snapshot=AirSnapshot.fromPublication(f.build());var keys=new SnapshotIdentityKeys(snapshot,new Keys());
             var index=SnapshotDeclarations.build(snapshot,keys,store,Long.MAX_VALUE,0,(rule,id,node)->{throw new AssertionError(rule);})) {
             eq(4096L,index.operands());eq(4096,store.maxPending);eq(0,store.frontier.size());
+            eq(true,store.frozen);
+            fails(IllegalStateException.class,()->store.define(999,1,2,3,4,5));
+            fails(IllegalStateException.class,()->store.enqueue(1,2,0));
+            fails(IllegalStateException.class,store::advance);
             eq(AirShape.PUBLICATION,snapshot.shape(index.declaration(0,SnapshotDeclarations.Fact.NODE)));
             store.remaining=0;
             eq(store.failure,fails(IllegalStateException.class,()->index.declaration(0,SnapshotDeclarations.Fact.NODE)));
@@ -143,6 +147,11 @@ final class SnapshotDeclarationChecks {
             eq(1,primary.getSuppressed().length);eq(broken.failure,primary.getSuppressed()[0]);
             eq(1,broken.failure.getSuppressed().length);eq(0L,broken.claimed);eq(true,broken.closed);
             eq(AirShape.PUBLICATION,snapshot.shape(snapshot.root()));
+        }
+        var freezeDenied=new Store();freezeDenied.freezeFailure=true;
+        try(var snapshot=AirSnapshot.fromPublication(g.build());var keys=new SnapshotIdentityKeys(snapshot,new Keys())) {
+            eq(freezeDenied.failure,fails(IllegalStateException.class,()->SnapshotDeclarations.build(snapshot,keys,freezeDenied,100,100,(rule,id,node)->{ })));
+            eq(true,freezeDenied.closed);eq(0L,freezeDenied.claimed);eq(AirShape.PUBLICATION,snapshot.shape(snapshot.root()));
         }
         // Unknown references can be indexed without implying reference validity.
         var h=new Fixtures();var missing=h.label("missing");
@@ -202,15 +211,17 @@ final class SnapshotDeclarationChecks {
     private static final class Store implements SnapshotDeclarations.Storage {
         final Map<Long,long[]> facts=new HashMap<>(); final ArrayList<long[]> rows=new ArrayList<>(); final ArrayDeque<long[]> frontier=new ArrayDeque<>();
         final IllegalStateException failure=new IllegalStateException("injected store failure");
-        long[] current; long claimed,remaining=Long.MAX_VALUE; int maxPending; boolean closed,deny,closeFailure,leaseFailure;
+        long[] current; long claimed,remaining=Long.MAX_VALUE; int maxPending; boolean closed,deny,closeFailure,leaseFailure,frozen,freezeFailure;
         private void work(){if(remaining--==0)throw failure;}
-        public boolean define(long key,long node,long identity,long unit,long sequence,long owner){work();long[] row=new long[]{node,identity,unit,sequence,owner};if(facts.putIfAbsent(key,row)!=null)return false;rows.add(row);return true;}
+        private void mutable(){if(frozen)throw new IllegalStateException("frozen index");}
+        public void freeze(){if(freezeFailure)throw failure;if(!frontier.isEmpty())throw new AssertionError("frontier not drained");frozen=true;}
+        public boolean define(long key,long node,long identity,long unit,long sequence,long owner){mutable();work();long[] row=new long[]{node,identity,unit,sequence,owner};if(facts.putIfAbsent(key,row)!=null)return false;rows.add(row);return true;}
         public long declaration(long index,SnapshotDeclarations.Fact field){work();return rows.get(Math.toIntExact(index))[field.ordinal()];}
         public long fact(long key,SnapshotDeclarations.Fact field){work();long[] row=facts.get(key);return row==null?0:row[field.ordinal()];}
-        public void enqueue(long node,long owner,long depth){work();frontier.addLast(new long[]{node,owner,depth});maxPending=Math.max(maxPending,frontier.size());}
-        public boolean advance(){work();current=frontier.pollFirst();return current!=null;}
+        public void enqueue(long node,long owner,long depth){mutable();work();frontier.addLast(new long[]{node,owner,depth});maxPending=Math.max(maxPending,frontier.size());}
+        public boolean advance(){mutable();work();current=frontier.pollFirst();return current!=null;}
         public long node(){return current[0];} public long owner(){return current[1];} public long depth(){return current[2];}
-        public AirSnapshotBuilder.Lease claim(long bytes){if(deny)throw failure;claimed+=bytes;return new AirSnapshotBuilder.Lease(){boolean closed;public void close(){if(!closed){closed=true;claimed-=bytes;if(leaseFailure)throw new IllegalStateException("lease cleanup failure");}}};}
+        public AirSnapshotBuilder.Lease claim(long bytes){mutable();if(deny)throw failure;claimed+=bytes;return new AirSnapshotBuilder.Lease(){boolean closed;public void close(){if(!closed){closed=true;claimed-=bytes;if(leaseFailure)throw new IllegalStateException("lease cleanup failure");}}};}
         public void close(){if(closed)return;closed=true;facts.clear();rows.clear();frontier.clear();current=null;if(closeFailure)throw failure;}
     }
     private static <T extends Throwable>T fails(Class<T> type,Runnable action){try{action.run();}catch(Throwable error){if(type.isInstance(error))return type.cast(error);throw new AssertionError(error);}throw new AssertionError("missing "+type);}

@@ -44,6 +44,8 @@ public final class SnapshotDeclarations implements AutoCloseable {
         boolean advance();
         long node(); long owner(); long depth();
         AirSnapshotBuilder.Lease claim(long bytes);
+        /** Seal a drained inventory: reject definitions/frontier writes/claims; retain exact reads. */
+        void freeze();
         @Override void close();
     }
     private AirSnapshot snapshot;
@@ -79,7 +81,7 @@ public final class SnapshotDeclarations implements AutoCloseable {
     public static SnapshotDeclarations build(AirSnapshot snapshot,SnapshotIdentityKeys keys,Storage storage,
                                              long maximumEntities,long maximumNesting,Issues issues) {
         var index=new SnapshotDeclarations(snapshot,keys,storage,maximumEntities,maximumNesting,issues);
-        try { index.inventory();return index; }
+        try { index.inventory();index.storage.freeze();return index; }
         catch(RuntimeException|Error failure) {index.closeSuppressed(failure);throw failure;}
     }
     public long entities(){open();return entities;}

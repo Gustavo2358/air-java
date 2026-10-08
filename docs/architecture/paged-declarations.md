@@ -30,6 +30,11 @@ Each reported Rule preserves its normative invariant code, source identity and n
 Issues are supplied to a caller-owned sink, which must account/spill retained facts.
 Entity/nesting limits are explicit index limits, not invented unknown/missing facts.
 
+Storage is explicitly frozen after the complete inventory and before publication.
+Retained write/queue/claim ports reject mutation; exact catalogue reads remain available.
+A missing-freeze law was RED on the first prototype. Failed freezing cannot publish
+an index and releases ownership.
+
 No partial index escapes a failed build. Source, storage or issue-sink failure closes
 owned rows/frontier/control and preserves the primary error plus cleanup failures.
 Operational lookup failure aborts the owner. Bounds errors on catalogue ordinals do
