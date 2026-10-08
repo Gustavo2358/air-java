@@ -22,6 +22,10 @@ public final class ContractSuite {
         test("PAGED-ATOMS canonical huge integers and single source reads",SnapshotAtomChecks::canonicalHugeIntegersAndSingleSourceReads);
         test("PAGED-ATOMS metadata failure and borrowed source",SnapshotAtomChecks::metadataReadFailureAbortsOwnerAndPreservesBorrowedSource);
         test("PAGED-ATOMS exact integer order and cached blankness",SnapshotAtomChecks::integerOrderAndBlanknessReuseCanonicalSubtrees);
+        test("PAGED-LABELS exact namespaces duplicates and owner",SnapshotLabelChecks::danglingAndForeignReferencesPreserveNamespacesMultiplicityAndOwner);
+        test("PAGED-LABELS independent randomized two rule relation",SnapshotLabelChecks::randomTinyRelationsMatchIndependentTwoRuleOracle);
+        test("PAGED-LABELS shared complement fold and zero retention",SnapshotLabelChecks::sharedRelationsFoldOnceAndZeroRetentionDoesNotSelectComplements);
+        test("PAGED-LABELS storage source failure ownership",SnapshotLabelChecks::everyStorageAndSourceFaultPoisonsOwnerWithoutClosingBorrowedInput);
         test("PAGED-PROJECTION mixed kinds exact contexts and zero retention",SnapshotProjectionChecks::mixedProjectedChunksPreserveExactContextOrderAndBulkKinds);
         test("PAGED-PROJECTION trillion prefix and incomplete callback failure",SnapshotProjectionChecks::trillionOccurrencesReadOnlyRequestedPrefixAndRejectEveryProjectionFault);
         test("PAGED-PROJECTION storage report and reentrant ownership",SnapshotProjectionChecks::everyProjectedStorageReportAndReentrantFailurePreservesBorrowedRelation);

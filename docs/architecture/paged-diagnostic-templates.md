@@ -73,3 +73,5 @@ projector/count-length/sign/overflow, every storage interruption, report and pro
 failures/reentrancy/borrowed lifetime. Compiled dropped-context and zero-quota-query
 mutations fail independent assertions. Managed projected context/reference index
 integration is still pending; the literal consumer checkpoint does not qualify it.
+
+The first contextual relation is specified in [shared local-label references](paged-local-labels.md).
