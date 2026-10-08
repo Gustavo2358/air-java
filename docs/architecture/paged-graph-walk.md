@@ -47,3 +47,7 @@ records, optionals, enum/boolean values and short/extra cursors; denied control,
 30 storage failure positions, callback plus both cleanup failures, and cursor-read
 failure with suppressed cursor cleanup. Deliberate context-only and order mutations
 are rejected by the manual oracle. Full paged admission/codec/CLI remain pending.
+
+[Constructor-local constraints](paged-local-constraints.md) now compose with this
+walk, using exact membership and memoized collection folds. Complete admission
+remains pending.

@@ -127,7 +127,7 @@ final class SnapshotAtomChecks {
         public void close(){closed=true;}
     }
     private record Tuple(long tag,long left,long right,long a,long b,long c,long d) { }
-    private static final class Store implements SnapshotIdentityKeys.Storage {
+    static final class Store implements SnapshotIdentityKeys.Storage {
         final Map<Long,Long> memo=new HashMap<>();final Map<Tuple,Long> tuples=new HashMap<>();final Map<Long,Tuple> rows=new HashMap<>();
         final IllegalStateException failure=new IllegalStateException("metadata read failure");long issued,requests,claimed,words;boolean closed,failWord;
         public long known(long node){return memo.getOrDefault(node,0L);}public void remember(long node,long key){memo.put(node,key);}

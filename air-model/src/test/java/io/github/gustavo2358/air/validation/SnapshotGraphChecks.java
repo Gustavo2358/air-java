@@ -129,7 +129,7 @@ final class SnapshotGraphChecks {
         }
         eq(0L,port.claimed);eq(true,port.closed);
     }
-    private static final class Fixture {
+    static final class Fixture {
         final Source source;final long root,id,empty;
         Fixture(Source source) {
             this.source=source;id=source.record(AirShape.IDS_PUBLICATION_ID,source.text("P"));empty=source.list();
@@ -147,7 +147,7 @@ final class SnapshotGraphChecks {
         }
     }
     private record Node(AirShape shape,long[] children,String text,long scalar) { }
-    private static final class Source implements AirSnapshot.Source {
+    static final class Source implements AirSnapshot.Source {
         final Map<Long,Node> nodes=new HashMap<>();long next=1L<<42,badLength,failNode,failingCursor;int cursors,activeCursors,maxCursors,indexedListReads,lengthDelta;
         boolean closeCursorFailure;
         final IllegalStateException failure=new IllegalStateException("source read failure"),cleanup=new IllegalStateException("cursor cleanup failure");
@@ -169,7 +169,7 @@ final class SnapshotGraphChecks {
         public void close(){eq(0,activeCursors);}
     }
     private record Context(long node,int element) { }
-    private static final class Store implements SnapshotGraphWalk.Storage {
+    static final class Store implements SnapshotGraphWalk.Storage {
         final ArrayList<long[]> stack=new ArrayList<>();final Set<Context> done=new HashSet<>();final Set<Long> active=new HashSet<>();
         final IllegalStateException failure=new IllegalStateException("storage failure");long[] current;long claimed,remaining=Long.MAX_VALUE;boolean closed,closeFailure,leaseFailure,denyClaim;
         private void work(){if(remaining--==0)throw failure;}
