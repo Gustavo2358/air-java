@@ -183,9 +183,10 @@ final class SnapshotValidatorChecks {
             public AirSnapshot.Elements elements(long h){return raw.elements(h);}public void close(){raw.close();}
         };
         try(var snapshot=AirSnapshot.attach(source,f.root);var keys=new SnapshotIdentityKeys(snapshot,new SnapshotAtomChecks.Store());
-            var declarations=SnapshotDeclarations.build(snapshot,keys,new SnapshotDeclarationChecks.Store(),Long.MAX_VALUE,Long.MAX_VALUE,(r,i,n)->{throw new AssertionError(r);})) {
+            var declarations=SnapshotDeclarations.build(snapshot,keys,new SnapshotDeclarationChecks.Store(),Long.MAX_VALUE,Long.MAX_VALUE,(r,i,n)->{throw new AssertionError(r);});
+            var visible=SnapshotVisibleObjects.build(snapshot,keys,new SnapshotVisibleChecks.Store())) {
             SnapshotNominalCycles.scan(snapshot,keys,declarations,new SnapshotCycleChecks.Store(),(r,i,n)->{throw new AssertionError(r);});
-            reads[0]=0;var program=SnapshotValidationProgram.afterPrimitiveAdmission(snapshot,declarations);
+            reads[0]=0;var program=SnapshotValidationProgram.afterPrimitiveAdmission(snapshot,declarations,visible);
             var index=new PublicationIndex(program,new ValidationContext(program,ValidationOptions.defaults()));index.build();
             eq(0L,reads[0]); // Catalog construction/cardinality must not decode full identity strings.
             eq(10,index.identities.size());eq(9,index.origins.size());eq(0L,reads[0]);

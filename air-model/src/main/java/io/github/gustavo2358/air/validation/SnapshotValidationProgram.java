@@ -10,10 +10,12 @@ import static io.github.gustavo2358.air.model.AirShape.*;
 final class SnapshotValidationProgram implements ValidationProgram {
     private final AirSnapshot snapshot;
     private final SnapshotDeclarations declarations;
+    private final SnapshotVisibleObjects visible;
     private final SnapshotOccurrenceReader reader;
     private final long[] counts=new long[AirShape.values().length];
-    private SnapshotValidationProgram(AirSnapshot snapshot,SnapshotDeclarations declarations) {
+    private SnapshotValidationProgram(AirSnapshot snapshot,SnapshotDeclarations declarations,SnapshotVisibleObjects visible) {
         this.snapshot=Objects.requireNonNull(snapshot);this.declarations=Objects.requireNonNull(declarations);
+        this.visible=Objects.requireNonNull(visible);
         reader=new SnapshotOccurrenceReader(snapshot,this::open);
         for(long at=0;at<declarations.entities();at++)
             counts[snapshot.shape(declarations.declaration(at,SnapshotDeclarations.Fact.IDENTITY)).ordinal()]++;
@@ -23,9 +25,10 @@ final class SnapshotValidationProgram implements ValidationProgram {
      * with no invalid/unsupported/operational issue. Not a public validity certificate: all
      * remaining general AIR rules still run. SnapshotValidator is the production caller.
      */
-    static SnapshotValidationProgram afterPrimitiveAdmission(AirSnapshot snapshot,SnapshotDeclarations declarations) {
-        return new SnapshotValidationProgram(snapshot,declarations);
+    static SnapshotValidationProgram afterPrimitiveAdmission(AirSnapshot snapshot,SnapshotDeclarations declarations,SnapshotVisibleObjects visible) {
+        return new SnapshotValidationProgram(snapshot,declarations,visible);
     }
+    boolean objectVisible(UnitId unit,ObjectId object){open();return visible.contains(unit,object);}
     private void open(){snapshot.shape(snapshot.root());}
     private long field(long node,int at){return snapshot.field(node,snapshot.shape(node),at);}
     private <T> T read(long node,Class<T> type){return reader.read(node,type);}

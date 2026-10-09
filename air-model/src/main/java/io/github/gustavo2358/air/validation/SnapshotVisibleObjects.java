@@ -2,6 +2,8 @@ package io.github.gustavo2358.air.validation;
 
 import io.github.gustavo2358.air.model.AirSnapshot;
 import io.github.gustavo2358.air.model.AirSnapshotBuilder;
+import io.github.gustavo2358.air.model.Ids.ObjectId;
+import io.github.gustavo2358.air.model.Ids.UnitId;
 import java.util.Objects;
 
 import static io.github.gustavo2358.air.model.AirShape.*;
@@ -58,6 +60,12 @@ public final class SnapshotVisibleObjects implements AutoCloseable {
         } catch(RuntimeException|Error failure){failed=true;throw failure;}
     }
     public Counts counts(){open();return new Counts(units,occurrences,distinct);}
+    /** Internal typed general-rule lookup over the exact same borrowed canonical pairs. */
+    boolean contains(UnitId unit,ObjectId object) {
+        open();
+        try{return storage.contains(keys.key(Objects.requireNonNull(unit)),keys.key(Objects.requireNonNull(object)));}
+        catch(RuntimeException|Error failure){failed=true;throw failure;}
+    }
     public boolean firstGrounding(long object) {
         open();
         try{if(snapshot.shape(object)!=IDS_OBJECT_ID)throw new IllegalArgumentException("ObjectId required");return storage.firstGrounding(keys.key(object));}

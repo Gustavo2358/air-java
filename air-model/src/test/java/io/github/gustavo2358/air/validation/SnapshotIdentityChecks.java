@@ -107,6 +107,24 @@ final class SnapshotIdentityChecks {
         }
         eq(0L,store.claimed);
     }
+    static void fixedPackedLeafReusePreservesCompleteIdentityAndSourceReads() {
+        for(int blocks:new int[]{1,4,16,64,256}) {
+            var source=new Source();var store=new Store();
+            var id=new PublicationId("x".repeat(1024*blocks));long handle=source.add(id);
+            try(var snapshot=AirSnapshot.attach(source,1);var keys=new SnapshotIdentityKeys(snapshot,store)) {
+                long key=keys.key(handle);
+                eq((long)id.localId().length(),source.characters); // All content is still inspected.
+                eq(1L,store.leafRequests); // One repeated exact packed leaf, not one lookup per occurrence.
+                long rows=store.issued,reads=source.characters;
+                eq(key,keys.key(id));eq(rows,store.issued);eq(reads,source.characters);
+                var changed=new PublicationId(id.localId()+"\u0000");long changedHandle=source.add(changed);
+                eq(false,key==keys.key(changedHandle));eq(keys.key(changedHandle),keys.key(changed));
+                eq(false,key==keys.key(new PublicationId(id.localId().substring(0,id.localId().length()-1)+"y")));
+                eq(false,key==keys.key(new OriginId(id,"x")));
+            }
+            eq(0L,store.claimed);eq(true,store.closed);
+        }
+    }
     private record Node(AirShape shape,Object scalar,long[] fields) { }
     private static final class Source implements AirSnapshot.Source {
         final Map<Long,Node> nodes=new HashMap<>();final IdentityHashMap<Object,Long> seen=new IdentityHashMap<>();
@@ -135,11 +153,11 @@ final class SnapshotIdentityChecks {
     }
     private static final class Store implements SnapshotIdentityKeys.Storage {
         final Map<Long,Long> memo=new HashMap<>();final Map<Tuple,Long> tuples=new HashMap<>();final Map<Long,Tuple> rows=new HashMap<>();
-        final Denied failure=new Denied();long issued,calls,claimed,remaining=Long.MAX_VALUE;
+        final Denied failure=new Denied();long issued,calls,leafRequests,claimed,remaining=Long.MAX_VALUE;
         boolean closed,denyClaim,closeFailure,leaseFailure;
         public long known(long node){return memo.getOrDefault(node,0L);}
         public void remember(long node,long key){if(remaining--==0)throw failure;Long old=memo.putIfAbsent(node,key);if(old!=null&&old!=key)throw new AssertionError("memo identity changed");}
-        public long intern(long tag,long l,long r,long a,long b,long c,long d){calls++;if(remaining--==0)throw failure;var tuple=new Tuple(tag,l,r,a,b,c,d);Long old=tuples.get(tuple);if(old!=null)return old;long key=++issued;tuples.put(tuple,key);rows.put(key,tuple);return key;}
+        public long intern(long tag,long l,long r,long a,long b,long c,long d){calls++;if(tag==1)leafRequests++;if(remaining--==0)throw failure;var tuple=new Tuple(tag,l,r,a,b,c,d);Long old=tuples.get(tuple);if(old!=null)return old;long key=++issued;tuples.put(tuple,key);rows.put(key,tuple);return key;}
         public long word(long key,int column){var row=rows.get(key);return switch(column){case 0->row.tag();case 1->row.left();case 2->row.right();case 3->row.a();case 4->row.b();case 5->row.c();case 6->row.d();default->throw new IllegalArgumentException("tuple column");};}
         public AirSnapshotBuilder.Lease claim(long bytes){if(denyClaim)throw failure;claimed+=bytes;return new AirSnapshotBuilder.Lease(){boolean released;public void close(){if(released)return;released=true;claimed-=bytes;if(leaseFailure)throw new Denied();}};}
         public void close(){if(closed)return;closed=true;memo.clear();tuples.clear();rows.clear();if(closeFailure)throw failure;}

@@ -67,6 +67,7 @@ public final class ContractSuite {
         test("PAGED-ADMISSION target possibilities requires unknown domain and capability",SnapshotValidatorChecks::targetPossibilitiesAdmitOnlyUnknownDomainsWithTheDeclaredCapability);
         test("PAGED-ADMISSION general typed rules preserve domain proofs without owning bodies",SnapshotValidatorChecks::generalTypedAdmissionRunsEveryExistingMandatoryRuleWithoutOwningBodies);
         test("PAGED-ADMISSION general identity catalog borrows canonical rows",SnapshotValidatorChecks::generalIndexesBorrowCanonicalIdentityRowsWithoutReadingTheirText);
+        test("PAGED-ADMISSION native visibility borrows canonical pairs",DomainRetentionChecks::nativeVisibilityBorrowsTheCompletePrimitiveRelation);
         test("PAGED-ADMISSION shared label Entries independently admitted",SnapshotValidatorChecks::sharedLabelEntriesHaveIndependentCompleteAdmission);
         test("PAGED-ADMISSION later Entry checks and incomplete distinct seeds",SnapshotValidatorChecks::sharedLabelAdmissionChecksEveryLaterEntryAndKeepsOtherSeedsIncomplete);
         test("PAGED-ADMISSION direct profile rejects multiple reaching definitions",SnapshotValidatorChecks::multipleDefinitionsCannotBorrowTheDirectCertificate);
@@ -94,6 +95,7 @@ public final class ContractSuite {
         test("PAGED-TRAVERSAL streaming and failure lifetimes",SnapshotTraversalChecks::streamingAndFailureLifetimes);
         test("PAGED-IDENTITY complete namespaces and exact collision equality",SnapshotIdentityChecks::completeNamespaces);
         test("PAGED-IDENTITY shared text and failure lifetimes",SnapshotIdentityChecks::sharedTextAndFailureLifetimes);
+        test("PAGED-IDENTITY fixed packed leaf reuse preserves exact content",SnapshotIdentityChecks::fixedPackedLeafReusePreservesCompleteIdentityAndSourceReads);
         test("PAGED-ACCESS exact typed model facts",PagedAccessChecks::modelFacts);
         test("PAGED-ACCESS unbounded integer facts",PagedAccessChecks::integerFacts);
         test("PAGED-ACCESS long cursors and lifetime",PagedAccessChecks::longAccessAndLifetime);
@@ -117,6 +119,7 @@ public final class ContractSuite {
         test("CORE-SIZE retention continues validation",CapacityChecks::retention);
         test("CORE-SIZE independent cardinality series",CapacityChecks::series);
         test("CORE-SIZE indexed reference lookup",CapacityChecks::indexedReferences);
+        test("CORE-SIZE isolated domain subjects are registered on demand",DomainRetentionChecks::isolatedSubjectsAreRegisteredOnlyByRelationsOrQueries);
         test("CORE-SIZE operational failure and counters",CapacityChecks::operational);
         test("CORE-SIZE omitted kinds retain classification",CapacityChecks::omittedKinds);
         test("CORE-SIZE recursive families use explicit frames",CapacityChecks::recursiveFamilies);

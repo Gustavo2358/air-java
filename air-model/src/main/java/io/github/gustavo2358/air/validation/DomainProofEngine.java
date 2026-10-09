@@ -35,11 +35,9 @@ final class DomainProofEngine {
     }
 
     void initialize() {
-        for(ObjectId id:c.index.objects.keySet()) register(new ObjectDomain(id));
-        for(Memory.Storage s:c.index.storage.values())
-            if(s instanceof Memory.Cell cell) register(new CellDomain(cell.header().id()));
-        for(OperandId id:c.index.operands.keySet()) register(new OperandDomain(id));
-
+        // The reference/type passes still inspect every declaration. An isolated subject is
+        // not a proof edge: materialize its exact domain only when a relation or query needs it.
+        // Every binding, operand link and premise below continues to contribute its full edges.
         for(Entries.Entry entry:c.index.entries.values()) {
             Map<BigInteger,TypeRef> parameters=slotMap(entry.signature().parameters().known());
             Map<BigInteger,TypeRef> results=resultSlotMap(entry.signature().results().known());
@@ -116,6 +114,7 @@ final class DomainProofEngine {
 
     boolean universalChoiceDomain(OperandId choice,Type domain,ProofSite site) {
         DomainSubject subject=new OperandDomain(choice);
+        register(subject);
         Graph graph=graph(site);
         Key expected=graph.root(new TypeKey(canonical(domain)));
         for(Scoped proof:bySubject.getOrDefault(subject,List.of())) {
@@ -204,7 +203,7 @@ final class DomainProofEngine {
         Set<DomainSubject> visited=new HashSet<>();
         Walk.run(subject,depth,node -> choiceChildren(node,true),new Walk.Visitor<DomainSubject>() {
             public boolean enter(DomainSubject node,long nesting) {
-                c.depth(nesting); return visited.add(node);
+                c.depth(nesting);register(node);return visited.add(node);
             }
             public void exit(DomainSubject node,long nesting) {
                 if(!(node instanceof OperandDomain domain)
@@ -222,7 +221,9 @@ final class DomainProofEngine {
         if(!registered.add(subject)) return;
         global.ensure(key(subject));
         type(subject).filter(Known.class::isInstance).map(Known.class::cast)
-                .ifPresent(known -> global.union(key(subject),new TypeKey(canonical(known.type()))));
+                // Append a singleton to the existing type component without renaming that
+                // component's root (including a tie). Cached scoped overlays borrow those roots.
+                .ifPresent(known -> global.union(new TypeKey(canonical(known.type())),key(subject)));
     }
 
     Optional<TypeRef> type(DomainSubject subject) {

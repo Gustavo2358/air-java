@@ -15,11 +15,16 @@ final class ReferenceChecks {
     private final Map<ObjectId,Grounding> resolvedGrounding=new HashMap<>();
 
     ReferenceChecks(ValidationContext c) { this.c=c; }
+    boolean objectVisible(UnitId unit,ObjectId object) {
+        if(c.index.publication instanceof SnapshotValidationProgram nativeProgram)
+            return nativeProgram.objectVisible(unit,object);
+        return visible.getOrDefault(unit,Set.of()).contains(object);
+    }
 
     void run() {
         var publication=c.index.publication;
         checkCapabilities(publication.capabilities());
-        for(var unit:publication.units()) {
+        if(!(publication instanceof SnapshotValidationProgram)) for(var unit:publication.units()) {
             Set<ObjectId> objects=new HashSet<>(unit.visibleObjects());
             for(Memory.ObjectDeclaration object:unit.objects()) objects.add(object.id());
             visible.put(unit.id(),objects);
@@ -223,7 +228,7 @@ final class ReferenceChecks {
         OperandId id=operand.header().id(); c.ref(operand.header().origin(),id);
         if(operand instanceof Places.ObjectPlace place) {
             c.ref(place.object(),id);
-            if(!visible.getOrDefault(id.owner().unit(),Set.of()).contains(place.object()))
+            if(!objectVisible(id.owner().unit(),place.object()))
                 c.error("I-02",id,"object not explicitly visible in operand unit");
         } else if(operand instanceof Places.Choice choice) {
             c.type(choice.typeRef(),id); executableMemoryBound(choice.remainder(),id,0);
@@ -342,7 +347,7 @@ final class ReferenceChecks {
         if(!qualified(d.classification())||!qualified(d.nameSource())) c.error("I-RB-03",id,"resource classification/nameSource must be qualified");
         var seenObjects=new HashSet<Interactions.ResourceObject>();
         for(var object:d.objects()) {
-            if(!c.index.objects.containsKey(object.object())||!visible.getOrDefault(d.owner(),Set.of()).contains(object.object()))
+            if(!c.index.objects.containsKey(object.object())||!objectVisible(d.owner(),object.object()))
                 c.error("I-RB-01",id,"associated object absent or not explicitly visible to resource owner");
             if(!seenObjects.add(object)) c.error("I-RB-02",id,"duplicate object/role association");
         }

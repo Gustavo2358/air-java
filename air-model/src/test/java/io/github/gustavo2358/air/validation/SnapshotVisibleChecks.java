@@ -17,11 +17,20 @@ final class SnapshotVisibleChecks {
         try(var snapshot=AirSnapshot.fromPublication(publication);var keys=new SnapshotIdentityKeys(snapshot,new SnapshotAtomChecks.Store());var visible=SnapshotVisibleObjects.build(snapshot,keys,store)) {
             long unit=find(snapshot,AirShape.IDS_UNIT_ID,"unit"),ownId=find(snapshot,AirShape.IDS_OBJECT_ID,"own"),importedId=find(snapshot,AirShape.IDS_OBJECT_ID,"imported");
             eq(true,visible.contains(unit,ownId));eq(true,visible.contains(unit,importedId));
+            eq(true,visible.contains(f.unit,own));eq(true,visible.contains(f.unit,imported));
+            eq(false,visible.contains(otherUnit,own));
+            eq(false,visible.contains(f.unit,new ObjectId(new UnitId(new PublicationId("Q"),f.unit.localId()),own.localId())));
             eq(true,visible.firstGrounding(ownId));eq(false,visible.firstGrounding(ownId));
             eq(new SnapshotVisibleObjects.Counts(1,3,2),visible.counts());
+            closeSnapshot(snapshot);
+            try {visible.contains(f.unit,own);throw new AssertionError("closed source accepted");}
+            catch(IllegalStateException expected) { }
+            try {visible.counts();throw new AssertionError("failed relation remained open");}
+            catch(IllegalStateException expected) { }
         }
         eq(true,store.closed);eq(0L,store.claimed);
     }
+    private static void closeSnapshot(AirSnapshot snapshot){snapshot.close();}
     private static long find(AirSnapshot snapshot,AirShape shape,String local) {
         final long[] found={0};
         SnapshotGraphWalk.scan(snapshot,new SnapshotGraphChecks.Store(),10_000,1000,(node,actual,element)->{

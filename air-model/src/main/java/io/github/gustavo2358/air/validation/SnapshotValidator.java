@@ -120,8 +120,8 @@ public final class SnapshotValidator {
                         "cyclic structural dependency"));
                 try(var grounding=SnapshotGrounding.build(snapshot,declarations,owned(storage.grounding()),
                     owned(storage.graphWalk()),options.maximumEntities(),options.maximumNesting());
-                    var visible=SnapshotVisibleObjects.build(snapshot,keys,owned(storage.visibleObjects()));
-                    var signatures=new SnapshotSignatureIndex(snapshot,keys,owned(storage.signatures()));
+                    var visible=SnapshotVisibleObjects.build(snapshot,keys,owned(storage.visibleObjects()))) {
+                  try(var signatures=new SnapshotSignatureIndex(snapshot,keys,owned(storage.signatures()));
                     var labels=new SnapshotLocalLabels(snapshot,keys,declarations,owned(storage.localLabels()));
                     var tape=new SnapshotDiagnosticTemplates(owned(storage.diagnostics()),labels);
                     var refs=new SnapshotReferenceLists(snapshot,declarations,tape,owned(storage.references()));
@@ -144,7 +144,8 @@ public final class SnapshotValidator {
                 if(!traversalCompleted&&!counts.containsKey(ValidationIssue.Kind.INVALID_IR)
                         &&!counts.containsKey(ValidationIssue.Kind.UNSUPPORTED_CAPABILITY)
                         &&!counts.containsKey(ValidationIssue.Kind.RESOURCE_LIMIT))
-                    return AirValidator.validate(SnapshotValidationProgram.afterPrimitiveAdmission(snapshot,declarations),options);
+                    return AirValidator.validate(SnapshotValidationProgram.afterPrimitiveAdmission(snapshot,declarations,visible),options);
+                }
             } catch(SnapshotDeclarations.Limit limit) {
                 resourceLimit(limit.getMessage());
             } catch(SnapshotGraphWalk.Limit limit) {
