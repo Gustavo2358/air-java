@@ -3,6 +3,7 @@ package io.github.gustavo2358.air.validation;
 import io.github.gustavo2358.air.model.AirShape;
 import io.github.gustavo2358.air.model.AirSnapshot;
 import io.github.gustavo2358.air.model.Ids;
+import io.github.gustavo2358.air.model.Interactions;
 import io.github.gustavo2358.air.model.Evidence;
 import io.github.gustavo2358.air.model.Expressions;
 import io.github.gustavo2358.air.model.Operand;
@@ -131,6 +132,7 @@ public final class SnapshotValidator {
                     var types=SnapshotTypes.build(snapshot,keys,declarations,owned(storage.types()),
                         (rule,owner,detail)->issue(ValidationIssue.Kind.INVALID_IR,rule,owner,detail))) {
                     referenceAdmission(keys,declarations,grounding,visible,signatures,tape,refs,labels,annotations,capabilities,distinct,context,types);
+                    invocationConstraints(keys,declarations,signatures,distinct,types);
                     // A deliberately narrow directly-analyzable profile has every mandatory rule
                     // discharged here. All other AIR remains explicit incomplete validation.
                     traversalCompleted=directDependencyProfile(keys,declarations,types)
@@ -443,6 +445,96 @@ public final class SnapshotValidator {
             long header=snapshot.field(operand,snapshot.shape(operand),0),actual=snapshot.scalar(snapshot.field(header,OPERAND_HEADER,1));
             if(actual!=expected.ordinal())issue(ValidationIssue.Kind.INVALID_IR,"I-11",owner,"operand role must be "+expected);
         }
+
+        /** Whole-inventory obligations: even an orphan invocation must be checked. */
+        private void invocationConstraints(SnapshotIdentityKeys keys,SnapshotDeclarations declarations,
+                SnapshotSignatureIndex signatures,SnapshotDistinctTuples distinct,SnapshotTypes types) {
+            for(long at=0;at<declarations.entities();at++) {
+                long operation=declarations.declaration(at,SnapshotDeclarations.Fact.NODE);
+                if(snapshot.shape(operation)!=OPERATIONS_INVOKE)continue;
+                long owner=declarations.declaration(at,SnapshotDeclarations.Fact.IDENTITY);
+                if(declarations.fact(owner,SnapshotDeclarations.Fact.NODE)!=operation)continue;
+                long outcomes=snapshot.field(operation,OPERATIONS_INVOKE,8),known=snapshot.field(outcomes,CONTROL_INVOCATION_OUTCOMES,0);
+                long normals=0,catchAll=0;
+                try(var rows=snapshot.elements(known,CONTROL_INVOCATION_ALTERNATIVE)) {
+                    while(rows.advance()) {
+                        long alternative=rows.value();
+                        switch(snapshot.shape(alternative)) {
+                            case CONTROL_NORMAL -> {if(++normals>1)issue(ValidationIssue.Kind.INVALID_IR,"I-60",owner,"invocation has more than one normal destination");}
+                            case CONTROL_ANY_EXCEPTION -> {if(++catchAll>1)issue(ValidationIssue.Kind.INVALID_IR,"I-60",owner,"duplicate invocation catch-all");}
+                            case CONTROL_EXCEPTIONAL -> {if(!distinct.first(operation,4,keys.atomKey(snapshot.field(alternative,CONTROL_EXCEPTIONAL,0)),0))issue(ValidationIssue.Kind.INVALID_IR,"I-60",owner,"duplicate invocation exception tag");}
+                            default -> { }
+                        }
+                    }
+                }
+                long arguments=snapshot.field(operation,OPERATIONS_INVOKE,3),results=snapshot.field(operation,OPERATIONS_INVOKE,4);
+                if(normals==0&&snapshot.size(results)!=0)issue(ValidationIssue.Kind.INVALID_IR,"I-08",owner,"results require an explicit normal invocation outcome");
+                try(var rows=snapshot.elements(arguments,INTERACTIONS_ARGUMENT)) {
+                    while(rows.advance()) {
+                        long argument=rows.value();
+                        role(snapshot.field(argument,snapshot.shape(argument),0),snapshot.shape(argument)==INTERACTIONS_REFERENCE_ARGUMENT?Operand.Role.ARGUMENT_REFERENCE:Operand.Role.ARGUMENT_VALUE,owner);
+                    }
+                }
+                try(var rows=snapshot.elements(results,PLACE)){while(rows.advance())role(rows.value(),Operand.Role.RESULT_TARGET,owner);}
+                long signature=snapshot.field(operation,OPERATIONS_INVOKE,5),target=snapshot.field(operation,OPERATIONS_INVOKE,2),resolved;
+                if(snapshot.shape(signature)==INTERACTIONS_ENTRY_SIGNATURE) {
+                    long entry=snapshot.field(signature,INTERACTIONS_ENTRY_SIGNATURE,0),declaration=declarations.fact(entry,SnapshotDeclarations.Fact.NODE);
+                    if(snapshot.shape(target)!=INTERACTIONS_INTERNAL_TARGET||keys.key(snapshot.field(target,INTERACTIONS_INTERNAL_TARGET,0))!=keys.key(entry))
+                        issue(ValidationIssue.Kind.INVALID_IR,"I-55",owner,"entry signature must correspond to the internal target");
+                    if(declaration==0)continue;
+                    resolved=snapshot.field(declaration,ENTRIES_ENTRY,2);
+                } else {
+                    if(snapshot.shape(target)==INTERACTIONS_INTERNAL_TARGET)issue(ValidationIssue.Kind.INVALID_IR,"I-55",owner,"internal target requires its entry signature");
+                    resolved=snapshot.field(signature,INTERACTIONS_EXTERNAL_SIGNATURE,0);
+                }
+                long parameters=snapshot.field(resolved,INTERACTIONS_SIGNATURE,0),slots=snapshot.field(resolved,INTERACTIONS_SIGNATURE,1);
+                signatures.checkInventory(parameters,owner,new SignatureReports());signatures.checkInventory(slots,owner,new SignatureReports());
+                long parameterList=snapshot.field(parameters,INTERACTIONS_PARAMETER_INVENTORY,0),resultList=snapshot.field(slots,INTERACTIONS_RESULT_INVENTORY,0);
+                if(snapshot.shape(snapshot.field(parameters,INTERACTIONS_PARAMETER_INVENTORY,1))==INTERACTIONS_NO_REMAINDER&&snapshot.size(arguments)!=snapshot.size(parameterList))
+                    issue(ValidationIssue.Kind.INVALID_IR,"I-08",owner,"argument cardinality contradicts the closed parameter inventory");
+                if(normals>0&&snapshot.shape(snapshot.field(slots,INTERACTIONS_RESULT_INVENTORY,1))==INTERACTIONS_NO_REMAINDER&&snapshot.size(results)!=snapshot.size(resultList))
+                    issue(ValidationIssue.Kind.INVALID_IR,"I-08",owner,"result cardinality contradicts the closed result inventory");
+                try(var rows=snapshot.elements(parameterList,INTERACTIONS_PARAMETER)) {
+                    while(rows.advance()) {
+                        long parameter=rows.value(),position=boundedPosition(snapshot.field(parameter,INTERACTIONS_PARAMETER,0),snapshot.size(arguments));
+                        if(position<0){issue(ValidationIssue.Kind.INVALID_IR,"I-08",owner,"known parameter position has no corresponding argument");continue;}
+                        long argument=snapshot.element(arguments,INTERACTIONS_ARGUMENT,position),mode=snapshot.field(parameter,INTERACTIONS_PARAMETER,1);
+                        if(snapshot.shape(mode)==INTERACTIONS_KNOWN_MODE) {
+                            var actual=snapshot.shape(argument)==INTERACTIONS_VALUE_ARGUMENT?Interactions.PassingMode.VALUE:snapshot.shape(argument)==INTERACTIONS_COPY_ARGUMENT?Interactions.PassingMode.COPY:Interactions.PassingMode.REFERENCE;
+                            if(snapshot.scalar(snapshot.field(mode,INTERACTIONS_KNOWN_MODE,0))!=actual.ordinal())issue(ValidationIssue.Kind.INVALID_IR,"I-08",owner,"argument passing mode differs from signature");
+                        }
+                        signatureType(types.ofNode(snapshot.field(argument,snapshot.shape(argument),0)),snapshot.field(parameter,INTERACTIONS_PARAMETER,2),owner,types);
+                    }
+                }
+                if(normals>0)try(var rows=snapshot.elements(resultList,INTERACTIONS_RESULT_SLOT)) {
+                    while(rows.advance()) {
+                        long slot=rows.value(),position=boundedPosition(snapshot.field(slot,INTERACTIONS_RESULT_SLOT,0),snapshot.size(results));
+                        if(position<0){issue(ValidationIssue.Kind.INVALID_IR,"I-08",owner,"known result position has no corresponding destination");continue;}
+                        signatureType(types.ofNode(snapshot.element(results,PLACE,position)),snapshot.field(slot,INTERACTIONS_RESULT_SLOT,1),owner,types);
+                    }
+                }
+            }
+        }
+        private void signatureType(SnapshotTypes.Type actual,long declared,long owner,SnapshotTypes types) {
+            if(snapshot.shape(declared)==TYPES_KNOWN&&!types.sameKnown(actual,types.fromRef(declared)))
+                issue(ValidationIssue.Kind.INVALID_IR,"I-08",owner,"operand does not have the declared known signature type");
+        }
+        /** Bounded ordinal conversion; arbitrarily large INTEGER text is never materialized. */
+        private long boundedPosition(long source,long count) {
+            long length=snapshot.characterCount(source),offset=0,value=0;boolean negative=false,any=false,overflow=false;
+            char[] block=new char[32];
+            while(offset<length) {
+                int read=snapshot.readCharacters(source,offset,block,0,(int)Math.min(block.length,length-offset));
+                if(read<=0)throw new IllegalStateException("integer source made no progress");
+                for(int i=0;i<read;i++) {
+                    char c=block[i];if(offset+i==0&&(c=='-'||c=='+')){negative=c=='-';continue;}
+                    if(c<'0'||c>'9')return -1;any=true;int digit=c-'0';
+                    if(!overflow){if(value>(Long.MAX_VALUE-digit)/10)overflow=true;else value=value*10+digit;}
+                }
+                offset+=read;
+            }
+            return !any||overflow||negative&&value!=0||value>=count?-1:value;
+        }
         private void expect(SnapshotTypes.Type actual,Types.Builtin expected,long owner,SnapshotTypes types) {if(!types.is(actual,expected))issue(ValidationIssue.Kind.INVALID_IR,"I-08",owner,"requires known("+expected+")");}
 
         /** Complete validation slice used by the first direct dependency pipeline. */
@@ -504,9 +596,28 @@ public final class SnapshotValidator {
             };
         }
         private boolean directInvoke(long invoke,SnapshotTypes types,SnapshotDeclarations declarations) {
+            // These remaining transmission/effect obligations are not discharged by this
+            // certificate. Field presence, not quantity observed in a fixture, governs it.
+            if(snapshot.size(snapshot.field(invoke,OPERATIONS_INVOKE,3))!=0
+                    ||snapshot.size(snapshot.field(invoke,OPERATIONS_INVOKE,4))!=0
+                    ||snapshot.size(snapshot.field(invoke,OPERATIONS_INVOKE,6))!=0)return false;
+            long signature=snapshot.field(invoke,OPERATIONS_INVOKE,5);
+            if(snapshot.shape(signature)!=INTERACTIONS_EXTERNAL_SIGNATURE)return false;
+            long external=snapshot.field(signature,INTERACTIONS_EXTERNAL_SIGNATURE,0);
+            if(!emptySignature(external))return false;
+            long effects=snapshot.field(invoke,OPERATIONS_INVOKE,7);
+            if(snapshot.size(snapshot.field(effects,INTERACTIONS_EFFECT_BOUND,1))!=0
+                    ||snapshot.size(snapshot.field(snapshot.field(effects,INTERACTIONS_EFFECT_BOUND,0),INTERACTIONS_FOREIGN_EFFECTS,2))!=0)return false;
             long target=snapshot.field(invoke,OPERATIONS_INVOKE,2);if(snapshot.shape(target)!=INTERACTIONS_COMPUTED_TARGET)return false;
             long name=snapshot.field(target,INTERACTIONS_COMPUTED_TARGET,2);if(snapshot.shape(name)!=EXPRESSIONS_READ||snapshot.shape(snapshot.field(name,EXPRESSIONS_READ,1))!=PLACES_OBJECT_PLACE||!types.is(types.ofNode(name),Types.Builtin.TEXT))return false;
             long namespace=snapshot.field(target,INTERACTIONS_COMPUTED_TARGET,1);return equal(namespace,"cobol.program");
+        }
+        private boolean emptySignature(long signature) {
+            long parameters=snapshot.field(signature,INTERACTIONS_SIGNATURE,0),results=snapshot.field(signature,INTERACTIONS_SIGNATURE,1);
+            return snapshot.size(snapshot.field(parameters,INTERACTIONS_PARAMETER_INVENTORY,0))==0
+                &&snapshot.shape(snapshot.field(parameters,INTERACTIONS_PARAMETER_INVENTORY,1))==INTERACTIONS_NO_REMAINDER
+                &&snapshot.size(snapshot.field(results,INTERACTIONS_RESULT_INVENTORY,0))==0
+                &&snapshot.shape(snapshot.field(results,INTERACTIONS_RESULT_INVENTORY,1))==INTERACTIONS_NO_REMAINDER;
         }
 
         /** Complete, deliberately narrow diamond used by the first relational dependency slice. */

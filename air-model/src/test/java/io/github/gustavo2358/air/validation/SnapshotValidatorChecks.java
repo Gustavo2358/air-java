@@ -96,6 +96,90 @@ final class SnapshotValidatorChecks {
         }
     }
 
+    static void invocationOutcomeContradictionsCannotBorrowACompleteCertificate() {
+        var base=directVariableCall(false);var call=(Operations.Invoke)base.units().getFirst().sequences().getFirst().terminator();
+        for(int size:new int[]{1,4,16,64,256}) {
+            var known=new ArrayList<Control.InvocationAlternative>();known.add(new Control.Normal(new LabelId(call.header().id().unit(),"end")));
+            for(int i=0;i<size;i++)known.add(new Control.Exceptional(i==0?"Aa":i==1?"BB":"tag-"+i,Control.Propagate.INSTANCE));
+            var unique=new Control.InvocationOutcomes(known,Scopes.NoControl.INSTANCE);
+            var valid=withCall(base,call,call.arguments(),call.results(),call.signature(),unique);
+            eq(ValidationResult.Status.STRUCTURALLY_VALID,AirValidator.validate(valid).status());
+            try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(valid),ValidationOptions.defaults(),new Stores())) {
+                eq(ValidationResult.Status.STRUCTURALLY_VALID,checked.result().status());
+            }
+            for(var repeated:List.of(known.getFirst(),known.getLast(),new Control.AnyException(Control.Propagate.INSTANCE))) {
+                var bad=new ArrayList<>(known);if(repeated instanceof Control.AnyException)bad.add(repeated);bad.add(repeated);
+                var changed=withCall(base,call,call.arguments(),call.results(),call.signature(),new Control.InvocationOutcomes(bad,Scopes.NoControl.INSTANCE));
+                // The independent obligation is I-60 at the full invocation identity, not the label's spelling.
+                eq(ValidationResult.Status.INVALID_IR,AirValidator.validate(changed).status());
+                try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(changed),ValidationOptions.defaults(),new Stores())) {
+                    eq(ValidationResult.Status.INVALID_IR,checked.result().status());
+                    if(checked.result().issues().stream().noneMatch(issue->issue.rule().equals("I-60")&&issue.subject().filter(call.header().id()::equals).isPresent()))
+                        throw new AssertionError("missing invocation I-60: "+checked.result());
+                }
+            }
+        }
+    }
+
+    static void invocationSignatureCardinalityAndRolesCannotBorrowACompleteCertificate() {
+        var base=directVariableCall(false);var call=(Operations.Invoke)base.units().getFirst().sequences().getFirst().terminator();
+        var header=new Operand.Header(new OperandId(new OperationOwner(call.header().id()),"argument"),Operand.Role.ARGUMENT_VALUE,call.header().origin());
+        var argument=new Interactions.ValueArgument(new Expressions.Literal(header,new Values.TextValue("ARG")));
+        var parameter=new Interactions.Parameter(BigInteger.ZERO,new Interactions.KnownMode(Interactions.PassingMode.VALUE),new Types.Known(Types.Builtin.TEXT),Interactions.ExternalBinding.INSTANCE,call.header().origin());
+        var signature=new Interactions.ExternalSignature(new Interactions.Signature(new Interactions.ParameterInventory(List.of(parameter),Interactions.NoRemainder.INSTANCE),new Interactions.ResultInventory(List.of(),Interactions.NoRemainder.INSTANCE),call.header().origin()));
+        var wrongRole=new Interactions.ValueArgument(new Expressions.Literal(new Operand.Header(header.id(),Operand.Role.VALUE_READ,header.origin()),new Values.TextValue("ARG")));
+        var valid=withCall(base,call,List.of(argument),call.results(),signature,call.outcomes());
+        eq(ValidationResult.Status.STRUCTURALLY_VALID,AirValidator.validate(valid).status());
+        try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(valid),ValidationOptions.defaults(),new Stores())) {
+            // Domain transmission/effect checking is unfinished, so no complete certificate.
+            eq(ValidationResult.Status.INCOMPLETE_VALIDATION,checked.result().status());
+            eq(0L,checked.result().diagnostics().count(ValidationIssue.Kind.INVALID_IR));
+        }
+        for(int mutation=0;mutation<4;mutation++) {
+            var arguments=mutation==0?List.<Interactions.Argument>of(argument):mutation==1?List.<Interactions.Argument>of():mutation==2?List.<Interactions.Argument>of(new Interactions.CopyArgument(argument.value())):List.<Interactions.Argument>of(wrongRole);
+            var selected=mutation==0?call.signature():signature;
+            var publication=withCall(base,call,arguments,call.results(),selected,call.outcomes());
+            eq(ValidationResult.Status.INVALID_IR,AirValidator.validate(publication).status());
+            try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(publication),ValidationOptions.defaults(),new Stores())) {
+                eq(ValidationResult.Status.INVALID_IR,checked.result().status());
+                String rule=mutation==3?"I-11":"I-08";
+                if(checked.result().issues().stream().noneMatch(issue->issue.rule().equals(rule)))throw new AssertionError("missing "+rule+": "+checked.result());
+            }
+        }
+        var object=base.units().getFirst().objects().getFirst().id();
+        var destination=new Places.ObjectPlace(new Operand.Header(new OperandId(new OperationOwner(call.header().id()),"result"),Operand.Role.RESULT_TARGET,call.header().origin()),object);
+        var slot=new Interactions.ResultSlot(BigInteger.ZERO,new Types.Known(Types.Builtin.TEXT),call.header().origin());
+        var resultSignature=new Interactions.ExternalSignature(new Interactions.Signature(new Interactions.ParameterInventory(List.of(),Interactions.NoRemainder.INSTANCE),new Interactions.ResultInventory(List.of(slot),Interactions.NoRemainder.INSTANCE),call.header().origin()));
+        for(int mutation=0;mutation<5;mutation++) {
+            var results=mutation==1?List.<Place>of():List.<Place>of(mutation==2?new Places.ObjectPlace(new Operand.Header(destination.header().id(),Operand.Role.VALUE_WRITE,destination.header().origin()),object):destination);
+            var selected=mutation==0?call.signature():mutation==3?new Interactions.ExternalSignature(new Interactions.Signature(new Interactions.ParameterInventory(List.of(),Interactions.NoRemainder.INSTANCE),new Interactions.ResultInventory(List.of(new Interactions.ResultSlot(BigInteger.ZERO,new Types.Known(Types.Builtin.INT),call.header().origin())),Interactions.NoRemainder.INSTANCE),call.header().origin())):resultSignature;
+            var outcomes=mutation==4?new Control.InvocationOutcomes(List.of(Control.HaltAlternative.INSTANCE),Scopes.NoControl.INSTANCE):call.outcomes();
+            var publication=withCall(base,call,call.arguments(),results,selected,outcomes);
+            eq(ValidationResult.Status.INVALID_IR,AirValidator.validate(publication).status());
+            try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(publication),ValidationOptions.defaults(),new Stores())) {
+                eq(ValidationResult.Status.INVALID_IR,checked.result().status());
+                String rule=mutation==2?"I-11":"I-08";
+                if(checked.result().issues().stream().noneMatch(issue->issue.rule().equals(rule)))throw new AssertionError("missing result "+rule+": "+checked.result());
+            }
+        }
+        var huge=new Interactions.Parameter(BigInteger.TEN.pow(4096),parameter.mode(),parameter.typeRef(),parameter.objectBinding(),parameter.origin());
+        var open=new Interactions.ExternalSignature(new Interactions.Signature(new Interactions.ParameterInventory(List.of(huge),new Interactions.UnknownRemainder(base.uncertainties().getFirst().id())),new Interactions.ResultInventory(List.of(),Interactions.NoRemainder.INSTANCE),call.header().origin()));
+        var unboundedPosition=withCall(base,call,List.of(argument),List.of(),open,call.outcomes());
+        eq(ValidationResult.Status.INVALID_IR,AirValidator.validate(unboundedPosition).status());
+        try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(unboundedPosition),ValidationOptions.defaults(),new Stores())) {
+            eq(ValidationResult.Status.INVALID_IR,checked.result().status());
+            eq(1L,checked.result().diagnostics().count(ValidationIssue.Kind.INVALID_IR));
+        }
+    }
+
+    private static Publication withCall(Publication base,Operations.Invoke previous,List<Interactions.Argument> arguments,List<Place> results,Interactions.InvocationSignature signature,Control.InvocationOutcomes outcomes) {
+        var call=new Operations.Invoke(previous.header(),previous.action(),previous.target(),arguments,results,signature,previous.effectOperands(),previous.effectBound(),outcomes,previous.contract());
+        var unit=base.units().getFirst();var sequences=new ArrayList<Sequence>();
+        for(var sequence:unit.sequences())sequences.add(sequence.terminator()==previous?new Sequence(sequence.label(),sequence.instructions(),call,sequence.origin()):sequence);
+        var changed=new Unit(unit.id(),unit.containingUnit(),unit.objects(),unit.visibleObjects(),unit.entries(),sequences,unit.completionPorts(),unit.body(),unit.bodyUnavailable(),unit.coverage(),unit.origin());
+        return Fixtures.withUnits(base,List.of(changed));
+    }
+
     static void sharedLabelEntriesHaveIndependentCompleteAdmission() {
         var base=directVariableCall(false);var first=base.units().getFirst().entries().getFirst();
         for(int count:new int[]{1,4,16,64}) {

@@ -249,3 +249,29 @@ tipos e descritores incoerentes; comprimento de caractere não provado gera uma
 obrigação explícita. NumericExpressionChecks verifica round-trip, limites,
 Unicode, campos adversariais e contagens grandes com payload constante.
 A autoridade está fixada no commit corrente de docs/sources.lock.json.
+
+## Snapshot: obrigações de invocação antes da ampliação da admissão
+
+O passe tipado verifica cada Invoke declarado, inclusive órfãos: no máximo um
+normal e um catch-all, unicidade exata de tags, vínculo InternalTarget/EntrySignature,
+posições dos inventários de assinatura, cardinalidades fechadas, papéis e modos
+de transmissão e tipos conhecidos de argumentos/resultados. Resultado exige normal
+explícito. As tags usam a relação gerenciada de tuplas e chaves textuais completas,
+sem hash como identidade; posições arbitrariamente grandes são examinadas em blocos
+de 32 caracteres, sem BigInteger ou texto integral temporário.
+
+Autoridade: AIR 05 §4 e AIR 04/05 assinaturas, no SHA normativo do source lock.
+Impacto COMPATIBLE de correção: entradas contraditórias deixam de obter certificado
+completo. Não muda modelo, API, codec, versões ou a ordem dos passes anteriores.
+O novo passe percorre o inventário declarado uma vez e as listas de cada ocorrência;
+tuplas crescentes permanecem no storage fornecido. Não há prova universal de custo
+linear do backend ou do heap inteiro.
+
+Transmissão com sameDomain por premissa, efeitos por outcome e mustOverwrite ainda
+não têm todas as obrigações migradas. Os certificados direct/correlated exigem
+argumentos/resultados/effectOperands vazios, assinatura externa fechada vazia e
+ausência de perOutcome/mustOverwrite. Não convertem campos não verificados em validade.
+Os limites completos de admissão permanecem; isto não é suporte geral de dataflow.
+Oráculos positivos e negativos incluem tags com colisão Aa/BB, cinco geometrias,
+tipos/papéis/modos/cardinalidades e posição de 4.097 dígitos. Os resultados residentes
+são comparados, mas I-60/I-08/I-11 e os sites esperados são escritos independentemente.
