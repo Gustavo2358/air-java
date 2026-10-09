@@ -213,7 +213,7 @@ final class PagedInputChecks {
     private static String characters(AirSnapshot snapshot,long node) {
         char[] value=new char[Math.toIntExact(snapshot.characterCount(node))];snapshot.readCharacters(node,0,value,0,value.length);return new String(value);
     }
-    private static void compare(AirSnapshot expected,long left,AirSnapshot actual,long right,AirShape element) {
+    static void compare(AirSnapshot expected,long left,AirSnapshot actual,long right,AirShape element) {
         AirShape shape=expected.shape(left);eq(shape,actual.shape(right));
         switch(shape.form()) {
             case TEXT,INTEGER->eq(characters(expected,left),characters(actual,right));

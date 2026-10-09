@@ -349,6 +349,8 @@ final class BindingReader {
         String kind = operationFields(a);
         if (Set.of("assign", "havoc.must", "havoc.may", "nop", "copy_bytes").contains(kind))
             throw a.invalid("I-04", "AIR 01 §3: ordinary operation as terminator");
+        if (kind.equals("halt")) return new Operations.Halt(header(a.child("header")),
+                switch(a.child("haltKind").text()){case "NORMAL" -> Operations.HaltKind.NORMAL;case "ABNORMAL" -> Operations.HaltKind.ABNORMAL;default -> throw Json.input(a.child("haltKind").path(),"Unknown HaltKind");});
         if (kind.equals("jump")) return new Operations.Jump(header(a.child("header")), labelId(a.child("destination")));
         if (kind.equals("branch")) return new Operations.Branch(header(a.child("header")), expression(a.child("predicate")),
                 labelId(a.child("trueDestination")), labelId(a.child("falseDestination")));

@@ -737,3 +737,22 @@ existente. Nenhuma versão ou variante mudou. `OrderedComparisonChecks` verifica
 inteiros maiores que 64 bits, roundtrip exato, canonicalização e rejeições.
 
 [Managed incremental physical input and current resident-model limit](../architecture/managed-json-staging.md) documents the new checked InputStream route.
+
+## Halt — existing terminal control transported by both readers
+
+The campaign's real pipeline fixture exposed an existing binding coverage gap:
+typed `Operations.Halt` was representable and validated, but the writer, resident
+reader and direct snapshot binder refused its transport. Coverage now includes
+exact `kind:halt`, complete Header and the closed `haltKind` tokens `NORMAL` and
+`ABNORMAL`, from `analysis-ir@4f09e8b1b496bf8de2e0fb62532e7aa0b97b9c6e`, binding
+§7/§10.4 and AIR 04 §8. Neither kind is converted to Return or given fallthrough.
+No model, Validator rule, capability, API, AIR/binding version or Maven dependency
+changes. Impact is additive/COMPATIBLE for previously accepted publications; callers
+formerly receiving IMPLEMENTATION_LIMIT for Halt can now transport those facts.
+
+CodecSuite uses literal wire tokens and an independent typed oracle, both readers,
+all-field native snapshot comparison, 1/4/16/64/256 reversed occurrences and exact
+re-encoding. Missing/extra fields, null/wrong-case/unknown tokens and instruction-slot
+Halt are rejected by both readers, with cleanup. Existing GOBACK Return bytes remain
+unchanged. This coverage does not qualify general snapshot admission or dependency
+analysis; consumers must adopt the exact tested producer commit.

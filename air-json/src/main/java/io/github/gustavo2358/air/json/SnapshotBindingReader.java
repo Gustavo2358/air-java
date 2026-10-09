@@ -438,6 +438,11 @@ final class SnapshotBindingReader {
         if (Set.of("assign", "havoc.must", "havoc.may", "nop", "copy_bytes").contains(kind))
             throw invalid(at, "I-04", "AIR 01 §3: ordinary operation as terminator");
         return switch (kind) {
+            case "halt" -> {
+                at.fields("kind", "header", "haltKind");
+                yield target.record(AirShape.OPERATIONS_HALT, header(at.child("header")),
+                        enumValue(at.child("haltKind"), AirShape.OPERATIONS_HALT_KIND));
+            }
             case "return" -> {
                 at.fields("kind", "header", "values");
                 yield target.record(AirShape.OPERATIONS_RETURN, header(at.child("header")),
@@ -516,7 +521,7 @@ final class SnapshotBindingReader {
                         conservativeEnvelope(at.child("fallback")),
                         target.scalar(AirShape.BOOLEAN, all && at.child("all").bool() ? 1 : 0));
             }
-            case "dispatch", "halt", "raise", "indirect.jump" ->
+            case "dispatch", "raise", "indirect.jump" ->
                     throw Json.limit(at.path(), "Operation " + kind + " outside binding implementation coverage");
             default -> throw new IllegalStateException("Terminator catalogue mismatch");
         };
