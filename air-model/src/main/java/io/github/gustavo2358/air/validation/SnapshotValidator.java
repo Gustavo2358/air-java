@@ -463,10 +463,20 @@ public final class SnapshotValidator {
                     try(var objects=snapshot.elements(snapshot.field(unit,UNIT,2),MEMORY_OBJECT_DECLARATION)) {
                         while(objects.advance()){long object=objects.value();if(!types.is(types.fromRef(snapshot.field(object,MEMORY_OBJECT_DECLARATION,2)),Types.Builtin.TEXT)||snapshot.shape(snapshot.field(object,MEMORY_OBJECT_DECLARATION,3))!=MEMORY_CELL_BINDING)return false;}
                     }
-                    long entryList=snapshot.field(unit,UNIT,4);if(snapshot.size(entryList)!=1)return false;
-                    long entry=snapshot.element(entryList,ENTRIES_ENTRY,0),initialOptional=snapshot.field(entry,ENTRIES_ENTRY,1);if(snapshot.size(initialOptional)!=1)return false;
-                    long initial=snapshot.element(initialOptional,IDS_LABEL_ID,0),signature=snapshot.field(entry,ENTRIES_ENTRY,2),parameters=snapshot.field(signature,INTERACTIONS_SIGNATURE,0),results=snapshot.field(signature,INTERACTIONS_SIGNATURE,1),state=snapshot.field(entry,ENTRIES_ENTRY,3);
-                    if(snapshot.size(snapshot.field(parameters,INTERACTIONS_PARAMETER_INVENTORY,0))!=0||snapshot.shape(snapshot.field(parameters,INTERACTIONS_PARAMETER_INVENTORY,1))!=INTERACTIONS_NO_REMAINDER||snapshot.size(snapshot.field(results,INTERACTIONS_RESULT_INVENTORY,0))!=0||snapshot.shape(snapshot.field(results,INTERACTIONS_RESULT_INVENTORY,1))!=INTERACTIONS_NO_REMAINDER||snapshot.size(snapshot.field(state,ENTRIES_ENTRY_STATE,0))!=0||snapshot.size(snapshot.field(state,ENTRIES_ENTRY_STATE,1))!=0)return false;
+                    long entryList=snapshot.field(unit,UNIT,4);if(snapshot.size(entryList)==0)return false;
+                    long initial=0;
+                    // Cardinality is not a capability. Each independent Entry must discharge
+                    // this slice's state/signature obligations; the shared body is read once.
+                    try(var entries=snapshot.elements(entryList,ENTRIES_ENTRY)) {
+                        while(entries.advance()) {
+                            long entry=entries.value(),initialOptional=snapshot.field(entry,ENTRIES_ENTRY,1);
+                            if(snapshot.size(initialOptional)!=1)return false;
+                            long label=snapshot.element(initialOptional,IDS_LABEL_ID,0);
+                            if(initial==0)initial=label;else if(keys.key(label)!=keys.key(initial))return false;
+                            long signature=snapshot.field(entry,ENTRIES_ENTRY,2),parameters=snapshot.field(signature,INTERACTIONS_SIGNATURE,0),results=snapshot.field(signature,INTERACTIONS_SIGNATURE,1),state=snapshot.field(entry,ENTRIES_ENTRY,3);
+                            if(snapshot.size(snapshot.field(parameters,INTERACTIONS_PARAMETER_INVENTORY,0))!=0||snapshot.shape(snapshot.field(parameters,INTERACTIONS_PARAMETER_INVENTORY,1))!=INTERACTIONS_NO_REMAINDER||snapshot.size(snapshot.field(results,INTERACTIONS_RESULT_INVENTORY,0))!=0||snapshot.shape(snapshot.field(results,INTERACTIONS_RESULT_INVENTORY,1))!=INTERACTIONS_NO_REMAINDER||snapshot.size(snapshot.field(state,ENTRIES_ENTRY_STATE,0))!=0||snapshot.size(snapshot.field(state,ENTRIES_ENTRY_STATE,1))!=0)return false;
+                        }
+                    }
                     long assignedObject=0,invokedObject=0;int assignments=0,invokes=0;
                     try(var sequences=snapshot.elements(snapshot.field(unit,UNIT,5),SEQUENCE)) {
                         while(sequences.advance()){

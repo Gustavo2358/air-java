@@ -51,6 +51,8 @@
     "PAGED-ADMISSION contextual resource signature and type references",
     "PAGED-ADMISSION bottom-up operand type resolution",
     "PAGED-ADMISSION direct variable call valid certificate",
+    "PAGED-ADMISSION shared label Entries independently admitted",
+    "PAGED-ADMISSION later Entry checks and incomplete distinct seeds",
     "PAGED-ADMISSION direct profile rejects multiple reaching definitions",
     "PAGED-ADMISSION COBOL profile rejects CICS name semantics",
     "PAGED-ADMISSION correlated concat diamond valid certificate",

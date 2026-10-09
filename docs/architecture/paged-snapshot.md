@@ -138,3 +138,31 @@ indexing pass, not full paged admission.
 The [ordered primitive graph walk](paged-graph-walk.md) covers complete typed
 grammar reachability and contextual collection memoization; model-local and full
 semantic validation remain separate obligations.
+
+## Shared-label Entry admission (campaign continuation 2026-10-09)
+
+Scope: remove the direct dependency slice's one-Entry cardinality restriction,
+not certify general snapshot AIR. Authority remains analysis-ir
+`4f09e8b1b496bf8de2e0fb62532e7aa0b97b9c6e`, control §1/§5 and I-05/I-08/I-55.
+All Entries must independently have one closed local initial label, empty closed
+signature and empty initial state; their initial labels must be identical. The
+existing literal assignment/computed COBOL invocation/body restrictions remain.
+General per-Entry seeds, distinct labels and signatures stay incomplete. Existing
+identity, duplicate, reference, signature, type and annotation passes still visit
+every Entry, including a malformed non-first Entry.
+
+Algorithm: scan each Entry once, compare exact canonical label keys against the
+first Entry, then inspect the shared body once. No Entry × body profile walk or
+resident Entry inventory. Zero Entries remain outside this slice. Oracles compare
+resident validation and assert hand-written status/rules for 1/4/16/64 Entries,
+permutations, duplicate/foreign/missing labels, nonempty state and incompatible
+signature in a later Entry. Consumer repin and real dependency/CFG integration
+must follow producer qualification; no producer certificate alone delivers this
+expanded dependency capability. The cardinality RED returned incomplete validation
+for four Entries. Producer qualification passed 271 model and 144 codec checks,
+compiled ownership/dependency boundaries and 44 harness tests. Later duplicate,
+foreign/missing label and invalid signature Entries remain invalid; valid distinct
+labels, states or nonempty bound signatures remain incomplete. The final extra
+negative assertions reran model/codec and compiled boundaries; unchanged harness
+tests are reused explicitly. Status: producer qualified, consumer integration
+pending; global admission remains open.

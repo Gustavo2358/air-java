@@ -6,6 +6,7 @@ import io.github.gustavo2358.air.model.*;
 import io.github.gustavo2358.air.model.Ids.*;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Objects;
 
@@ -93,6 +94,57 @@ final class SnapshotValidatorChecks {
         try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(directVariableCall(true)),ValidationOptions.defaults(),new Stores())) {
             eq(ValidationResult.Status.INCOMPLETE_VALIDATION,checked.result().status());eq(false,checked.result().diagnostics().traversalCompleted());
         }
+    }
+
+    static void sharedLabelEntriesHaveIndependentCompleteAdmission() {
+        var base=directVariableCall(false);var first=base.units().getFirst().entries().getFirst();
+        for(int count:new int[]{1,4,16,64}) {
+            var entries=new ArrayList<Entries.Entry>();
+            for(int i=0;i<count;i++)entries.add(new Entries.Entry(new EntryId(first.id().unit(),"entry-"+i),first.initialLabel(),first.signature(),first.state(),first.origin()));
+            for(var order:List.of(entries,entries.reversed())) {
+                var publication=withEntries(base,order);
+                eq(ValidationResult.Status.STRUCTURALLY_VALID,AirValidator.validate(publication).status());
+                try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(publication),ValidationOptions.defaults(),new Stores())) {
+                    eq(ValidationResult.Status.STRUCTURALLY_VALID,checked.result().status());
+                    eq(true,checked.result().diagnostics().traversalCompleted());eq(List.of(),checked.result().issues());
+                }
+            }
+        }
+    }
+
+    static void sharedLabelAdmissionChecksEveryLaterEntryAndKeepsOtherSeedsIncomplete() {
+        var base=directVariableCall(false);var first=base.units().getFirst().entries().getFirst();
+        var next=new EntryId(first.id().unit(),"second");
+        var distinct=new Entries.Entry(next,Optional.of(new LabelId(first.id().unit(),"end")),first.signature(),first.state(),first.origin());
+        var state=new Entries.Entry(next,first.initialLabel(),first.signature(),new Entries.EntryState(List.of(),List.of(base.uncertainties().getFirst().id())),first.origin());
+        var parameter=new Interactions.Parameter(BigInteger.ZERO,new Interactions.KnownMode(Interactions.PassingMode.VALUE),new Types.Known(Types.Builtin.TEXT),Interactions.ExternalBinding.INSTANCE,first.origin());
+        var signature=new Interactions.Signature(new Interactions.ParameterInventory(List.of(parameter),Interactions.NoRemainder.INSTANCE),first.signature().results(),first.origin());
+        var badSignature=new Entries.Entry(next,first.initialLabel(),signature,first.state(),first.origin());
+        var bound=new Interactions.Parameter(BigInteger.ZERO,parameter.mode(),parameter.typeRef(),new Interactions.ObjectBinding(base.units().getFirst().objects().getFirst().id()),first.origin());
+        var boundSignature=new Interactions.Signature(new Interactions.ParameterInventory(List.of(bound),Interactions.NoRemainder.INSTANCE),first.signature().results(),first.origin());
+        var validSignature=new Entries.Entry(next,first.initialLabel(),boundSignature,first.state(),first.origin());
+        var missing=new Entries.Entry(next,Optional.of(new LabelId(first.id().unit(),"missing-label")),first.signature(),first.state(),first.origin());
+        var foreign=new UnitId(new PublicationId("foreign"),first.id().unit().localId());
+        var foreignEntry=new Entries.Entry(new EntryId(foreign,"second"),first.initialLabel(),first.signature(),first.state(),first.origin());
+        for(var later:List.of(distinct,state,validSignature,first,badSignature,foreignEntry,missing)) {
+            var publication=withEntries(base,List.of(first,later));
+            try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(publication),ValidationOptions.defaults(),new Stores())) {
+                if(later==distinct||later==state||later==validSignature) {
+                    eq(ValidationResult.Status.STRUCTURALLY_VALID,AirValidator.validate(publication).status());
+                    eq(ValidationResult.Status.INCOMPLETE_VALIDATION,checked.result().status());eq(false,checked.result().diagnostics().traversalCompleted());
+                } else {
+                    eq(ValidationResult.Status.INVALID_IR,checked.result().status());
+                    String rule=later==badSignature?"I-55":later==missing?"I-02":"I-01";
+                    if(checked.result().issues().stream().noneMatch(issue->issue.rule().equals(rule)))throw new AssertionError("missing rule "+rule+": "+checked.result());
+                }
+            }
+        }
+    }
+
+    private static Publication withEntries(Publication base,List<Entries.Entry> entries) {
+        var unit=base.units().getFirst();
+        var changed=new Unit(unit.id(),unit.containingUnit(),unit.objects(),unit.visibleObjects(),entries,unit.sequences(),unit.completionPorts(),unit.body(),unit.bodyUnavailable(),unit.coverage(),unit.origin());
+        return new Publication(base.id(),base.airVersion(),base.capabilities(),base.artifacts(),List.of(changed),base.storage(),base.resources(),base.artifactRelations(),base.origins(),base.coverage(),base.uncertainties(),base.premises());
     }
 
     static void cicsNamesCannotBorrowTheCobolDependencyCertificate() {

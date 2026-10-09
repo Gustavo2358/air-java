@@ -63,6 +63,8 @@ public final class ContractSuite {
         test("PAGED-ADMISSION contextual resource signature and type references",SnapshotValidatorChecks::contextualResourcesSignaturesAndTypesAreAdmittedTogether);
         test("PAGED-ADMISSION bottom-up operand type resolution",SnapshotValidatorChecks::operandTypesResolveBottomUpWithoutResidentOperands);
         test("PAGED-ADMISSION direct variable call valid certificate",SnapshotValidatorChecks::directVariableCallProfileCanIssueAValidCertificate);
+        test("PAGED-ADMISSION shared label Entries independently admitted",SnapshotValidatorChecks::sharedLabelEntriesHaveIndependentCompleteAdmission);
+        test("PAGED-ADMISSION later Entry checks and incomplete distinct seeds",SnapshotValidatorChecks::sharedLabelAdmissionChecksEveryLaterEntryAndKeepsOtherSeedsIncomplete);
         test("PAGED-ADMISSION direct profile rejects multiple reaching definitions",SnapshotValidatorChecks::multipleDefinitionsCannotBorrowTheDirectCertificate);
         test("PAGED-ADMISSION COBOL profile rejects CICS name semantics",SnapshotValidatorChecks::cicsNamesCannotBorrowTheCobolDependencyCertificate);
         test("PAGED-ADMISSION correlated concat diamond valid certificate",SnapshotValidatorChecks::correlatedConcatDiamondCanIssueAValidCertificate);
