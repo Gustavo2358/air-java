@@ -138,6 +138,13 @@ public final class SnapshotValidator {
                     traversalCompleted=directDependencyProfile(keys,declarations,types)
                         ||correlatedConcatDependencyProfile(keys,declarations,types);
                 }
+                // Finish the general rule set over borrowed typed facts when this input is
+                // outside the old proven slices. Invalid local grammar is never reconstructed,
+                // and an operational or unsupported admission is never upgraded.
+                if(!traversalCompleted&&!counts.containsKey(ValidationIssue.Kind.INVALID_IR)
+                        &&!counts.containsKey(ValidationIssue.Kind.UNSUPPORTED_CAPABILITY)
+                        &&!counts.containsKey(ValidationIssue.Kind.RESOURCE_LIMIT))
+                    return AirValidator.validate(new SnapshotValidationProgram(snapshot,declarations),options);
             } catch(SnapshotDeclarations.Limit limit) {
                 resourceLimit(limit.getMessage());
             } catch(SnapshotGraphWalk.Limit limit) {
@@ -346,7 +353,13 @@ public final class SnapshotValidator {
             switch(snapshot.shape(target)) {
                 case INTERACTIONS_INTERNAL_TARGET -> emit(tape,refs.reference(snapshot.field(target,INTERACTIONS_INTERNAL_TARGET,0)),owner);
                 case INTERACTIONS_LITERAL_TARGET -> {emit(tape,refs.reference(snapshot.field(target,INTERACTIONS_LITERAL_TARGET,4)),owner);namePolicy(snapshot.field(target,INTERACTIONS_LITERAL_TARGET,3),owner,tape,refs,capabilities);}
-                case INTERACTIONS_COMPUTED_TARGET -> {long name=snapshot.field(target,INTERACTIONS_COMPUTED_TARGET,2);role(name,Operand.Role.CALL_TARGET,owner);expect(types.ofNode(name),Types.Builtin.TEXT,owner,types);emit(tape,refs.reference(snapshot.field(target,INTERACTIONS_COMPUTED_TARGET,4)),owner);namePolicy(snapshot.field(target,INTERACTIONS_COMPUTED_TARGET,3),owner,tape,refs,capabilities);}
+                case INTERACTIONS_COMPUTED_TARGET -> {
+                    long name=snapshot.field(target,INTERACTIONS_COMPUTED_TARGET,2);role(name,Operand.Role.CALL_TARGET,owner);
+                    var domain=types.ofNode(name);
+                    if(types.unknown(domain)&&capabilities.required("target.possibilities","1"))capabilities.require("target.possibilities","1",owner,this::capabilityIssue);
+                    else expect(domain,Types.Builtin.TEXT,owner,types);
+                    emit(tape,refs.reference(snapshot.field(target,INTERACTIONS_COMPUTED_TARGET,4)),owner);namePolicy(snapshot.field(target,INTERACTIONS_COMPUTED_TARGET,3),owner,tape,refs,capabilities);
+                }
                 default -> throw new IllegalStateException("invocation target required");
             }
             long signature=snapshot.field(operation,OPERATIONS_INVOKE,5);
@@ -822,7 +835,7 @@ public final class SnapshotValidator {
         private void namePolicy(long policy,long owner,SnapshotDiagnosticTemplates tape,SnapshotReferenceLists refs,
                 SnapshotCapabilities capabilities) {
             if(snapshot.shape(policy)==INTERACTIONS_EXTENSION_NAME)
-                capabilities.require(snapshot.field(policy,INTERACTIONS_EXTENSION_NAME,0),snapshot.field(policy,INTERACTIONS_EXTENSION_NAME,1),owner,this::capabilityIssue);
+                capabilities.declared(snapshot.field(policy,INTERACTIONS_EXTENSION_NAME,0),snapshot.field(policy,INTERACTIONS_EXTENSION_NAME,1),owner,this::capabilityIssue);
             else if(snapshot.shape(policy)==INTERACTIONS_UNKNOWN_NAME)
                 emit(tape,refs.reference(snapshot.field(policy,INTERACTIONS_UNKNOWN_NAME,0)),owner);
         }

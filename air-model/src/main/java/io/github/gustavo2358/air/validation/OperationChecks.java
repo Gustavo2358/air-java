@@ -340,7 +340,7 @@ final class OperationChecks {
     }
 
     private void returnOperation(Operations.Return returned) {
-        OperationId id=returned.header().id(); Unit unit=c.index.units.get(id.unit());
+        OperationId id=returned.header().id(); var unit=c.index.units.get(id.unit());
         if(unit==null || unit.entries().isEmpty()) return;
         List<Entries.Entry> entries=unit.entries();
         if(entries.size()>1 && !returnCompatibility.computeIfAbsent(unit.id(),

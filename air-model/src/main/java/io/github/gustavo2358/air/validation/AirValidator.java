@@ -32,6 +32,10 @@ public final class AirValidator {
     }
     public static ValidationResult validate(Publication publication,ValidationOptions options) {
         Objects.requireNonNull(publication,"publication"); Objects.requireNonNull(options,"options");
+        return validate(ValidationProgram.resident(publication),options);
+    }
+    /** The same mandatory rules over typed borrowed bodies, not a second semantic validator. */
+    static ValidationResult validate(ValidationProgram publication,ValidationOptions options) {
         ValidationContext c=new ValidationContext(publication,options);
         try {
             if(!publication.airVersion().equals(SemanticVersion.AIR_2_0_0)) {

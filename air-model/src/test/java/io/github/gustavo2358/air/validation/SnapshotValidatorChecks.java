@@ -18,10 +18,15 @@ final class SnapshotValidatorChecks {
         var source=new SnapshotGraphChecks.Source();var fixture=new SnapshotGraphChecks.Fixture(source);
         SnapshotValidator.CheckedSnapshot checked=SnapshotValidator.check(AirSnapshot.attach(source,fixture.root),
             ValidationOptions.defaults(),new Stores());
-        eq(ValidationResult.Status.INCOMPLETE_VALIDATION,checked.result().status());
+        eq(ValidationResult.Status.STRUCTURALLY_VALID,checked.result().status());
         eq(1,checked.result().statistics().entities());eq(0,checked.result().statistics().operands());
         eq(AirShape.PUBLICATION,checked.snapshot().shape(fixture.root));
         checked.close();fails(IllegalStateException.class,checked::snapshot);checked.close();
+        var unproved=calculatedSlice();var expected=AirValidator.validate(unproved);
+        eq(ValidationResult.Status.INCOMPLETE_VALIDATION,expected.status());
+        try(var incomplete=SnapshotValidator.check(AirSnapshot.fromPublication(unproved),ValidationOptions.defaults(),new Stores())) {
+            eq(expected,incomplete.result());
+        }
     }
 
     static void duplicateAndLocalFailuresRemainInvalidWithoutFalseCompletion() {
@@ -89,10 +94,70 @@ final class SnapshotValidatorChecks {
             eq(true,checked.result().diagnostics().traversalCompleted());eq(List.of(),checked.result().issues());
         }
     }
+    static void declaredNamePoliciesAreNotOtherExtensionSurfaces() {
+        for(boolean declared:new boolean[]{true,false}) {
+            var f=new Fixtures();var operation=f.op("call");var reason=f.uncertainty("contract","CONTRACT_UNKNOWN");
+            if(declared)f.capabilities.add(new Capabilities.Capability("fixture.name-policy","1"));
+            var call=new Operations.Invoke(f.header(operation),"call",
+                new Interactions.LiteralTarget("program","fixture.program","X",new Interactions.ExtensionName("fixture.name-policy","1"),f.origin),
+                List.of(),List.of(),new Interactions.ExternalSignature(f.signature(List.of(),List.of())),List.of(),f.effects(),
+                new Control.InvocationOutcomes(List.of(Control.HaltAlternative.INSTANCE),Scopes.NoControl.INSTANCE),new Interactions.UnknownContract(reason));
+            f.sequence("start",List.of(),call);
+            var publication=f.build();
+            eq(declared?ValidationResult.Status.STRUCTURALLY_VALID:ValidationResult.Status.INVALID_IR,AirValidator.validate(publication).status());
+            try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(publication),ValidationOptions.defaults(),new Stores())) {
+                eq(declared?0L:1L,checked.result().diagnostics().count(ValidationIssue.Kind.INVALID_IR));
+                eq(0L,checked.result().diagnostics().count(ValidationIssue.Kind.UNSUPPORTED_CAPABILITY));
+                if(!declared&&checked.result().issues().stream().noneMatch(i->i.rule().equals("I-43")))throw new AssertionError("missing declared-policy obligation");
+            }
+        }
+    }
+    static void targetPossibilitiesAdmitOnlyUnknownDomainsWithTheDeclaredCapability() {
+        for(boolean declared:new boolean[]{false,true})for(boolean unknown:new boolean[]{false,true}) {
+            var f=new Fixtures();var operation=f.op("call");var reason=f.uncertainty("type","TYPE_UNKNOWN");
+            var valueReason=f.uncertainty("value","VALUE_UNKNOWN");
+            var contract=f.uncertainty("contract","CONTRACT_UNKNOWN");
+            var type=unknown?new Types.UnknownType(reason):new Types.Known(Types.Builtin.INT);
+            if(declared)f.capabilities.add(Capabilities.TARGET_POSSIBILITIES);
+            var name=new Expressions.Unknown(f.operand(operation,"name",Operand.Role.CALL_TARGET),type,List.of(),Scopes.NoMemory.INSTANCE,valueReason);
+            var call=new Operations.Invoke(f.header(operation),"call",new Interactions.ComputedTarget("program","cobol.program",name,Interactions.ExactName.INSTANCE,f.origin),
+                List.of(),List.of(),new Interactions.ExternalSignature(f.signature(List.of(),List.of())),List.of(),f.effects(),
+                new Control.InvocationOutcomes(List.of(Control.HaltAlternative.INSTANCE),Scopes.NoControl.INSTANCE),new Interactions.UnknownContract(contract));
+            f.sequence("start",List.of(),call);var publication=f.build();
+            boolean admitted=declared&&unknown;
+            eq(admitted?ValidationResult.Status.STRUCTURALLY_VALID:ValidationResult.Status.INVALID_IR,AirValidator.validate(publication).status());
+            try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(publication),ValidationOptions.defaults(),new Stores())) {
+                eq(admitted?0L:1L,checked.result().diagnostics().count(ValidationIssue.Kind.INVALID_IR));
+                if(!admitted&&checked.result().issues().stream().noneMatch(i->i.rule().equals("I-08")))throw new AssertionError("target type must stay diagnosed");
+            }
+        }
+    }
 
     static void multipleDefinitionsCannotBorrowTheDirectCertificate() {
         try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(directVariableCall(true)),ValidationOptions.defaults(),new Stores())) {
-            eq(ValidationResult.Status.INCOMPLETE_VALIDATION,checked.result().status());eq(false,checked.result().diagnostics().traversalCompleted());
+            // This no longer borrows the narrow certificate: the full rule engine discharges it.
+            eq(ValidationResult.Status.STRUCTURALLY_VALID,checked.result().status());eq(true,checked.result().diagnostics().traversalCompleted());
+        }
+    }
+    static void generalTypedAdmissionRunsEveryExistingMandatoryRuleWithoutOwningBodies() {
+        for(var publication:List.of(directVariableCall(true),directVariableCall(false,"cics.program"))) {
+            eq(ValidationResult.Status.STRUCTURALLY_VALID,AirValidator.validate(publication).status());
+            try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(publication),ValidationOptions.defaults(),new Stores())) {
+                eq(ValidationResult.Status.STRUCTURALLY_VALID,checked.result().status());
+                eq(true,checked.result().diagnostics().traversalCompleted());
+            }
+        }
+        for(boolean proof:new boolean[]{false,true}) {
+            var f=new Fixtures();var unknown=new Types.UnknownType(f.uncertainty("type","TYPE_UNKNOWN"));
+            var left=f.object("left",unknown);var right=f.object("right",unknown);
+            f.linear(f.assign("copy",right,f.read(f.op("copy"),"value",left,Operand.Role.VALUE_READ)));
+            if(proof)f.proof("domain",new Proofs.ObjectDomain(left),new Proofs.ObjectDomain(right),new Proofs.UnitDomain(f.unit));
+            var publication=f.build();var expected=AirValidator.validate(publication);
+            eq(proof?ValidationResult.Status.STRUCTURALLY_VALID:ValidationResult.Status.INVALID_IR,expected.status());
+            try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(publication),ValidationOptions.defaults(),new Stores())) {
+                eq(expected,checked.result());
+                if(!proof&&checked.result().issues().stream().noneMatch(i->i.rule().equals("I-08/I-52")))throw new AssertionError("shared unknown_type must never prove sameDomain");
+            }
         }
     }
 
@@ -131,8 +196,8 @@ final class SnapshotValidatorChecks {
         var valid=withCall(base,call,List.of(argument),call.results(),signature,call.outcomes());
         eq(ValidationResult.Status.STRUCTURALLY_VALID,AirValidator.validate(valid).status());
         try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(valid),ValidationOptions.defaults(),new Stores())) {
-            // Domain transmission/effect checking is unfinished, so no complete certificate.
-            eq(ValidationResult.Status.INCOMPLETE_VALIDATION,checked.result().status());
+            // General rules prove this known transmission; contradictions below still fail.
+            eq(ValidationResult.Status.STRUCTURALLY_VALID,checked.result().status());
             eq(0L,checked.result().diagnostics().count(ValidationIssue.Kind.INVALID_IR));
         }
         for(int mutation=0;mutation<4;mutation++) {
@@ -219,8 +284,15 @@ final class SnapshotValidatorChecks {
         var outside=withCall(base,call,List.of(new Interactions.ValueArgument(compound)),List.of(),signature,call.outcomes());
         eq(ValidationResult.Status.STRUCTURALLY_VALID,AirValidator.validate(outside).status());
         try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(outside),ValidationOptions.defaults(),new Stores())) {
-            eq(ValidationResult.Status.INCOMPLETE_VALIDATION,checked.result().status());
+            eq(ValidationResult.Status.STRUCTURALLY_VALID,checked.result().status());
         }
+    }
+    private static Publication calculatedSlice() {
+        var f=new Fixtures();var target=f.object("target",Fixtures.known(Types.Builtin.TEXT));var index=f.object("index",Fixtures.known(Types.Builtin.INT));
+        var operation=f.op("slice");
+        var value=new Expressions.SliceText(f.operand(operation,"value",Operand.Role.VALUE_READ),f.text(operation,"text","ABC"),
+            f.read(operation,"index",index,Operand.Role.VALUE_READ),f.integer(operation,"count",1,Operand.Role.VALUE_READ));
+        f.linear(f.assign("slice",target,value));return f.build();
     }
 
     private static Publication withCall(Publication base,Operations.Invoke previous,List<Interactions.Argument> arguments,List<Place> results,Interactions.InvocationSignature signature,Control.InvocationOutcomes outcomes) {
@@ -266,7 +338,7 @@ final class SnapshotValidatorChecks {
             try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(publication),ValidationOptions.defaults(),new Stores())) {
                 if(later==distinct||later==state||later==validSignature) {
                     eq(ValidationResult.Status.STRUCTURALLY_VALID,AirValidator.validate(publication).status());
-                    eq(ValidationResult.Status.INCOMPLETE_VALIDATION,checked.result().status());eq(false,checked.result().diagnostics().traversalCompleted());
+                    eq(ValidationResult.Status.STRUCTURALLY_VALID,checked.result().status());eq(true,checked.result().diagnostics().traversalCompleted());
                 } else {
                     eq(ValidationResult.Status.INVALID_IR,checked.result().status());
                     String rule=later==badSignature?"I-55":later==missing?"I-02":"I-01";
@@ -284,7 +356,8 @@ final class SnapshotValidatorChecks {
 
     static void cicsNamesCannotBorrowTheCobolDependencyCertificate() {
         try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(directVariableCall(false,"cics.program")),ValidationOptions.defaults(),new Stores())) {
-            eq(ValidationResult.Status.INCOMPLETE_VALIDATION,checked.result().status());eq(false,checked.result().diagnostics().traversalCompleted());
+            // Structural validation does not interpret the external namespace or borrow COBOL policy.
+            eq(ValidationResult.Status.STRUCTURALLY_VALID,checked.result().status());eq(true,checked.result().diagnostics().traversalCompleted());
         }
     }
 

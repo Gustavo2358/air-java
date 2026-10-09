@@ -283,3 +283,24 @@ Os limites completos de admissão permanecem; isto não é suporte geral de data
 Oráculos positivos e negativos incluem tags com colisão Aa/BB, cinco geometrias,
 tipos/papéis/modos/cardinalidades e posição de 4.097 dígitos. Os resultados residentes
 são comparados, mas I-60/I-08/I-11 e os sites esperados são escritos independentemente.
+
+## Snapshot: conjunto geral de regras sobre views tipadas (2026-10-09)
+
+O limite de admissão dos perfis acima foi substituído prospectivamente: fora dos
+certificados direct/correlated, `SnapshotValidator` executa o mesmo conjunto de
+ReferenceChecks, TypeResolver, DomainProofEngine e OperationChecks de AirValidator
+sobre `ValidationProgram`. As views nativas e índices de endereços emprestam o
+snapshot; não reconstruem Publication, Unit, Sequence ou Coverage agregadas.
+`SnapshotOccurrenceReader` é a leitura oficial explícita de uma ocorrência.
+
+Não se infere validade da ausência de diagnósticos do passe parcial. Entradas
+localmente inválidas, capacidades não suportadas e limites operacionais não são
+promovidos. Obrigações indecididas continuam INCOMPLETE_VALIDATION. Os contratos
+cobrem múltiplas definições, política de nome declarada, target.possibilities,
+unknown_type sem prova sameDomain e a obrigação real de um slice calculado.
+Known(INT) não vira target TEXT e incerteza compartilhada não é prova de domínio.
+
+Limite PARTIAL: índices de IDs/endereços e caches da prova geral ainda são
+residentes; uma ocorrência solicitada é materializada temporariamente. A extensão
+de admissão não qualifica heap/spill global nem implementa dataflow. FAST local:
+277 contratos do modelo, 145 contratos do transporte e fronteiras compiladas.

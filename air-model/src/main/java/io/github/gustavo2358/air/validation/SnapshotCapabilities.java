@@ -94,6 +94,14 @@ public final class SnapshotCapabilities implements AutoCloseable {
             return true;
         }catch(RuntimeException|Error failure){failed=true;throw failure;}
     }
+    /** A name policy needs its declaration, not permission to supply another extension surface. */
+    public boolean declared(long name,long version,long owner,Issues issues) {
+        open();Objects.requireNonNull(issues);
+        try {
+            if(!storage.required(keys.atomKey(name),keys.atomKey(version))){issues.report(Rule.MISSING,owner,name);return false;}
+            return true;
+        }catch(RuntimeException|Error failure){failed=true;throw failure;}
+    }
     public boolean required(String name,String version) {
         open();long root=snapshot.root(),manifest=snapshot.field(root,PUBLICATION,2),list=snapshot.field(manifest,CAPABILITIES_MANIFEST,0);
         try(var rows=snapshot.elements(list,CAPABILITIES_CAPABILITY)) {

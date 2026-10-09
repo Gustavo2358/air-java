@@ -17,9 +17,9 @@ final class ReferenceChecks {
     ReferenceChecks(ValidationContext c) { this.c=c; }
 
     void run() {
-        Publication publication=c.index.publication;
+        var publication=c.index.publication;
         checkCapabilities(publication.capabilities());
-        for(Unit unit:publication.units()) {
+        for(var unit:publication.units()) {
             Set<ObjectId> objects=new HashSet<>(unit.visibleObjects());
             for(Memory.ObjectDeclaration object:unit.objects()) objects.add(object.id());
             visible.put(unit.id(),objects);
@@ -78,7 +78,7 @@ final class ReferenceChecks {
         }
         coverage(publication.coverage(),publication.id());
 
-        for(Unit unit:publication.units()) {
+        for(var unit:publication.units()) {
             c.ref(unit.origin(),unit.id());
             unit.containingUnit().ifPresent(id -> c.ref(id,unit.id()));
             c.refs(unit.visibleObjects(),unit.id());
@@ -136,7 +136,7 @@ final class ReferenceChecks {
                         c.uncertainty(uninitialized.reason(),null,entry.id());
                 }
             }
-            for(Sequence sequence:unit.sequences()) {
+            for(var sequence:unit.sequences()) {
                 c.ref(sequence.origin(),sequence.label());
                 if(!sequence.label().unit().equals(unit.id()))
                     c.error("I-03",sequence.label(),"sequence owner differs from unit");
@@ -416,7 +416,8 @@ final class ReferenceChecks {
         }
     }
 
-    void coverage(Evidence.Coverage coverage,Id owner) {
+    void coverage(Evidence.Coverage coverage,Id owner){coverage(ValidationProgram.coverage(coverage),owner);}
+    void coverage(ValidationProgram.CoverageView coverage,Id owner) {
         scope(coverage.scope(),owner); c.refs(coverage.uncertainties(),owner);
         if(coverage.inventory()!=Evidence.InventoryStatus.COMPLETE && coverage.uncertainties().isEmpty())
             c.error("I-28",owner,"partial/unavailable inventory needs explicit reason");

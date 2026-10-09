@@ -6,25 +6,36 @@ import java.util.*;
 
 /** Per-validation identity indexes, built once. No resolution by names or source locations. */
 final class PublicationIndex {
-    final Publication publication;
+    final ValidationProgram publication;
     final Set<Id> identities = new LinkedHashSet<>();
-    final Map<UnitId,Unit> units=new LinkedHashMap<>();
-    final Map<ObjectId,Memory.ObjectDeclaration> objects=new LinkedHashMap<>();
-    final Map<StorageId,Memory.Storage> storage=new LinkedHashMap<>();
-    final Map<EntryId,Entries.Entry> entries=new LinkedHashMap<>();
-    final Map<LabelId,Sequence> sequences=new LinkedHashMap<>();
-    final Map<OperationId,Operation> operations=new LinkedHashMap<>();
+    final Map<UnitId,ValidationProgram.UnitView> units;
+    final Map<ObjectId,Memory.ObjectDeclaration> objects;
+    final Map<StorageId,Memory.Storage> storage;
+    final Map<EntryId,Entries.Entry> entries;
+    final Map<LabelId,ValidationProgram.SequenceView> sequences;
+    final Map<OperationId,Operation> operations;
     final Map<OperationId,LabelId> sequenceOf=new LinkedHashMap<>();
-    final Map<OperandId,Operand> operands=new LinkedHashMap<>();
-    final Map<OriginId,Origins.Origin> origins=new LinkedHashMap<>();
-    final Map<UncertaintyId,Evidence.Uncertainty> uncertainties=new LinkedHashMap<>();
-    final Map<PremiseId,Proofs.Premise> premises=new LinkedHashMap<>();
-    final Map<ResourceId,Interactions.Resource> resources=new LinkedHashMap<>();
-    final Map<ArtifactRelationId,Artifacts.Relation> artifactRelations=new LinkedHashMap<>();
+    final Map<OperandId,Operand> operands;
+    final Map<OriginId,Origins.Origin> origins;
+    final Map<UncertaintyId,Evidence.Uncertainty> uncertainties;
+    final Map<PremiseId,Proofs.Premise> premises;
+    final Map<ResourceId,Interactions.Resource> resources;
+    final Map<ArtifactRelationId,Artifacts.Relation> artifactRelations;
     final ValidationContext context;
 
-    PublicationIndex(Publication p,ValidationContext context) { this.publication=p; this.context=context; }
+    PublicationIndex(ValidationProgram p,ValidationContext context) {
+        this.publication=p;this.context=context;
+        var nativeProgram=p instanceof SnapshotValidationProgram nativeInput?nativeInput:null;
+        units=nativeProgram==null?new LinkedHashMap<>():nativeProgram.unitMap();
+        sequences=nativeProgram==null?new LinkedHashMap<>():nativeProgram.sequenceMap();
+        objects=map(nativeProgram,Memory.ObjectDeclaration.class);storage=map(nativeProgram,Memory.Storage.class);
+        entries=map(nativeProgram,Entries.Entry.class);operations=map(nativeProgram,Operation.class);operands=map(nativeProgram,Operand.class);
+        origins=map(nativeProgram,Origins.Origin.class);uncertainties=map(nativeProgram,Evidence.Uncertainty.class);
+        premises=map(nativeProgram,Proofs.Premise.class);resources=map(nativeProgram,Interactions.Resource.class);artifactRelations=map(nativeProgram,Artifacts.Relation.class);
+    }
+    private static <K,V> Map<K,V> map(SnapshotValidationProgram program,Class<V> type){return program==null?new LinkedHashMap<>():program.map(type);}
     void build() {
+        if(publication instanceof SnapshotValidationProgram nativeProgram){nativeProgram.index(this);return;}
         add(publication.id());
         for(Origins.Artifact a:publication.artifacts()) add(a.id());
         for(Origins.Origin o:publication.origins()) { add(o.id()); origins.putIfAbsent(o.id(),o); }
@@ -35,7 +46,7 @@ final class PublicationIndex {
             add(r.id()); artifactRelations.putIfAbsent(r.id(),r);
         }
         for(Memory.Storage s:publication.storage()) { add(s.header().id()); storage.putIfAbsent(s.header().id(),s); }
-        for(Unit u:publication.units()) {
+        for(var u:publication.units()) {
             add(u.id()); units.putIfAbsent(u.id(),u);
             for(Memory.ObjectDeclaration o:u.objects()) { add(o.id()); objects.putIfAbsent(o.id(),o); }
             for(Entries.CompletionPort c:u.completionPorts()) add(c.id());
@@ -49,7 +60,7 @@ final class PublicationIndex {
                         for(var literal:possible.candidates())operand(literal,new EntryOwner(e.id()),0);
                 }
             }
-            for(Sequence s:u.sequences()) {
+            for(var s:u.sequences()) {
                 add(s.label()); sequences.putIfAbsent(s.label(),s);
                 for(Operation op:s.operations()) {
                     add(op.header().id()); operations.putIfAbsent(op.header().id(),op);
