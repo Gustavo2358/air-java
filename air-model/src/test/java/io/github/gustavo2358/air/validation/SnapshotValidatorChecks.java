@@ -172,6 +172,57 @@ final class SnapshotValidatorChecks {
         }
     }
 
+    static void openUnmaterializedSignaturePreservesIndependentTypedArgumentsAndResults() {
+        var base=directVariableCall(false);var call=(Operations.Invoke)base.units().getFirst().sequences().getFirst().terminator();
+        var origin=call.header().origin();var owner=new OperationOwner(call.header().id());
+        var object=base.units().getFirst().objects().getFirst().id();var reason=base.uncertainties().getFirst().id();
+        var signature=new Interactions.ExternalSignature(new Interactions.Signature(
+            new Interactions.ParameterInventory(List.of(),new Interactions.UnknownRemainder(reason)),
+            new Interactions.ResultInventory(List.of(),new Interactions.UnknownRemainder(reason)),origin));
+        for(int count:new int[]{0,1,4,16,64}) {
+            var arguments=new ArrayList<Interactions.Argument>();var results=new ArrayList<Place>();
+            for(int i=0;i<count;i++) {
+                arguments.add(new Interactions.ReferenceArgument(new Places.ObjectPlace(new Operand.Header(
+                    new OperandId(owner,"reference-"+i),Operand.Role.ARGUMENT_REFERENCE,origin),object)));
+                arguments.add(new Interactions.ValueArgument(new Expressions.Unknown(new Operand.Header(
+                    new OperandId(owner,"unknown-"+i),Operand.Role.ARGUMENT_VALUE,origin),
+                    new Types.Known(Types.Builtin.TEXT),List.of(),Scopes.NoMemory.INSTANCE,reason)));
+                arguments.add(new Interactions.CopyArgument(new Expressions.Literal(new Operand.Header(
+                    new OperandId(owner,"copy-"+i),Operand.Role.ARGUMENT_VALUE,origin),new Values.TextValue("ARG"))));
+                arguments.add(new Interactions.ValueArgument(new Expressions.Read(new Operand.Header(
+                    new OperandId(owner,"read-"+i),Operand.Role.ARGUMENT_VALUE,origin),new Places.ObjectPlace(new Operand.Header(
+                    new OperandId(owner,"read-place-"+i),Operand.Role.VALUE_READ,origin),object))));
+                results.add(new Places.ObjectPlace(new Operand.Header(new OperandId(owner,"result-"+i),Operand.Role.RESULT_TARGET,origin),object));
+            }
+            var publication=withCall(base,call,arguments,results,signature,call.outcomes());
+            // AIR-04 invocation transmission applies to materialized positions only. Open,
+            // empty inventories do not invent slot domains or erase BEFORE-target evidence.
+            eq(ValidationResult.Status.STRUCTURALLY_VALID,AirValidator.validate(publication).status());
+            try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(publication),ValidationOptions.defaults(),new Stores())) {
+                eq(ValidationResult.Status.STRUCTURALLY_VALID,checked.result().status());
+                eq(true,checked.result().diagnostics().traversalCompleted());
+            }
+            if(count>0) {
+                var contradiction=withCall(base,call,arguments,results,call.signature(),call.outcomes());
+                eq(ValidationResult.Status.INVALID_IR,AirValidator.validate(contradiction).status());
+                try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(contradiction),ValidationOptions.defaults(),new Stores())) {
+                    eq(ValidationResult.Status.INVALID_IR,checked.result().status());
+                    if(checked.result().issues().stream().noneMatch(issue->issue.rule().equals("I-08")))
+                        throw new AssertionError("closed signature contradiction lost: "+checked.result());
+                }
+            }
+        }
+        var compound=new Expressions.Binary(new Operand.Header(new OperandId(owner,"compound"),Operand.Role.ARGUMENT_VALUE,origin),
+            Expressions.BinaryOperator.CONCAT,
+            new Expressions.Literal(new Operand.Header(new OperandId(owner,"left"),Operand.Role.VALUE_READ,origin),new Values.TextValue("A")),
+            new Expressions.Literal(new Operand.Header(new OperandId(owner,"right"),Operand.Role.VALUE_READ,origin),new Values.TextValue("B")));
+        var outside=withCall(base,call,List.of(new Interactions.ValueArgument(compound)),List.of(),signature,call.outcomes());
+        eq(ValidationResult.Status.STRUCTURALLY_VALID,AirValidator.validate(outside).status());
+        try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(outside),ValidationOptions.defaults(),new Stores())) {
+            eq(ValidationResult.Status.INCOMPLETE_VALIDATION,checked.result().status());
+        }
+    }
+
     private static Publication withCall(Publication base,Operations.Invoke previous,List<Interactions.Argument> arguments,List<Place> results,Interactions.InvocationSignature signature,Control.InvocationOutcomes outcomes) {
         var call=new Operations.Invoke(previous.header(),previous.action(),previous.target(),arguments,results,signature,previous.effectOperands(),previous.effectBound(),outcomes,previous.contract());
         var unit=base.units().getFirst();var sequences=new ArrayList<Sequence>();

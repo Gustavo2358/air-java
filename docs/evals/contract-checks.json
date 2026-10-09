@@ -58,6 +58,7 @@
     "PAGED-ADMISSION correlated concat diamond valid certificate",
     "PAGED-ADMISSION invocation outcome contradictions cannot certify",
     "PAGED-ADMISSION invocation signature cardinality and roles cannot certify",
+    "PAGED-ADMISSION open unmaterialized signature preserves independent operands",
     "PAGED-VISIBILITY declared and imported exact membership",
     "PAGED-CAPABILITIES exact manifest classification",
     "PAGED-GROUNDING seeded and unseeded cycles",

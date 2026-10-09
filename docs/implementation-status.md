@@ -269,8 +269,16 @@ linear do backend ou do heap inteiro.
 
 Transmissão com sameDomain por premissa, efeitos por outcome e mustOverwrite ainda
 não têm todas as obrigações migradas. Os certificados direct/correlated exigem
-argumentos/resultados/effectOperands vazios, assinatura externa fechada vazia e
-ausência de perOutcome/mustOverwrite. Não convertem campos não verificados em validade.
+effectOperands vazios, ausência de perOutcome/mustOverwrite e assinatura externa
+sem posições conhecidas. Inventários vazios podem ser abertos: AIR 04 §7.1 não
+inventa slots a partir do restante desconhecido. Argumentos independentes TEXT
+nominais, literal ou Unknown sem inputs e resultados ObjectPlace TEXT são admitidos
+com os papéis, tipos, referências e normal verificados pelos passes comuns.
+Cardinalidade fechada contraditória continua INVALID_IR. Argumentos compostos,
+posições materializadas e provas de transmissão ainda não migradas não recebem
+certificado por essa regra; permanecem INCOMPLETE_VALIDATION. Não convertem campos
+não verificados em validade. A proteção inicial de `7e3d0f0` era excessiva nesse
+caso aberto e regredia uma obrigação da CLI; o oracle antigo foi preservado.
 Os limites completos de admissão permanecem; isto não é suporte geral de dataflow.
 Oráculos positivos e negativos incluem tags com colisão Aa/BB, cinco geometrias,
 tipos/papéis/modos/cardinalidades e posição de 4.097 dígitos. Os resultados residentes

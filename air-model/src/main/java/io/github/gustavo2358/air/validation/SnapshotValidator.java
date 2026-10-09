@@ -596,15 +596,28 @@ public final class SnapshotValidator {
             };
         }
         private boolean directInvoke(long invoke,SnapshotTypes types,SnapshotDeclarations declarations) {
-            // These remaining transmission/effect obligations are not discharged by this
-            // certificate. Field presence, not quantity observed in a fixture, governs it.
-            if(snapshot.size(snapshot.field(invoke,OPERATIONS_INVOKE,3))!=0
-                    ||snapshot.size(snapshot.field(invoke,OPERATIONS_INVOKE,4))!=0
-                    ||snapshot.size(snapshot.field(invoke,OPERATIONS_INVOKE,6))!=0)return false;
+            // Known slot transmission remains outside this certificate. AIR-04 §7.1
+            // permits empty open inventories: no slot domain is invented for their
+            // independent, typed arguments/results. Global invocationConstraints still
+            // checks roles, cardinality and the explicit normal outcome.
+            if(snapshot.size(snapshot.field(invoke,OPERATIONS_INVOKE,6))!=0)return false;
             long signature=snapshot.field(invoke,OPERATIONS_INVOKE,5);
             if(snapshot.shape(signature)!=INTERACTIONS_EXTERNAL_SIGNATURE)return false;
             long external=snapshot.field(signature,INTERACTIONS_EXTERNAL_SIGNATURE,0);
-            if(!emptySignature(external))return false;
+            if(!unmaterializedSignature(external))return false;
+            try(var arguments=snapshot.elements(snapshot.field(invoke,OPERATIONS_INVOKE,3),INTERACTIONS_ARGUMENT)) {
+                while(arguments.advance()) {
+                    long argument=arguments.value(),operand=snapshot.field(argument,snapshot.shape(argument),0);
+                    if(snapshot.shape(argument)==INTERACTIONS_REFERENCE_ARGUMENT) {
+                        if(snapshot.shape(operand)!=PLACES_OBJECT_PLACE)return false;
+                    } else if(!independentTextOperand(operand))return false;
+                    if(!types.is(types.ofNode(operand),Types.Builtin.TEXT))return false;
+                }
+            }
+            try(var results=snapshot.elements(snapshot.field(invoke,OPERATIONS_INVOKE,4),PLACE)) {
+                while(results.advance())if(snapshot.shape(results.value())!=PLACES_OBJECT_PLACE
+                        ||!types.is(types.ofNode(results.value()),Types.Builtin.TEXT))return false;
+            }
             long effects=snapshot.field(invoke,OPERATIONS_INVOKE,7);
             if(snapshot.size(snapshot.field(effects,INTERACTIONS_EFFECT_BOUND,1))!=0
                     ||snapshot.size(snapshot.field(snapshot.field(effects,INTERACTIONS_EFFECT_BOUND,0),INTERACTIONS_FOREIGN_EFFECTS,2))!=0)return false;
@@ -612,12 +625,18 @@ public final class SnapshotValidator {
             long name=snapshot.field(target,INTERACTIONS_COMPUTED_TARGET,2);if(snapshot.shape(name)!=EXPRESSIONS_READ||snapshot.shape(snapshot.field(name,EXPRESSIONS_READ,1))!=PLACES_OBJECT_PLACE||!types.is(types.ofNode(name),Types.Builtin.TEXT))return false;
             long namespace=snapshot.field(target,INTERACTIONS_COMPUTED_TARGET,1);return equal(namespace,"cobol.program");
         }
-        private boolean emptySignature(long signature) {
+        private boolean independentTextOperand(long operand) {
+            return switch(snapshot.shape(operand)) {
+                case EXPRESSIONS_LITERAL -> snapshot.shape(snapshot.field(operand,EXPRESSIONS_LITERAL,1))==VALUES_TEXT_VALUE;
+                case EXPRESSIONS_READ -> snapshot.shape(snapshot.field(operand,EXPRESSIONS_READ,1))==PLACES_OBJECT_PLACE;
+                case EXPRESSIONS_UNKNOWN -> snapshot.size(snapshot.field(operand,EXPRESSIONS_UNKNOWN,2))==0;
+                default -> false;
+            };
+        }
+        private boolean unmaterializedSignature(long signature) {
             long parameters=snapshot.field(signature,INTERACTIONS_SIGNATURE,0),results=snapshot.field(signature,INTERACTIONS_SIGNATURE,1);
             return snapshot.size(snapshot.field(parameters,INTERACTIONS_PARAMETER_INVENTORY,0))==0
-                &&snapshot.shape(snapshot.field(parameters,INTERACTIONS_PARAMETER_INVENTORY,1))==INTERACTIONS_NO_REMAINDER
-                &&snapshot.size(snapshot.field(results,INTERACTIONS_RESULT_INVENTORY,0))==0
-                &&snapshot.shape(snapshot.field(results,INTERACTIONS_RESULT_INVENTORY,1))==INTERACTIONS_NO_REMAINDER;
+                &&snapshot.size(snapshot.field(results,INTERACTIONS_RESULT_INVENTORY,0))==0;
         }
 
         /** Complete, deliberately narrow diamond used by the first relational dependency slice. */

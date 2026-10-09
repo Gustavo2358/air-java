@@ -70,6 +70,7 @@ public final class ContractSuite {
         test("PAGED-ADMISSION correlated concat diamond valid certificate",SnapshotValidatorChecks::correlatedConcatDiamondCanIssueAValidCertificate);
         test("PAGED-ADMISSION invocation outcome contradictions cannot certify",SnapshotValidatorChecks::invocationOutcomeContradictionsCannotBorrowACompleteCertificate);
         test("PAGED-ADMISSION invocation signature cardinality and roles cannot certify",SnapshotValidatorChecks::invocationSignatureCardinalityAndRolesCannotBorrowACompleteCertificate);
+        test("PAGED-ADMISSION open unmaterialized signature preserves independent operands",SnapshotValidatorChecks::openUnmaterializedSignaturePreservesIndependentTypedArgumentsAndResults);
         test("PAGED-VISIBILITY declared and imported exact membership",SnapshotVisibleChecks::declaredAndImportedObjectsShareExactNamespacedMembership);
         test("PAGED-CAPABILITIES exact manifest classification",SnapshotCapabilityChecks::duplicateProfilesUnsupportedAndMissingUsesStayClassified);
         test("PAGED-GROUNDING seeded and unseeded cycles",SnapshotGroundingChecks::seededAndUnseededCyclesPreserveOrSemanticsAcrossInventoryOrder);
