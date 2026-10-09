@@ -144,7 +144,7 @@ public final class SnapshotValidator {
                 if(!traversalCompleted&&!counts.containsKey(ValidationIssue.Kind.INVALID_IR)
                         &&!counts.containsKey(ValidationIssue.Kind.UNSUPPORTED_CAPABILITY)
                         &&!counts.containsKey(ValidationIssue.Kind.RESOURCE_LIMIT))
-                    return AirValidator.validate(new SnapshotValidationProgram(snapshot,declarations),options);
+                    return AirValidator.validate(SnapshotValidationProgram.afterPrimitiveAdmission(snapshot,declarations),options);
             } catch(SnapshotDeclarations.Limit limit) {
                 resourceLimit(limit.getMessage());
             } catch(SnapshotGraphWalk.Limit limit) {

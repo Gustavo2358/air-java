@@ -94,6 +94,12 @@ public final class SnapshotDeclarations implements AutoCloseable {
             return storage.fact(keys.key(identity),field);
         } catch(RuntimeException|Error failure) {closeSuppressed(failure);throw failure;}
     }
+    /** Exact caller-owned typed identity lookup in the sealed primitive catalogue. */
+    public long fact(Ids.Id identity,Fact field) {
+        open();Objects.requireNonNull(identity);Objects.requireNonNull(field);
+        try{return storage.fact(keys.key(identity),field);}
+        catch(RuntimeException|Error failure){closeSuppressed(failure);throw failure;}
+    }
     /** Random access to the immutable declaration catalogue; ordinal and addresses remain 64-bit. */
     public long declaration(long ordinal,Fact field) {
         open();Objects.requireNonNull(field);

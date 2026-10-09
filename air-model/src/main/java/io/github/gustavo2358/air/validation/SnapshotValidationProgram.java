@@ -6,14 +6,25 @@ import java.util.*;
 import java.util.function.LongFunction;
 import static io.github.gustavo2358.air.model.AirShape.*;
 
-/** Borrowed native bodies. Address/ID indexes remain resident metadata, not a global spill claim. */
+/** Borrowed native bodies and canonical declaration rows; no second typed-ID catalogue. */
 final class SnapshotValidationProgram implements ValidationProgram {
     private final AirSnapshot snapshot;
     private final SnapshotDeclarations declarations;
     private final SnapshotOccurrenceReader reader;
-    SnapshotValidationProgram(AirSnapshot snapshot,SnapshotDeclarations declarations) {
+    private final long[] counts=new long[AirShape.values().length];
+    private SnapshotValidationProgram(AirSnapshot snapshot,SnapshotDeclarations declarations) {
         this.snapshot=Objects.requireNonNull(snapshot);this.declarations=Objects.requireNonNull(declarations);
         reader=new SnapshotOccurrenceReader(snapshot,this::open);
+        for(long at=0;at<declarations.entities();at++)
+            counts[snapshot.shape(declarations.declaration(at,SnapshotDeclarations.Fact.IDENTITY)).ordinal()]++;
+    }
+    /**
+     * Internal handoff ONLY after immutable primitive I-01/I-03/I-11 and nominal-cycle passes,
+     * with no invalid/unsupported/operational issue. Not a public validity certificate: all
+     * remaining general AIR rules still run. SnapshotValidator is the production caller.
+     */
+    static SnapshotValidationProgram afterPrimitiveAdmission(AirSnapshot snapshot,SnapshotDeclarations declarations) {
+        return new SnapshotValidationProgram(snapshot,declarations);
     }
     private void open(){snapshot.shape(snapshot.root());}
     private long field(long node,int at){return snapshot.field(node,snapshot.shape(node),at);}
@@ -69,52 +80,79 @@ final class SnapshotValidationProgram implements ValidationProgram {
             public List<UncertaintyId> uncertainties(){return list(field(h,3),IDS_UNCERTAINTY_ID,UncertaintyId.class);}
         };
     }
-    <K,V> AddressMap<K,V> map(Class<V> type){return new AddressMap<>(h->read(h,type));}
-    AddressMap<UnitId,UnitView> unitMap(){return new AddressMap<>(this::unit);}
-    AddressMap<LabelId,SequenceView> sequenceMap(){return new AddressMap<>(this::sequence);}
-    final class AddressMap<K,V> extends AbstractMap<K,V> {
-        private final Map<K,Long> addresses=new LinkedHashMap<>();
+    <K extends Id,V> AddressMap<K,V> map(Class<V> type){
+        AirShape identity;
+        if(type==Memory.ObjectDeclaration.class)identity=IDS_OBJECT_ID;
+        else if(type==Memory.Storage.class)identity=IDS_STORAGE_ID;
+        else if(type==Entries.Entry.class)identity=IDS_ENTRY_ID;
+        else if(type==Operation.class)identity=IDS_OPERATION_ID;
+        else if(type==Operand.class)identity=IDS_OPERAND_ID;
+        else if(type==Origins.Origin.class)identity=IDS_ORIGIN_ID;
+        else if(type==Evidence.Uncertainty.class)identity=IDS_UNCERTAINTY_ID;
+        else if(type==Proofs.Premise.class)identity=IDS_PREMISE_ID;
+        else if(type==Interactions.Resource.class)identity=IDS_RESOURCE_ID;
+        else if(type==Artifacts.Relation.class)identity=IDS_ARTIFACT_RELATION_ID;
+        else throw new IllegalArgumentException("uncatalogued validation declaration domain");
+        return new AddressMap<>(identity,SnapshotDeclarations.Fact.NODE,h->read(h,type));
+    }
+    AddressMap<UnitId,UnitView> unitMap(){return new AddressMap<>(IDS_UNIT_ID,SnapshotDeclarations.Fact.NODE,this::unit);}
+    AddressMap<LabelId,SequenceView> sequenceMap(){return new AddressMap<>(IDS_LABEL_ID,SnapshotDeclarations.Fact.NODE,this::sequence);}
+    AddressMap<OperationId,LabelId> sequenceOfMap(){return new AddressMap<>(IDS_OPERATION_ID,SnapshotDeclarations.Fact.SEQUENCE,h->read(h,LabelId.class));}
+    Set<Id> identities(){return Collections.unmodifiableSet(new AbstractSet<>() {
+        public int size(){open();return cardinality(declarations.entities());}
+        public boolean contains(Object key){open();return key instanceof Id id&&declarations.fact(id,SnapshotDeclarations.Fact.NODE)!=0;}
+        public Iterator<Id> iterator(){return identityRows(null);}
+    });}
+    private static int cardinality(long count){return (int)Math.min(Integer.MAX_VALUE,count);}
+    private boolean domain(Id id,AirShape shape){
+        return switch(shape) {
+            case IDS_UNIT_ID->id instanceof UnitId;case IDS_LABEL_ID->id instanceof LabelId;
+            case IDS_OBJECT_ID->id instanceof ObjectId;case IDS_STORAGE_ID->id instanceof StorageId;
+            case IDS_ENTRY_ID->id instanceof EntryId;case IDS_OPERATION_ID->id instanceof OperationId;
+            case IDS_OPERAND_ID->id instanceof OperandId;case IDS_ORIGIN_ID->id instanceof OriginId;
+            case IDS_UNCERTAINTY_ID->id instanceof UncertaintyId;case IDS_PREMISE_ID->id instanceof PremiseId;
+            case IDS_RESOURCE_ID->id instanceof ResourceId;case IDS_ARTIFACT_RELATION_ID->id instanceof ArtifactRelationId;
+            default->throw new IllegalArgumentException("validation index domain required");
+        };
+    }
+    private <K extends Id> Iterator<K> identityRows(AirShape domain) {
+        return new Iterator<>() {
+            private long next,identity;
+            public boolean hasNext(){
+                open();while(identity==0&&next<declarations.entities()) {
+                    long candidate=declarations.declaration(next++,SnapshotDeclarations.Fact.IDENTITY);
+                    if(domain==null||snapshot.shape(candidate)==domain)identity=candidate;
+                }
+                return identity!=0;
+            }
+            @SuppressWarnings("unchecked")
+            public K next(){if(!hasNext())throw new NoSuchElementException();long node=identity;identity=0;return (K)read(node,Id.class);}
+        };
+    }
+    final class AddressMap<K extends Id,V> extends AbstractMap<K,V> {
+        private final AirShape domain;
+        private final SnapshotDeclarations.Fact fact;
         private final LongFunction<V> decode;
-        AddressMap(LongFunction<V> decode){this.decode=decode;}
-        void address(K key,long node){addresses.putIfAbsent(key,node);}
-        @Override public V get(Object key){open();var node=addresses.get(key);return node==null?null:decode.apply(node);}
-        @Override public boolean containsKey(Object key){open();return addresses.containsKey(key);}
-        @Override public int size(){open();return addresses.size();}
-        @Override public Set<K> keySet(){open();return Collections.unmodifiableSet(addresses.keySet());}
+        AddressMap(AirShape domain,SnapshotDeclarations.Fact fact,LongFunction<V> decode){this.domain=domain;this.fact=fact;this.decode=decode;}
+        private long address(Object key){open();return key instanceof Id id&&domain(id,domain)?declarations.fact(id,fact):0;}
+        @Override public V get(Object key){long node=address(key);return node==0?null:decode.apply(node);}
+        @Override public boolean containsKey(Object key){return address(key)!=0;}
+        @Override public int size(){open();return cardinality(counts[domain.ordinal()]);}
+        @Override public Set<K> keySet(){return Collections.unmodifiableSet(new AbstractSet<>() {
+            public int size(){return AddressMap.this.size();}public boolean contains(Object key){return containsKey(key);}
+            public Iterator<K> iterator(){return identityRows(domain);}
+        });}
         @Override public Set<Map.Entry<K,V>> entrySet(){
             return new AbstractSet<>() {
                 @Override public int size(){return AddressMap.this.size();}
                 @Override public Iterator<Map.Entry<K,V>> iterator(){
-                    var rows=addresses.entrySet().iterator();
+                    Iterator<K> rows=identityRows(domain);
                     return new Iterator<>() {
                         public boolean hasNext(){open();return rows.hasNext();}
-                        public Map.Entry<K,V> next(){open();var row=rows.next();return new SimpleImmutableEntry<>(row.getKey(),decode.apply(row.getValue()));}
+                        public Map.Entry<K,V> next(){open();K key=rows.next();return new SimpleImmutableEntry<>(key,get(key));}
                     };
                 }
             };
-        }
-    }
-    @SuppressWarnings("unchecked")
-    private static <K,V> void address(Map<K,V> map,K key,long node){((SnapshotValidationProgram.AddressMap<K,V>)map).address(key,node);}
-    void index(PublicationIndex index) {
-        for(long at=0;at<declarations.entities();at++) {
-            long node=declarations.declaration(at,SnapshotDeclarations.Fact.NODE),identity=declarations.declaration(at,SnapshotDeclarations.Fact.IDENTITY);
-            var id=read(identity,Id.class);index.add(id);
-            switch(id) {
-                case UnitId unit->address(index.units,unit,node);
-                case ObjectId object->address(index.objects,object,node);
-                case StorageId storage->address(index.storage,storage,node);
-                case EntryId entry->address(index.entries,entry,node);
-                case LabelId label->address(index.sequences,label,node);
-                case OperationId operation->{address(index.operations,operation,node);long label=declarations.declaration(at,SnapshotDeclarations.Fact.SEQUENCE);if(label!=0)index.sequenceOf.put(operation,read(label,LabelId.class));}
-                case OperandId operand->address(index.operands,operand,node);
-                case OriginId origin->address(index.origins,origin,node);
-                case UncertaintyId uncertainty->address(index.uncertainties,uncertainty,node);
-                case PremiseId premise->address(index.premises,premise,node);
-                case ResourceId resource->address(index.resources,resource,node);
-                case ArtifactRelationId relation->address(index.artifactRelations,relation,node);
-                default->{ }
-            }
         }
     }
 }

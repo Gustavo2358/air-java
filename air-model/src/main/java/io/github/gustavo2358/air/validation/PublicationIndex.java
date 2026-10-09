@@ -7,14 +7,14 @@ import java.util.*;
 /** Per-validation identity indexes, built once. No resolution by names or source locations. */
 final class PublicationIndex {
     final ValidationProgram publication;
-    final Set<Id> identities = new LinkedHashSet<>();
+    final Set<Id> identities;
     final Map<UnitId,ValidationProgram.UnitView> units;
     final Map<ObjectId,Memory.ObjectDeclaration> objects;
     final Map<StorageId,Memory.Storage> storage;
     final Map<EntryId,Entries.Entry> entries;
     final Map<LabelId,ValidationProgram.SequenceView> sequences;
     final Map<OperationId,Operation> operations;
-    final Map<OperationId,LabelId> sequenceOf=new LinkedHashMap<>();
+    final Map<OperationId,LabelId> sequenceOf;
     final Map<OperandId,Operand> operands;
     final Map<OriginId,Origins.Origin> origins;
     final Map<UncertaintyId,Evidence.Uncertainty> uncertainties;
@@ -26,6 +26,8 @@ final class PublicationIndex {
     PublicationIndex(ValidationProgram p,ValidationContext context) {
         this.publication=p;this.context=context;
         var nativeProgram=p instanceof SnapshotValidationProgram nativeInput?nativeInput:null;
+        identities=nativeProgram==null?new LinkedHashSet<>():nativeProgram.identities();
+        sequenceOf=nativeProgram==null?new LinkedHashMap<>():nativeProgram.sequenceOfMap();
         units=nativeProgram==null?new LinkedHashMap<>():nativeProgram.unitMap();
         sequences=nativeProgram==null?new LinkedHashMap<>():nativeProgram.sequenceMap();
         objects=map(nativeProgram,Memory.ObjectDeclaration.class);storage=map(nativeProgram,Memory.Storage.class);
@@ -33,9 +35,11 @@ final class PublicationIndex {
         origins=map(nativeProgram,Origins.Origin.class);uncertainties=map(nativeProgram,Evidence.Uncertainty.class);
         premises=map(nativeProgram,Proofs.Premise.class);resources=map(nativeProgram,Interactions.Resource.class);artifactRelations=map(nativeProgram,Artifacts.Relation.class);
     }
-    private static <K,V> Map<K,V> map(SnapshotValidationProgram program,Class<V> type){return program==null?new LinkedHashMap<>():program.map(type);}
+    private static <K extends Id,V> Map<K,V> map(SnapshotValidationProgram program,Class<V> type){return program==null?new LinkedHashMap<>():program.map(type);}
     void build() {
-        if(publication instanceof SnapshotValidationProgram nativeProgram){nativeProgram.index(this);return;}
+        // The native handoff already sealed these exact inventory/ownership checks. Its views
+        // borrow primitive rows; rebuilding a resident full-ID catalogue would duplicate them.
+        if(publication instanceof SnapshotValidationProgram)return;
         add(publication.id());
         for(Origins.Artifact a:publication.artifacts()) add(a.id());
         for(Origins.Origin o:publication.origins()) { add(o.id()); origins.putIfAbsent(o.id(),o); }

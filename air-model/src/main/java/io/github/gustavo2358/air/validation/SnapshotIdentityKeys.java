@@ -3,6 +3,7 @@ package io.github.gustavo2358.air.validation;
 import io.github.gustavo2358.air.model.AirShape;
 import io.github.gustavo2358.air.model.AirSnapshot;
 import io.github.gustavo2358.air.model.AirSnapshotBuilder;
+import io.github.gustavo2358.air.model.Ids.*;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -80,6 +81,51 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
             throw new IllegalStateException("identity traversal produced no key");
         } catch(RuntimeException|Error failure) {failed=true;throw failure;}
         finally {Arrays.fill(nodes,0);Arrays.fill(first,0);Arrays.fill(second,0);}
+    }
+    /**
+     * Exact lookup key for a caller-owned typed ID, in the same catalogue as source IDs.
+     * No typed ID/String is retained or assigned a source handle; buffers are fixed and
+     * the namespace recursion is bounded by the closed official ID/owner schema (five).
+     */
+    public long key(Id id) {
+        open();Objects.requireNonNull(id);
+        try {snapshot.shape(snapshot.root());return typed(id);}
+        catch(RuntimeException|Error failure){failed=true;throw failure;}
+        finally{Arrays.fill(forest,0);}
+    }
+    private long typed(Id id) {
+        AirShape shape=switch(id) {
+            case PublicationId ignored->AirShape.IDS_PUBLICATION_ID;
+            case UnitId ignored->AirShape.IDS_UNIT_ID;
+            case EntryId ignored->AirShape.IDS_ENTRY_ID;
+            case LabelId ignored->AirShape.IDS_LABEL_ID;
+            case OperationId ignored->AirShape.IDS_OPERATION_ID;
+            case OperandId ignored->AirShape.IDS_OPERAND_ID;
+            case ObjectId ignored->AirShape.IDS_OBJECT_ID;
+            case StorageId ignored->AirShape.IDS_STORAGE_ID;
+            case ResourceId ignored->AirShape.IDS_RESOURCE_ID;
+            case ArtifactId ignored->AirShape.IDS_ARTIFACT_ID;
+            case ArtifactRelationId ignored->AirShape.IDS_ARTIFACT_RELATION_ID;
+            case OriginId ignored->AirShape.IDS_ORIGIN_ID;
+            case UncertaintyId ignored->AirShape.IDS_UNCERTAINTY_ID;
+            case PremiseId ignored->AirShape.IDS_PREMISE_ID;
+            case CompletionPortId ignored->AirShape.IDS_COMPLETION_PORT_ID;
+        };
+        if(id instanceof PublicationId)return record(shape,text(0,id.localId(),false),0);
+        long namespace=switch(id) {
+            case EntryId value->typed(value.unit());case LabelId value->typed(value.unit());
+            case OperationId value->typed(value.unit());case ObjectId value->typed(value.unit());
+            case CompletionPortId value->typed(value.unit());
+            case OperandId value->switch(value.owner()) {
+                case OperationOwner owner->record(AirShape.IDS_OPERATION_OWNER,typed(owner.operation()),0);
+                case EntryOwner owner->record(AirShape.IDS_ENTRY_OWNER,typed(owner.entry()),0);
+            };
+            default->typed(id.publication());
+        };
+        return record(shape,namespace,text(0,id.localId(),false));
+    }
+    private long record(AirShape shape,long left,long right) {
+        return positive(storage.intern(RECORD_BASE+shape.ordinal(),left,right,0,0,0,0));
     }
     /** Cached intrinsic atom facts, not model-local or cross-reference validation. */
     public enum AtomFact {
@@ -195,10 +241,15 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
         return known;
     }
     private long text(long handle,boolean integer) {
-        Arrays.fill(forest,0);long length=snapshot.characterCount(handle),offset=0,leaves=0,scalars=0,digits=0;
+        return text(handle,null,integer);
+    }
+    private long text(long handle,String value,boolean integer) {
+        Arrays.fill(forest,0);long length=value==null?snapshot.characterCount(handle):value.length(),offset=0,leaves=0,scalars=0,digits=0;
         boolean unicode=true,nonblank=false,canonical=true,negative=false,firstZero=false;char high=0;int modulo=0;
         while(offset<length) {
-            int count=snapshot.readCharacters(handle,offset,characters,0,(int)Math.min(characters.length,length-offset));
+            int count=(int)Math.min(characters.length,length-offset);
+            if(value==null)count=snapshot.readCharacters(handle,offset,characters,0,count);
+            else value.getChars(Math.toIntExact(offset),Math.toIntExact(offset)+count,characters,0);
             for(int at=0;at<count;at+=16) {
                 int end=Math.min(count,at+16);long a=0,b=0,c=0,d=0;
                 for(int n=at;n<end;n++) {
@@ -221,8 +272,8 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
                             digits++;modulo=(modulo*10+character-'0')&7;
                         }
                     }
-                    long value=(long)character<<((n-at)%4*16);
-                    switch((n-at)/4) {case 0->a|=value;case 1->b|=value;case 2->c|=value;case 3->d|=value;default->throw new AssertionError();}
+                    long packed=(long)character<<((n-at)%4*16);
+                    switch((n-at)/4) {case 0->a|=packed;case 1->b|=packed;case 2->c|=packed;case 3->d|=packed;default->throw new AssertionError();}
                 }
                 long tree=positive(storage.intern(TEXT_LEAF,0,0,a,b,c,d));int level=0;long carry=leaves++;
                 while((carry&1)!=0) {tree=positive(storage.intern(TEXT_PAIR,forest[level],tree,0,0,0,0));forest[level++]=0;carry>>>=1;}
@@ -237,7 +288,7 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
             tree=tree==0?forest[level]:positive(storage.intern(TEXT_PAIR,tree,forest[level],0,0,0,0));
         long sign=integer?(firstZero?0:negative?-1:1):0;
         long result=positive(storage.intern(integer?INTEGER_END:TEXT_END,tree,0,length,unicode?scalars:-1,integer?sign:nonblank?1:0,integer?modulo:0));
-        storage.remember(handle,result);return result;
+        if(value==null)storage.remember(handle,result);return result;
     }
     private static long positive(long key) {if(key<=0)throw new IllegalStateException("positive canonical identity key required");return key;}
     private static boolean identity(AirShape shape) {return AirShape.IDS_ID.accepts(shape)||AirShape.IDS_OPERAND_OWNER.accepts(shape);}

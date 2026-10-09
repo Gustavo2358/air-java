@@ -161,6 +161,75 @@ final class SnapshotValidatorChecks {
         }
     }
 
+    static void generalIndexesBorrowCanonicalIdentityRowsWithoutReadingTheirText() {
+        var raw=new SnapshotGraphChecks.Source();var f=new SnapshotGraphChecks.Fixture(raw);
+        long original=raw.record(AirShape.IDS_ORIGIN_ID,f.id,raw.text("original"));
+        long[] origins=new long[9];origins[0]=raw.record(AirShape.ORIGINS_UNAVAILABLE,original,raw.text("fixture"));
+        var expected=new ArrayList<OriginId>();expected.add(new OriginId(new PublicationId("P"),"original"));
+        for(int n=1;n<origins.length;n++) {
+            String local="𝄞x".repeat(1365)+n;expected.add(new OriginId(new PublicationId("P"),local));
+            long id=raw.record(AirShape.IDS_ORIGIN_ID,f.id,raw.text(local));
+            origins[n]=raw.record(AirShape.ORIGINS_DERIVED,id,raw.list(original),raw.text("fixture"));
+        }
+        raw.replaceField(f.root,8,raw.list(origins));long[] reads={0};
+        var source=new AirSnapshot.Source() {
+            public AirShape shape(long h){return raw.shape(h);}public long length(long h){return raw.length(h);}
+            public long child(long h,long at){
+                if(raw.shape(h)!=AirShape.LIST)return raw.child(h,at);
+                try(var rows=raw.elements(h)){for(long n=0;n<=at;n++)if(!rows.advance())throw new IndexOutOfBoundsException();return rows.value();}
+            }
+            public long scalar(long h){return raw.scalar(h);}
+            public int characters(long h,long at,char[] out,int start,int count){reads[0]+=count;return raw.characters(h,at,out,start,count);}
+            public AirSnapshot.Elements elements(long h){return raw.elements(h);}public void close(){raw.close();}
+        };
+        try(var snapshot=AirSnapshot.attach(source,f.root);var keys=new SnapshotIdentityKeys(snapshot,new SnapshotAtomChecks.Store());
+            var declarations=SnapshotDeclarations.build(snapshot,keys,new SnapshotDeclarationChecks.Store(),Long.MAX_VALUE,Long.MAX_VALUE,(r,i,n)->{throw new AssertionError(r);})) {
+            SnapshotNominalCycles.scan(snapshot,keys,declarations,new SnapshotCycleChecks.Store(),(r,i,n)->{throw new AssertionError(r);});
+            reads[0]=0;var program=SnapshotValidationProgram.afterPrimitiveAdmission(snapshot,declarations);
+            var index=new PublicationIndex(program,new ValidationContext(program,ValidationOptions.defaults()));index.build();
+            eq(0L,reads[0]); // Catalog construction/cardinality must not decode full identity strings.
+            eq(10,index.identities.size());eq(9,index.origins.size());eq(0L,reads[0]);
+            for(var id:expected)eq(true,index.identities.contains(id));eq(0L,reads[0]);
+            eq(false,index.identities.contains(new OriginId(new PublicationId("Q"),expected.getLast().localId())));
+            eq(false,index.identities.contains(new ArtifactId(new PublicationId("P"),expected.getLast().localId())));
+            eq(false,index.origins.containsKey(new OriginId(new PublicationId("P"),"missing")));
+            eq(null,index.origins.get(new OriginId(new PublicationId("P"),"missing")));
+            eq(expected,new ArrayList<>(index.origins.keySet()));
+            eq(expected,index.origins.values().stream().map(Origins.Origin::id).toList());
+            eq(expected.getLast(),index.origins.get(expected.getLast()).id());
+            fails(UnsupportedOperationException.class,()->index.origins.keySet().clear());
+            fails(UnsupportedOperationException.class,()->index.origins.entrySet().iterator().next().setValue(index.origins.get(expected.getFirst())));
+            closeSnapshot(snapshot);fails(IllegalStateException.class,()->index.identities.contains(expected.getFirst()));
+            fails(IllegalStateException.class,()->index.origins.get(expected.getFirst()));
+        }
+        // The general handoff may reuse primitive cycle checks only after they actually ran.
+        for(String rule:List.of("I-36","I-12","I-01")) {
+            var fixture=new Fixtures();fixture.sequence("start",List.of(),fixture.halt("stop"));
+            if(rule.equals("I-36")) {
+                var a=new OriginId(fixture.pub,"a");var b=new OriginId(fixture.pub,"b");
+                fixture.origins.add(new Origins.Derived(a,List.of(b),"fixture"));
+                fixture.origins.add(new Origins.Derived(b,List.of(a),"fixture"));
+            } else if(rule.equals("I-12")) {
+                fixture.alias("a",new ObjectId(fixture.unit,"b"),Fixtures.known(Types.Builtin.TEXT));
+                fixture.alias("b",new ObjectId(fixture.unit,"a"),Fixtures.known(Types.Builtin.TEXT));
+            }
+            var publication=fixture.build();
+            if(rule.equals("I-01")) {
+                var unit=publication.units().getFirst();
+                var changed=new Unit(unit.id(),Optional.of(unit.id()),unit.objects(),unit.visibleObjects(),unit.entries(),unit.sequences(),unit.completionPorts(),unit.body(),unit.bodyUnavailable(),unit.coverage(),unit.origin());
+                publication=new Publication(publication.id(),publication.airVersion(),publication.capabilities(),publication.artifacts(),List.of(changed),publication.storage(),publication.resources(),publication.artifactRelations(),publication.origins(),publication.coverage(),publication.uncertainties(),publication.premises());
+            }
+            eq(ValidationResult.Status.INVALID_IR,AirValidator.validate(publication).status());
+            try(var checked=SnapshotValidator.check(AirSnapshot.fromPublication(publication),ValidationOptions.defaults(),new Stores())) {
+                eq(ValidationResult.Status.INVALID_IR,checked.result().status());
+                if(checked.result().issues().stream().noneMatch(issue->issue.rule().equals(rule)))throw new AssertionError("missing primitive cycle "+rule);
+                eq(false,checked.result().diagnostics().traversalCompleted());
+            }
+        }
+    }
+
+    private static void closeSnapshot(AirSnapshot snapshot){snapshot.close();}
+
     static void invocationOutcomeContradictionsCannotBorrowACompleteCertificate() {
         var base=directVariableCall(false);var call=(Operations.Invoke)base.units().getFirst().sequences().getFirst().terminator();
         for(int size:new int[]{1,4,16,64,256}) {

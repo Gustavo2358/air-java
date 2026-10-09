@@ -37,6 +37,9 @@ final class SnapshotIdentityChecks {
         var storage = new Store();
         try (var snapshot=AirSnapshot.attach(source,1); var index=new SnapshotIdentityKeys(snapshot,storage)) {
             for (int n=0;n<keys.length;n++) keys[n]=index.key(handles[n]);
+            long sourceReads=source.characters;
+            for(int n=0;n<keys.length;n++)if(values.get(n) instanceof Id id)eq(keys[n],index.key(id));
+            eq(sourceReads,source.characters); // Typed queries do not reread source text.
             for (int a=0;a<keys.length;a++) for (int b=0;b<keys.length;b++)
                 eq(values.get(a).equals(values.get(b)),keys[a]==keys[b]);
             long characters=source.characters, tuples=storage.calls;
@@ -87,6 +90,22 @@ final class SnapshotIdentityChecks {
                 closeIndex(index);eq(0L,failing.claimed);eq(AirShape.PUBLICATION,snapshot.shape(1));
             }
         }
+        for(int at:new int[]{0,1,5,100}) {
+            var input=new Source();var store=new Store();store.remaining=at;
+            var typed=new OperandId(new EntryOwner(new EntryId(new UnitId(new PublicationId("p"),"u"),"e")),"long".repeat(500));
+            try(var snapshot=AirSnapshot.attach(input,1);var index=new SnapshotIdentityKeys(snapshot,store)) {
+                eq(store.failure,fails(Denied.class,()->index.key(typed)));
+                fails(IllegalStateException.class,()->index.key(typed));eq(0L,input.characters);
+                eq(AirShape.PUBLICATION,snapshot.shape(1));
+            }
+            eq(0L,store.claimed);eq(true,store.closed);
+        }
+        var input=new Source();var store=new Store();
+        try(var snapshot=AirSnapshot.attach(input,1);var index=new SnapshotIdentityKeys(snapshot,store)) {
+            index.key(new OriginId(new PublicationId("P"),"original"));closeSnapshot(snapshot);
+            fails(IllegalStateException.class,()->index.key(new OriginId(new PublicationId("P"),"original")));
+        }
+        eq(0L,store.claimed);
     }
     private record Node(AirShape shape,Object scalar,long[] fields) { }
     private static final class Source implements AirSnapshot.Source {

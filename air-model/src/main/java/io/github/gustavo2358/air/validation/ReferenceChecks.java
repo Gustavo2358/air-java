@@ -36,7 +36,10 @@ final class ReferenceChecks {
             case Origins.Contractual ignored -> { }
             case Origins.Unavailable ignored -> { }
         }
-        cycleOrigins(); cycleUnits(); cycleAliases();
+        // Only the internal native handoff has already completed SnapshotNominalCycles over
+        // this same immutable snapshot. Resident inputs still execute the original graph checks.
+        // All references above and every remaining general rule below continue independently.
+        if(!(publication instanceof SnapshotValidationProgram)) {cycleOrigins();cycleUnits();cycleAliases();}
 
         for(Evidence.Uncertainty uncertainty:publication.uncertainties()) {
             c.ref(uncertainty.origin(),uncertainty.id());

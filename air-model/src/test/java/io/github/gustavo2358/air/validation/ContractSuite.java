@@ -66,6 +66,7 @@ public final class ContractSuite {
         test("PAGED-ADMISSION declared name policy is not another extension surface",SnapshotValidatorChecks::declaredNamePoliciesAreNotOtherExtensionSurfaces);
         test("PAGED-ADMISSION target possibilities requires unknown domain and capability",SnapshotValidatorChecks::targetPossibilitiesAdmitOnlyUnknownDomainsWithTheDeclaredCapability);
         test("PAGED-ADMISSION general typed rules preserve domain proofs without owning bodies",SnapshotValidatorChecks::generalTypedAdmissionRunsEveryExistingMandatoryRuleWithoutOwningBodies);
+        test("PAGED-ADMISSION general identity catalog borrows canonical rows",SnapshotValidatorChecks::generalIndexesBorrowCanonicalIdentityRowsWithoutReadingTheirText);
         test("PAGED-ADMISSION shared label Entries independently admitted",SnapshotValidatorChecks::sharedLabelEntriesHaveIndependentCompleteAdmission);
         test("PAGED-ADMISSION later Entry checks and incomplete distinct seeds",SnapshotValidatorChecks::sharedLabelAdmissionChecksEveryLaterEntryAndKeepsOtherSeedsIncomplete);
         test("PAGED-ADMISSION direct profile rejects multiple reaching definitions",SnapshotValidatorChecks::multipleDefinitionsCannotBorrowTheDirectCertificate);
