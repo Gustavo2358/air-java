@@ -81,3 +81,37 @@ cases, Java String.isBlank oracles and metadata fault laws are covered. Five siz
 bound and no additional source reads/intern requests. They are finite structural
 curves, not a universal end-to-end latency proof. Local constraints/full admission
 and managed consumer production integration still remain incomplete.
+
+## Fixed exact pair reuse (2026-10-09)
+
+The integrated physical Java21 pressure case reached the application's original
+480-second deadline. A separate CPU profile observes repeated canonical text-pair
+index access in admission and subsequent typed queries; it is diagnostic evidence,
+not a qualified latency run. The existing packed-leaf law now also detects repeated
+probes of an identical immutable pair (RED:63 requests become126 on replay).
+
+A fixed16-slot memo holds only left/right/result canonical keys. The carry level
+selects a slot; a hit requires both complete child keys to match. Wrapped levels,
+other namespaces and different text can evict entries, never establish equality.
+Tuple tags/content, all character inspection, Unicode/scalar/blankness/integer
+summaries and complete identity checking remain unchanged. Canonical keys are
+stable for this owned catalogue's lifetime; failure/close still aborts that owner.
+No caller-owned String, typed ID or input-cardinality history is retained.
+
+The three16-word arrays add384 primitive bytes within the original4096-byte
+control claim. All nine fixed arrays total3084 payload bytes; allowing32 bytes
+per array, alignment and256 bytes for the owner/control leaves this below4096
+under the existing Java21 object-layout envelope. No quota or lease is increased.
+
+The original five text sizes, full source-read counts and collision/equality laws
+remain. An extra2MiB text changes a middle character and forces carry levels to
+wrap slots; source/typed keys remain exact. Failure injection keeps2000 characters
+and all0/1/5/100 positions, with distinct adjacent blocks so the last position is
+still reached after redundant pair requests disappear. All281 model contracts
+passed. Producer FAST passed281 model/145 transport contracts and unchanged
+compiled boundaries in34.534s. Removing child comparisons in a temporary copy
+fails the independent integer-order oracle (expected1/actual0); real sources remain
+unchanged by that challenge. A normal Maven install detected a stale offline-JAR
+versus Maven-classfile mismatch; clean install passed17.359s without bypassing
+the byte check. Consumer backend/pressure qualification remains pending.
+Earlier checkpoint paragraphs retain their scope.

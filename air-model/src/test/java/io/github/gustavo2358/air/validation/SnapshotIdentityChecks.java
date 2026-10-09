@@ -79,8 +79,11 @@ final class SnapshotIdentityChecks {
             eq(AirShape.PUBLICATION,snapshot.shape(1));
         }
         eq(0L,readStorage.claimed);
+        // Keep the original 2000 characters and every denial position. Distinct
+        // adjacent leaves make position 100 reachable even with exact pair reuse.
+        String failureText="abcdefghijklmnopqrstuvwxyz".repeat(77).substring(0,2000);
         for(int at:new int[]{0,1,5,100}) {
-            var failingSource=new Source();long id=failingSource.add(new OperandId(new EntryOwner(new EntryId(new UnitId(new PublicationId("p"),"u"),"e")),"long".repeat(500)));
+            var failingSource=new Source();long id=failingSource.add(new OperandId(new EntryOwner(new EntryId(new UnitId(new PublicationId("p"),"u"),"e")),failureText));
             var failing=new Store();failing.remaining=at;
             try(var snapshot=AirSnapshot.attach(failingSource,1);var index=new SnapshotIdentityKeys(snapshot,failing)) {
                 var first=fails(Denied.class,()->index.key(id));eq(failing.failure,first);
@@ -92,7 +95,7 @@ final class SnapshotIdentityChecks {
         }
         for(int at:new int[]{0,1,5,100}) {
             var input=new Source();var store=new Store();store.remaining=at;
-            var typed=new OperandId(new EntryOwner(new EntryId(new UnitId(new PublicationId("p"),"u"),"e")),"long".repeat(500));
+            var typed=new OperandId(new EntryOwner(new EntryId(new UnitId(new PublicationId("p"),"u"),"e")),failureText);
             try(var snapshot=AirSnapshot.attach(input,1);var index=new SnapshotIdentityKeys(snapshot,store)) {
                 eq(store.failure,fails(Denied.class,()->index.key(typed)));
                 fails(IllegalStateException.class,()->index.key(typed));eq(0L,input.characters);
@@ -112,11 +115,15 @@ final class SnapshotIdentityChecks {
             var source=new Source();var store=new Store();
             var id=new PublicationId("x".repeat(1024*blocks));long handle=source.add(id);
             try(var snapshot=AirSnapshot.attach(source,1);var keys=new SnapshotIdentityKeys(snapshot,store)) {
+                eq(4096L,store.claimed);
                 long key=keys.key(handle);
                 eq((long)id.localId().length(),source.characters); // All content is still inspected.
                 eq(1L,store.leafRequests); // One repeated exact packed leaf, not one lookup per occurrence.
+                if(store.pairRequests>Long.SIZE)throw new AssertionError("repeated canonical text-pair probes: "+store.pairRequests);
                 long rows=store.issued,reads=source.characters;
+                long pairs=store.pairRequests;
                 eq(key,keys.key(id));eq(rows,store.issued);eq(reads,source.characters);
+                eq(pairs,store.pairRequests); // The same complete text reuses its exact immutable pairs.
                 var changed=new PublicationId(id.localId()+"\u0000");long changedHandle=source.add(changed);
                 eq(false,key==keys.key(changedHandle));eq(keys.key(changedHandle),keys.key(changed));
                 eq(false,key==keys.key(new PublicationId(id.localId().substring(0,id.localId().length()-1)+"y")));
@@ -124,6 +131,16 @@ final class SnapshotIdentityChecks {
             }
             eq(0L,store.claimed);eq(true,store.closed);
         }
+        // Carry levels wrap the fixed 16-slot memo; a slot is never identity.
+        var source=new Source();var store=new Store();String text="x".repeat(2*1024*1024);
+        var original=new PublicationId(text);var changed=new PublicationId(text.substring(0,1024*1024)+"y"+text.substring(1024*1024+1));
+        long first=source.add(original),second=source.add(changed);
+        try(var snapshot=AirSnapshot.attach(source,1);var keys=new SnapshotIdentityKeys(snapshot,store)) {
+            long a=keys.key(first),b=keys.key(second);eq(false,a==b);
+            eq(a,keys.key(original));eq(b,keys.key(changed));eq(source.textUnits,source.characters);
+            eq(4096L,store.claimed);
+        }
+        eq(0L,store.claimed);eq(true,store.closed);
     }
     private record Node(AirShape shape,Object scalar,long[] fields) { }
     private static final class Source implements AirSnapshot.Source {
@@ -153,11 +170,11 @@ final class SnapshotIdentityChecks {
     }
     private static final class Store implements SnapshotIdentityKeys.Storage {
         final Map<Long,Long> memo=new HashMap<>();final Map<Tuple,Long> tuples=new HashMap<>();final Map<Long,Tuple> rows=new HashMap<>();
-        final Denied failure=new Denied();long issued,calls,leafRequests,claimed,remaining=Long.MAX_VALUE;
+        final Denied failure=new Denied();long issued,calls,leafRequests,pairRequests,claimed,remaining=Long.MAX_VALUE;
         boolean closed,denyClaim,closeFailure,leaseFailure;
         public long known(long node){return memo.getOrDefault(node,0L);}
         public void remember(long node,long key){if(remaining--==0)throw failure;Long old=memo.putIfAbsent(node,key);if(old!=null&&old!=key)throw new AssertionError("memo identity changed");}
-        public long intern(long tag,long l,long r,long a,long b,long c,long d){calls++;if(tag==1)leafRequests++;if(remaining--==0)throw failure;var tuple=new Tuple(tag,l,r,a,b,c,d);Long old=tuples.get(tuple);if(old!=null)return old;long key=++issued;tuples.put(tuple,key);rows.put(key,tuple);return key;}
+        public long intern(long tag,long l,long r,long a,long b,long c,long d){calls++;if(tag==1)leafRequests++;if(tag==2)pairRequests++;if(remaining--==0)throw failure;var tuple=new Tuple(tag,l,r,a,b,c,d);Long old=tuples.get(tuple);if(old!=null)return old;long key=++issued;tuples.put(tuple,key);rows.put(key,tuple);return key;}
         public long word(long key,int column){var row=rows.get(key);return switch(column){case 0->row.tag();case 1->row.left();case 2->row.right();case 3->row.a();case 4->row.b();case 5->row.c();case 6->row.d();default->throw new IllegalArgumentException("tuple column");};}
         public AirSnapshotBuilder.Lease claim(long bytes){if(denyClaim)throw failure;claimed+=bytes;return new AirSnapshotBuilder.Lease(){boolean released;public void close(){if(released)return;released=true;claimed-=bytes;if(leaseFailure)throw new Denied();}};}
         public void close(){if(closed)return;closed=true;memo.clear();tuples.clear();rows.clear();if(closeFailure)throw failure;}

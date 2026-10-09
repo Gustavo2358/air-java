@@ -37,6 +37,9 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
     private AirSnapshotBuilder.Lease control;
     private char[] characters;
     private long[] forest,nodes,first,second;
+    // Fixed exact pair memo (16 x 3 primitive words), within the same control lease.
+    // The level selects a cache slot only; both immutable child keys must match.
+    private long[] pairLeft,pairRight,pairKeys;
     private int[] positions;
     // Five primitive words (40B), inside the existing 4096B fixed control reservation.
     // A canonical leaf is immutable for this owned catalogue's lifetime. No text/ID is retained.
@@ -50,6 +53,7 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
             snapshot.root();control=Objects.requireNonNull(storage.claim(4096));
             characters=new char[1024];forest=new long[64];nodes=new long[NAMESPACE_DEPTH];
             first=new long[NAMESPACE_DEPTH];second=new long[NAMESPACE_DEPTH];positions=new int[NAMESPACE_DEPTH];
+            pairLeft=new long[16];pairRight=new long[16];pairKeys=new long[16];
         } catch(RuntimeException|Error failure) {closeSuppressed(failure);throw failure;}
     }
     /** Complete ID or operand-owner key. Memoized source nodes perform no character re-read. */
@@ -279,7 +283,7 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
                     switch((n-at)/4) {case 0->a|=packed;case 1->b|=packed;case 2->c|=packed;case 3->d|=packed;default->throw new AssertionError();}
                 }
                 long tree=leaf(a,b,c,d);int level=0;long carry=leaves++;
-                while((carry&1)!=0) {tree=positive(storage.intern(TEXT_PAIR,forest[level],tree,0,0,0,0));forest[level++]=0;carry>>>=1;}
+                while((carry&1)!=0) {tree=pair(forest[level],tree,level);forest[level++]=0;carry>>>=1;}
                 forest[level]=tree;
             }
             offset+=count;
@@ -288,7 +292,7 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
         if(high!=0){unicode=false;nonblank=true;}
         long tree=0;
         for(int level=forest.length-1;level>=0;level--)if(forest[level]!=0)
-            tree=tree==0?forest[level]:positive(storage.intern(TEXT_PAIR,tree,forest[level],0,0,0,0));
+            tree=tree==0?forest[level]:pair(tree,forest[level],level);
         long sign=integer?(firstZero?0:negative?-1:1):0;
         long result=positive(storage.intern(integer?INTEGER_END:TEXT_END,tree,0,length,unicode?scalars:-1,integer?sign:nonblank?1:0,integer?modulo:0));
         if(value==null)storage.remember(handle,result);return result;
@@ -298,6 +302,12 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
         long key=positive(storage.intern(TEXT_LEAF,0,0,a,b,c,d));
         leafA=a;leafB=b;leafC=c;leafD=d;leafKey=key;return key;
     }
+    private long pair(long left,long right,int level) {
+        int slot=level&(pairKeys.length-1);
+        if(pairKeys[slot]!=0&&pairLeft[slot]==left&&pairRight[slot]==right)return pairKeys[slot];
+        long key=positive(storage.intern(TEXT_PAIR,left,right,0,0,0,0));
+        pairLeft[slot]=left;pairRight[slot]=right;pairKeys[slot]=key;return key;
+    }
     private static long positive(long key) {if(key<=0)throw new IllegalStateException("positive canonical identity key required");return key;}
     private static boolean identity(AirShape shape) {return AirShape.IDS_ID.accepts(shape)||AirShape.IDS_OPERAND_OWNER.accepts(shape);}
     private void open() {if(storage==null||failed)throw new IllegalStateException("snapshot identity index is closed or aborted");}
@@ -305,6 +315,7 @@ public final class SnapshotIdentityKeys implements AutoCloseable {
         if(storage==null)return;
         Storage owner=storage;storage=null;AirSnapshotBuilder.Lease lease=control;control=null;
         characters=null;forest=null;nodes=null;first=null;second=null;positions=null;
+        pairLeft=pairRight=pairKeys=null;
         leafA=leafB=leafC=leafD=leafKey=0;
         Throwable primary=null;
         try {owner.close();}catch(RuntimeException|Error failure){primary=failure;}
