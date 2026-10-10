@@ -29,6 +29,9 @@ final class SnapshotValidationProgram implements ValidationProgram {
         return new SnapshotValidationProgram(snapshot,declarations,visible);
     }
     boolean objectVisible(UnitId unit,ObjectId object){open();return visible.contains(unit,object);}
+    /** Full nominal lookup returns the canonical source identity address,not a hash.
+     * Zero means absent; callers must not merge unrelated missing identities. */
+    long identityAddress(Id identity){open();return declarations.fact(identity,SnapshotDeclarations.Fact.IDENTITY);}
     private void open(){snapshot.shape(snapshot.root());}
     private long field(long node,int at){return snapshot.field(node,snapshot.shape(node),at);}
     private <T> T read(long node,Class<T> type){return reader.read(node,type);}

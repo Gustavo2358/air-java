@@ -56,6 +56,7 @@
     "PAGED-ADMISSION general typed rules preserve domain proofs without owning bodies",
     "PAGED-ADMISSION general identity catalog borrows canonical rows",
     "PAGED-ADMISSION native visibility borrows canonical pairs",
+    "PAGED-ADMISSION native type and proof keys borrow complete operand owners",
     "PAGED-ADMISSION shared label Entries independently admitted",
     "PAGED-ADMISSION later Entry checks and incomplete distinct seeds",
     "PAGED-ADMISSION direct profile rejects multiple reaching definitions",

@@ -47,6 +47,17 @@ final class DomainRetentionChecks {
         var fresh=new ArrayList<ObjectId>();for(int n=0;n<32;n++)fresh.add(isolated(f,"fresh-"+n,Fixtures.known(Types.Builtin.TEXT),reason));
         var different=isolated(f,"different",Fixtures.known(Types.Builtin.INT),reason);
         var context=new ValidationContext(f.build(),ValidationOptions.defaults());context.index.build();
+        lateRegistrationQueries(context,f,left,unrelated,different,fresh);
+        try(var snapshot=AirSnapshot.fromPublication(f.build());
+            var keys=new SnapshotIdentityKeys(snapshot,new SnapshotAtomChecks.Store());
+            var declarations=SnapshotDeclarations.build(snapshot,keys,new SnapshotDeclarationChecks.Store(),Long.MAX_VALUE,Long.MAX_VALUE,(r,i,n)->{throw new AssertionError(r);});
+            var visible=SnapshotVisibleObjects.build(snapshot,keys,new SnapshotVisibleChecks.Store())) {
+            SnapshotNominalCycles.scan(snapshot,keys,declarations,new SnapshotCycleChecks.Store(),(r,i,n)->{throw new AssertionError(r);});
+            var nativeContext=new ValidationContext(SnapshotValidationProgram.afterPrimitiveAdmission(snapshot,declarations,visible),ValidationOptions.defaults());nativeContext.index.build();
+            lateRegistrationQueries(nativeContext,f,left,unrelated,different,fresh);
+        }
+    }
+    private static void lateRegistrationQueries(ValidationContext context,Fixtures f,ObjectId left,ObjectId unrelated,ObjectId different,List<ObjectId> fresh) {
         var domains=new DomainProofEngine(context,new TypeResolver(context));domains.initialize();
         var local=new OperationSite(f.op("stop"));var outside=new OperationSite(f.op("elsewhere"));
         for(var id:fresh) {
@@ -89,6 +100,67 @@ final class DomainRetentionChecks {
             new Memory.UnknownBinding(new Scopes.VisibleMemory(f.unit,true),reason),Memory.Visibility.PRIVATE,
             f.origin,Evidence.CoverageStatus.MODELED,f.precision()));
         return id;
+    }
+    static void nativeTypeAndProofKeysBorrowCompleteOperandOwners() {
+        var f=new Fixtures();var text=f.object("text",Fixtures.known(Types.Builtin.TEXT));var integer=f.object("integer",Fixtures.known(Types.Builtin.INT));
+        var instructions=new ArrayList<Instruction>();
+        for(int at=0;at<16;at++) {
+            String name="cold-operation-owner-"+"x".repeat(4096)+"/"+at;var id=f.op(name);
+            Expression value=at%2==0?f.text(id,"value","TEXT"):f.integer(id,"value",7,Operand.Role.VALUE_READ);
+            instructions.add(f.assign(name,at%2==0?text:integer,value));
+        }
+        f.sequence("start",instructions,f.halt("stop"));var publication=f.build();var expected=AirValidator.validate(publication);
+        eq(ValidationResult.Status.STRUCTURALLY_VALID,expected.status());eq(List.of(),expected.issues());
+        TypeResolver borrowedTypes;DomainProofEngine borrowedDomains;
+        try(var snapshot=AirSnapshot.fromPublication(publication);
+            var keys=new SnapshotIdentityKeys(snapshot,new SnapshotAtomChecks.Store());
+            var declarations=SnapshotDeclarations.build(snapshot,keys,new SnapshotDeclarationChecks.Store(),Long.MAX_VALUE,Long.MAX_VALUE,(r,i,n)->{throw new AssertionError(r);});
+            var visible=SnapshotVisibleObjects.build(snapshot,keys,new SnapshotVisibleChecks.Store())) {
+            SnapshotNominalCycles.scan(snapshot,keys,declarations,new SnapshotCycleChecks.Store(),(r,i,n)->{throw new AssertionError(r);});
+            var program=SnapshotValidationProgram.afterPrimitiveAdmission(snapshot,declarations,visible);
+            var context=new ValidationContext(program,ValidationOptions.defaults());context.index.build();new ReferenceChecks(context).run();
+            borrowedTypes=new TypeResolver(context);
+            for(var operand:context.index.operands.values())borrowedTypes.type(operand);
+            eq(0,retainedOwnerTexts(borrowedTypes.types));
+            borrowedDomains=new DomainProofEngine(context,borrowedTypes);borrowedDomains.initialize();
+            var first=(Operations.Assign)instructions.get(0);var second=(Operations.Assign)instructions.get(1);
+            var site=new OperationSite(first.header().id());
+            eq(true,borrowedDomains.same(new OperandDomain(first.destination().header().id()),new OperandDomain(first.value().header().id()),site));
+            eq(false,borrowedDomains.same(new OperandDomain(first.destination().header().id()),new OperandDomain(second.value().header().id()),site));
+            for(var instruction:instructions) {
+                var assign=(Operations.Assign)instruction;
+                eq(true,borrowedDomains.same(new OperandDomain(assign.destination().header().id()),new OperandDomain(assign.value().header().id()),new OperationSite(assign.header().id())));
+            }
+            for(var field:DomainProofEngine.class.getDeclaredFields())if(!java.lang.reflect.Modifier.isStatic(field.getModifiers())&&!Set.of("c","types","scopes").contains(field.getName())) {
+                try{field.setAccessible(true);eq(0,retainedOwnerTexts(field.get(borrowedDomains)));}catch(ReflectiveOperationException failure){throw new AssertionError(failure);}
+            }
+            var missingA=new OperandId(new OperationOwner(first.header().id()),"Aa");var missingB=new OperandId(new OperationOwner(first.header().id()),"BB");
+            eq(missingA.hashCode(),missingB.hashCode());eq(false,missingA.equals(missingB));
+            eq(false,borrowedDomains.same(new OperandDomain(missingA),new OperandDomain(missingB),site));
+            eq(true,borrowedDomains.same(new OperandDomain(missingA),new OperandDomain(missingA),site));
+            var foreign=new OperandId(new OperationOwner(new OperationId(new UnitId(f.pub,"foreign-unit"),first.header().id().localId())),"Aa");
+            eq(false,borrowedDomains.same(new OperandDomain(missingA),new OperandDomain(foreign),site));
+            eq(List.of(),context.issues);eq(expected,AirValidator.validate(program,ValidationOptions.defaults()));
+        }
+        var types=borrowedTypes;var domains=borrowedDomains;var first=(Operations.Assign)instructions.getFirst();
+        expired(()->types.type(first.value()));expired(()->domains.same(new OperandDomain(first.destination().header().id()),new OperandDomain(first.value().header().id()),new OperationSite(first.header().id())));
+    }
+    private static void expired(Runnable action){try{action.run();}catch(IllegalStateException expected){return;}throw new AssertionError("expired admission accepted");}
+    /** Inspect stored keys/rows only,never expand borrowed ValidationContext/source inventories. */
+    private static int retainedOwnerTexts(Object root) {
+        var pending=new ArrayDeque<Object>();if(root!=null)pending.add(root);var seen=Collections.newSetFromMap(new IdentityHashMap<Object,Boolean>());int count=0;
+        while(!pending.isEmpty()) {
+            var value=pending.removeFirst();if(!seen.add(value))continue;
+            if(value instanceof String text&&text.startsWith("cold-operation-owner-")){count++;continue;}
+            if(value instanceof Optional<?> optional){optional.ifPresent(pending::add);continue;}
+            if(value instanceof Map<?,?> map){for(var entry:map.entrySet()){if(entry.getKey()!=null)pending.add(entry.getKey());if(entry.getValue()!=null)pending.add(entry.getValue());}continue;}
+            if(value instanceof Iterable<?> items){for(var item:items)if(item!=null)pending.add(item);continue;}
+            for(var owner=value.getClass();owner!=null&&owner.getName().startsWith("io.github.gustavo2358.");owner=owner.getSuperclass())
+                for(var field:owner.getDeclaredFields())if(!java.lang.reflect.Modifier.isStatic(field.getModifiers())&&!field.getType().isPrimitive()) {
+                    try{field.setAccessible(true);var item=field.get(value);if(item!=null)pending.add(item);}catch(ReflectiveOperationException failure){throw new AssertionError(failure);}
+                }
+        }
+        return count;
     }
     private static Set<?> registered(DomainProofEngine engine) {
         try {var field=DomainProofEngine.class.getDeclaredField("registered");field.setAccessible(true);

@@ -36,6 +36,16 @@ final class PublicationIndex {
         premises=map(nativeProgram,Proofs.Premise.class);resources=map(nativeProgram,Interactions.Resource.class);artifactRelations=map(nativeProgram,Artifacts.Relation.class);
     }
     private static <K extends Id,V> Map<K,V> map(SnapshotValidationProgram program,Class<V> type){return program==null?new LinkedHashMap<>():program.map(type);}
+    /** Native internal key borrows one canonical declaration address. Missing IDs
+     * retain complete typed identity so invalid queries never alias a zero key. */
+    Object identityAddress(Id identity){
+        Objects.requireNonNull(identity);
+        if(publication instanceof SnapshotValidationProgram nativeProgram){
+            long address=nativeProgram.identityAddress(identity);if(address!=0)return address;
+        }
+        return identity;
+    }
+    boolean nativeIdentityAddresses(){return publication instanceof SnapshotValidationProgram;}
     void build() {
         // The native handoff already sealed these exact inventory/ownership checks. Its views
         // borrow primitive rows; rebuilding a resident full-ID catalogue would duplicate them.
