@@ -67,3 +67,84 @@ string byte array, encoded-string cache or publication history is introduced.
 Independent literal bytes, all delimiter/control/non-ASCII boundaries and runs
 across buffer lengths define the oracle before implementation. Byte and streaming
 APIs use the same run rule, then whole-output digest and runtime comparisons.
+
+## Native general admission: identity and proof inventory
+
+General native visibility borrows the complete admitted canonical UnitId/ObjectId
+pair relation until the general rules finish; it does not construct a second set
+of decoded object identities. Resident validation still builds its original set.
+Exact typed queries preserve publication/unit namespaces and fail closed when the
+borrowed source or relation expires. The handoff remains internal, after the
+mandatory primitive checks; it never promotes invalid or incomplete admission.
+
+Object, Cell and operand domain subjects are registered when a binding, operand
+link, premise or query needs them. All reference/type scans, binding links and
+premises still run. Known domains append to the existing exact type component
+without renaming its root, so scoped overlays remain valid after later queries.
+Choice normalization registers every visited subject; unknown types are never
+unification keys. Contract laws preserve aliases, concrete type differences,
+shared-unknown negatives, local authority obligations and outside-scope rejection.
+Signature indexes, connected proof graphs and scoped caches remain resident;
+this is not a claim of complete spill coverage.
+
+Canonical identity construction reuses the immediately preceding exact packed
+16-UTF16 leaf using five fixed primitive words, within the existing 4096-byte
+control lease. Every character is still inspected, and length, Unicode, integer
+facts and complete namespaces are unchanged. No String/Id query cache is added.
+The repeated-leaf law covers 1024..262144 characters plus exact-content negatives;
+the existing complete namespace, collision and failure laws remain mandatory.
+
+The integrated 407529903-byte object-identity input completed through the public
+production pipeline with a 128MiB JVM heap, unchanged managed quotas and eight-
+minute application deadline in 373.204 seconds. An independent oracle compared
+all 21 wire fields (work metrics separately), all 87 original origins and CFG
+against the frozen reference. This observation qualifies that input, not every
+cardinality or the remaining campaign. Producer FAST: 281 model/145 transport
+checks and original compiled module/JAR boundaries; no full/corpus claim here.
+
+## Native type/proof identity addresses (pre-code)
+
+The next integrated consumer counterexample changes only16 Assign IDs and their
+operand owners to3000000 characters,144490643 AIR bytes. Complete resident fixture
+validation keeps67 operations/337 entities/140 operands/66 domain queries and the
+same two historical I-56 obligations. The actual native physical CLI on650a5466,
+Java21/Xmx128m/original eight-minute quotas,failed with heap OOM in47.24s while
+DomainProofEngine.initialize reopened operations. TypeResolver already retained
+full OperandId keys from its mandatory type pass; proof subjects and per-site graph
+cache keys would regain more full identities. This is an admission retention
+defect,not justification to skip cold code,types,links or queries.
+
+Under normative AIR4f09e8b1,02§1.1–1.4/I-08/I-52,internal native type/proof keys may
+borrow the canonical declaration identity address resolved through the full typed
+nominal ID. Subject kind,signature direction,complete position and associated Entry
+must remain in the proof key. Region kind and full canonical owner remain distinct.
+Unknown/missing identities retain their explicit typed key rather than sharing zero;
+hashes and display text never establish equality. Existing resident validation keeps
+its ordinary ID/subject keys. No public AIR/schema/rule/API change is intended
+(COMPATIBLE); invalid,unknown,outside-scope and contradictory proofs remain negative.
+
+The existing exact graph and bottom-up type rules remain unchanged. Only their
+internal identity representation changes; all traversals,links,scope overlays and
+diagnostic order still execute. Same-owner numeric addresses are run-local,not
+exported identities. Lookup checks the borrowed admission lifetime. Structural
+stored-key tests and exact resident/native positive/negative results define the
+oracle before implementation. Graph/value cardinality is still resident and this
+does not complete spill coverage; the same large public CLI must be repeated under
+unchanged limits and compared with the pre-fix consumer reference.
+
+The native law is independently RED32 stored owner texts in TypeResolver; after
+only the type-key correction,it is still RED32 in the proof graph. Both are
+preserved. Canonical keys now remove those copies from types,registered subjects,
+graph parents and per-site caches. Signature maps borrow canonical Entry/Invoke
+identities too; subject kind,direction,Entry binding and complete BigInteger position
+stay explicit. Tests preserve distinct TEXT/INT domains,late scoped registration,
+outside-scope rejection,missing equal-hash identities,foreign owners,reflexivity,
+exact resident/native ValidationResult and expired-owner rejection. The explicit
+resident route retains its existing identity/subject keys. Graphs,scope-premise
+bodies and type values still have resident cardinality; no complete spill claim.
+Original coherent producer FAST PASS29.983s:282 model/145 transport checks,
+484 compiled classfiles/7748 dependencies,offline reactor and44 harness tests.
+All eight frozen source/test/doc/inventory inputs match afterwards. The same large
+public physical case remains pending consumer repin and integration;its prior OOM
+has not been relabeled PASS. No API,specification,rule,quota or fixture dimension
+changed.

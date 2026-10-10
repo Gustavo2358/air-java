@@ -8,6 +8,7 @@
   "checks": [
     "bounded ASCII runs preserve literal bytes",
     "stream output golden admission and ownership",
+    "managed stream input physical binding admission and ownership",
     "decode scopes have exact per-read ownership",
     "decode scheduling preserves facts diagnostics and isolation",
     "binding record field indexes have bounded ownership",
@@ -78,7 +79,8 @@
     "local AIR constraints and Java representability limits stay distinct",
     "closed tokens are checked explicitly",
     "process timestamp and private model fields forbidden",
-    "valid Halt unsupported and Return never silently changed",
+    "Halt literal NORMAL ABNORMAL wire and snapshot preserve every field",
+    "Halt multiplicity strict fields and instruction placement",
     "ordinary operation as terminator and Return as instruction invalid",
     "deferred forms fail explicitly without partial materialization",
     "capability nonempty manifest distinguished from invalid AIR",

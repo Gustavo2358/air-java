@@ -2,6 +2,8 @@ package io.github.gustavo2358.air.json;
 
 import io.github.gustavo2358.air.model.Publication;
 import io.github.gustavo2358.air.model.SemanticVersion;
+import io.github.gustavo2358.air.model.AirSnapshot;
+import io.github.gustavo2358.air.model.AirSnapshotBuilder;
 import io.github.gustavo2358.air.validation.AirValidator;
 import io.github.gustavo2358.air.validation.ValidationIssue;
 import io.github.gustavo2358.air.validation.ValidationOptions;
@@ -15,6 +17,25 @@ import static io.github.gustavo2358.air.json.AirJsonException.Code.*;
  * Stateless and thread safe. Admission failures expose no facts/bytes; stream I/O failure may leave a prefix. Partial transport is opt-in.
  */
 public final class AirJson {
+    /** Managed physical JSON staging, not ownership/accounting of the returned resident model. */
+    public interface InputStorage extends AutoCloseable {
+        // Frozen token schema: eight NODES words per positive token, (token-1)*8.
+        // 0 kind(OBJECT0/ARRAY1/TEXT2/TRUE3/FALSE4/NULL5),1 property-name text token,
+        // 3 child count,4 decoded UTF-16 start,5 UTF-16 count; other words reserved0.
+        // CHARACTERS packs four UTF-16 units per word, least significant unit first.
+        // FRAMES is a managed transient two-word (container,state) column per depth.
+
+        enum Column { NODES, CHARACTERS, FRAMES }
+        long get(Column column,long index);
+        void set(Column column,long index,long value);
+        /** Exact append-only (parent,ordinal) index; random reads must avoid sibling-prefix replay. */
+        void child(long parent,long ordinal,long child);
+        long child(long parent,long ordinal);
+        /** Exact decoded UTF-16 property equality within an object, including escaped spellings. */
+        boolean firstField(long parent,long nameToken);
+        io.github.gustavo2358.air.model.AirSnapshotBuilder.Lease claim(long bytes);
+        @Override void close();
+    }
     /** Operational bounds, not AIR cardinality or integer validity rules. */
     public record Limits(int maximumDocumentBytes, int maximumDepth) {
         public Limits {
@@ -116,6 +137,41 @@ public final class AirJson {
         try (var blocks = new OrderedBlocks(decodeOptions.bindingParallelism())) {
             publication = new BindingReader(blocks).envelope(wire);
         }
+        return checkBound(publication,partialAnalysis);
+    }
+    /** Reads incrementally into managed staging; borrows input and transfers/closes storage. */
+    public AirValidator.CheckedPublication decodeChecked(java.io.InputStream input,InputStorage storage)throws java.io.IOException {
+        return decodeChecked(input,storage,false);
+    }
+    public AirValidator.CheckedPublication decodeCheckedForPartialAnalysis(java.io.InputStream input,InputStorage storage)throws java.io.IOException {
+        return decodeChecked(input,storage,true);
+    }
+    private AirValidator.CheckedPublication decodeChecked(java.io.InputStream input,InputStorage storage,boolean partialAnalysis)throws java.io.IOException {
+        try(var staged=PagedJson.parse(input,limits,storage);var blocks=new OrderedBlocks(decodeOptions.bindingParallelism())) {
+            return checkBound(new BindingReader(blocks).envelope(staged.node(staged.root())),partialAnalysis);
+        }
+    }
+    /**
+     * Builds official typed storage directly from managed physical staging, without constructing a
+     * Publication. The direct binder covers every wire form admitted by the resident binding reader;
+     * unsupported binding forms retain explicit implementation-limit outcomes. The returned snapshot
+     * is typed storage, not a validation certificate; callers must run complete snapshot admission.
+     */
+    public AirSnapshot decodeSnapshot(java.io.InputStream input,InputStorage inputStorage,
+                                      AirSnapshotBuilder.Storage snapshotStorage)throws java.io.IOException {
+        Objects.requireNonNull(input,"input");Objects.requireNonNull(inputStorage,"inputStorage");
+        Objects.requireNonNull(snapshotStorage,"snapshotStorage");
+        AirSnapshotBuilder builder;
+        try { builder=new AirSnapshotBuilder(snapshotStorage); }
+        catch(RuntimeException|Error failure) {
+            try { inputStorage.close(); } catch(RuntimeException|Error cleanup) { if(cleanup!=failure)failure.addSuppressed(cleanup); }
+            throw failure;
+        }
+        try(builder;var staged=PagedJson.parse(input,limits,inputStorage)) {
+            return new SnapshotBindingReader(builder).envelope(staged.node(staged.root()));
+        }
+    }
+    private AirValidator.CheckedPublication checkBound(Publication publication,boolean partialAnalysis) {
         // Validate capability use only after the complete typed payload is available.
         var names = io.github.gustavo2358.air.model.NamePolicies.extensions(publication);
         for (var capabilities : java.util.List.of(publication.capabilities().required(), publication.capabilities().provided()))

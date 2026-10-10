@@ -8,28 +8,29 @@ import static io.github.gustavo2358.air.model.Types.*;
 /** Only type signatures are checked. No constant propagation, name lookup or runtime inference. */
 final class TypeResolver {
     final ValidationContext c;
-    final Map<OperandId, Optional<TypeRef>> types = new LinkedHashMap<>();
+    final Map<Object, Optional<TypeRef>> types = new LinkedHashMap<>();
     TypeResolver(ValidationContext c) { this.c=c; }
     Optional<TypeRef> type(Operand operand) {
-        Optional<TypeRef> cached=types.get(operand.header().id()); if(cached!=null) return cached;
-        Set<OperandId> active=new HashSet<>();
+        Optional<TypeRef> cached=types.get(key(operand.header().id())); if(cached!=null) return cached;
+        Set<Object> active=new HashSet<>();
         Walk.run(operand,0,Operands::children,new Walk.Visitor<Operand>() {
             public boolean enter(Operand node,long depth) {
                 c.depth(depth);
                 // Duplicate/cyclic occurrence IDs were diagnosed by PublicationIndex.
-                return !types.containsKey(node.header().id()) && active.add(node.header().id());
+                Object identity=key(node.header().id());return !types.containsKey(identity) && active.add(identity);
             }
             public void exit(Operand node,long depth) {
                 Optional<TypeRef> result=calculate(node);
                 result.ifPresent(t -> c.type(t,node.header().id()));
-                types.put(node.header().id(),result); active.remove(node.header().id());
+                Object identity=key(node.header().id());types.put(identity,result); active.remove(identity);
             }
         });
         return cached(operand);
     }
     private Optional<TypeRef> cached(Operand operand) {
-        return types.getOrDefault(operand.header().id(),Optional.empty());
+        return types.getOrDefault(key(operand.header().id()),Optional.empty());
     }
+    private Object key(OperandId identity){return c.index.identityAddress(identity);}
     private Optional<TypeRef> calculate(Operand operand) {
         return switch(operand) {
             case Expressions.Literal l -> known(l.value().type());

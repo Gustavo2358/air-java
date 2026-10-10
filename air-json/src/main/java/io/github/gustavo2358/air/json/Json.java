@@ -17,7 +17,7 @@ import static io.github.gustavo2358.air.json.AirJsonException.Code.*;
 /** Physical rules of pinned binding §§3, 5, 6. No model reflection or runtime type names. */
 final class Json {
     private Json() {}
-    sealed interface Value permits Obj, Arr, Text, Bool, Nil, Utf8Input.Node {}
+    sealed interface Value permits Obj, Arr, Text, Bool, Nil, Utf8Input.Node, PagedJson.Node {}
     record Obj(Map<String, Value> fields) implements Value { Obj { fields = Map.copyOf(fields); } }
     record Arr(List<Value> values) implements Value { Arr { if(!(values instanceof MappedArray<?>))values = List.copyOf(values); } }
     record Text(String value) implements Value {}
@@ -285,6 +285,7 @@ final class Json {
                 case Bool bool -> ascii(bool.value() ? "true" : "false");
                 case Nil ignored -> ascii("null");
                 case Utf8Input.Node ignored -> throw new IllegalArgumentException("Input tape is not a writer value");
+                case PagedJson.Node ignored -> throw new IllegalArgumentException("physical input staging is not an output model");
             }
         }
         void octet(int value) {

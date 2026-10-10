@@ -96,6 +96,18 @@ class BytecodeTests(unittest.TestCase):
         with self.assertRaisesRegex(Failure, "Forbidden dependency"):
             inspect_dependencies("   io.github.gustavo2358.air.model.Value -> java.lang.Runtime java.base")
 
+    def test_codec_input_stream_is_confined_to_exact_transport_owners(self):
+        prefix = "io.github.gustavo2358.air.json."
+        for owner in ("AirJson", "PagedJson"):
+            for target in ("java.io.InputStream", "java.io.IOException"):
+                self.assertEqual(1, inspect_dependencies(f"   {prefix}{owner} -> {target} java.base", "air-json"))
+            for target in ("java.io.FileInputStream", "java.nio.file.Path", "java.net.Socket"):
+                with self.subTest(owner=owner, target=target), self.assertRaisesRegex(Failure, "Forbidden dependency"):
+                    inspect_dependencies(f"   {prefix}{owner} -> {target} java.base", "air-json")
+        for source in (prefix + "BindingReader", "io.github.gustavo2358.air.model.Value"):
+            with self.subTest(source=source), self.assertRaisesRegex(Failure, "Forbidden dependency"):
+                inspect_dependencies(f"   {source} -> java.io.InputStream java.base", "air-json" if source.startswith(prefix) else "air-model")
+
     def test_runtime_cpu_query_is_allowed_but_process_and_other_runtime_methods_are_not(self):
         for body, allowed in (("return Runtime.getRuntime().availableProcessors();", True),
                               ("return (int) Runtime.getRuntime().freeMemory();", False),

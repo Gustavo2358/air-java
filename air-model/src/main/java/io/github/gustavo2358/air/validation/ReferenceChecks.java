@@ -15,11 +15,16 @@ final class ReferenceChecks {
     private final Map<ObjectId,Grounding> resolvedGrounding=new HashMap<>();
 
     ReferenceChecks(ValidationContext c) { this.c=c; }
+    boolean objectVisible(UnitId unit,ObjectId object) {
+        if(c.index.publication instanceof SnapshotValidationProgram nativeProgram)
+            return nativeProgram.objectVisible(unit,object);
+        return visible.getOrDefault(unit,Set.of()).contains(object);
+    }
 
     void run() {
-        Publication publication=c.index.publication;
+        var publication=c.index.publication;
         checkCapabilities(publication.capabilities());
-        for(Unit unit:publication.units()) {
+        if(!(publication instanceof SnapshotValidationProgram)) for(var unit:publication.units()) {
             Set<ObjectId> objects=new HashSet<>(unit.visibleObjects());
             for(Memory.ObjectDeclaration object:unit.objects()) objects.add(object.id());
             visible.put(unit.id(),objects);
@@ -36,7 +41,10 @@ final class ReferenceChecks {
             case Origins.Contractual ignored -> { }
             case Origins.Unavailable ignored -> { }
         }
-        cycleOrigins(); cycleUnits(); cycleAliases();
+        // Only the internal native handoff has already completed SnapshotNominalCycles over
+        // this same immutable snapshot. Resident inputs still execute the original graph checks.
+        // All references above and every remaining general rule below continue independently.
+        if(!(publication instanceof SnapshotValidationProgram)) {cycleOrigins();cycleUnits();cycleAliases();}
 
         for(Evidence.Uncertainty uncertainty:publication.uncertainties()) {
             c.ref(uncertainty.origin(),uncertainty.id());
@@ -78,7 +86,7 @@ final class ReferenceChecks {
         }
         coverage(publication.coverage(),publication.id());
 
-        for(Unit unit:publication.units()) {
+        for(var unit:publication.units()) {
             c.ref(unit.origin(),unit.id());
             unit.containingUnit().ifPresent(id -> c.ref(id,unit.id()));
             c.refs(unit.visibleObjects(),unit.id());
@@ -136,7 +144,7 @@ final class ReferenceChecks {
                         c.uncertainty(uninitialized.reason(),null,entry.id());
                 }
             }
-            for(Sequence sequence:unit.sequences()) {
+            for(var sequence:unit.sequences()) {
                 c.ref(sequence.origin(),sequence.label());
                 if(!sequence.label().unit().equals(unit.id()))
                     c.error("I-03",sequence.label(),"sequence owner differs from unit");
@@ -220,7 +228,7 @@ final class ReferenceChecks {
         OperandId id=operand.header().id(); c.ref(operand.header().origin(),id);
         if(operand instanceof Places.ObjectPlace place) {
             c.ref(place.object(),id);
-            if(!visible.getOrDefault(id.owner().unit(),Set.of()).contains(place.object()))
+            if(!objectVisible(id.owner().unit(),place.object()))
                 c.error("I-02",id,"object not explicitly visible in operand unit");
         } else if(operand instanceof Places.Choice choice) {
             c.type(choice.typeRef(),id); executableMemoryBound(choice.remainder(),id,0);
@@ -339,7 +347,7 @@ final class ReferenceChecks {
         if(!qualified(d.classification())||!qualified(d.nameSource())) c.error("I-RB-03",id,"resource classification/nameSource must be qualified");
         var seenObjects=new HashSet<Interactions.ResourceObject>();
         for(var object:d.objects()) {
-            if(!c.index.objects.containsKey(object.object())||!visible.getOrDefault(d.owner(),Set.of()).contains(object.object()))
+            if(!c.index.objects.containsKey(object.object())||!objectVisible(d.owner(),object.object()))
                 c.error("I-RB-01",id,"associated object absent or not explicitly visible to resource owner");
             if(!seenObjects.add(object)) c.error("I-RB-02",id,"duplicate object/role association");
         }
@@ -416,7 +424,8 @@ final class ReferenceChecks {
         }
     }
 
-    void coverage(Evidence.Coverage coverage,Id owner) {
+    void coverage(Evidence.Coverage coverage,Id owner){coverage(ValidationProgram.coverage(coverage),owner);}
+    void coverage(ValidationProgram.CoverageView coverage,Id owner) {
         scope(coverage.scope(),owner); c.refs(coverage.uncertainties(),owner);
         if(coverage.inventory()!=Evidence.InventoryStatus.COMPLETE && coverage.uncertainties().isEmpty())
             c.error("I-28",owner,"partial/unavailable inventory needs explicit reason");

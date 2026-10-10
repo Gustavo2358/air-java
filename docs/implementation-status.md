@@ -249,3 +249,58 @@ tipos e descritores incoerentes; comprimento de caractere não provado gera uma
 obrigação explícita. NumericExpressionChecks verifica round-trip, limites,
 Unicode, campos adversariais e contagens grandes com payload constante.
 A autoridade está fixada no commit corrente de docs/sources.lock.json.
+
+## Snapshot: obrigações de invocação antes da ampliação da admissão
+
+O passe tipado verifica cada Invoke declarado, inclusive órfãos: no máximo um
+normal e um catch-all, unicidade exata de tags, vínculo InternalTarget/EntrySignature,
+posições dos inventários de assinatura, cardinalidades fechadas, papéis e modos
+de transmissão e tipos conhecidos de argumentos/resultados. Resultado exige normal
+explícito. As tags usam a relação gerenciada de tuplas e chaves textuais completas,
+sem hash como identidade; posições arbitrariamente grandes são examinadas em blocos
+de 32 caracteres, sem BigInteger ou texto integral temporário.
+
+Autoridade: AIR 05 §4 e AIR 04/05 assinaturas, no SHA normativo do source lock.
+Impacto COMPATIBLE de correção: entradas contraditórias deixam de obter certificado
+completo. Não muda modelo, API, codec, versões ou a ordem dos passes anteriores.
+O novo passe percorre o inventário declarado uma vez e as listas de cada ocorrência;
+tuplas crescentes permanecem no storage fornecido. Não há prova universal de custo
+linear do backend ou do heap inteiro.
+
+Transmissão com sameDomain por premissa, efeitos por outcome e mustOverwrite ainda
+não têm todas as obrigações migradas. Os certificados direct/correlated exigem
+effectOperands vazios, ausência de perOutcome/mustOverwrite e assinatura externa
+sem posições conhecidas. Inventários vazios podem ser abertos: AIR 04 §7.1 não
+inventa slots a partir do restante desconhecido. Argumentos independentes TEXT
+nominais, literal ou Unknown sem inputs e resultados ObjectPlace TEXT são admitidos
+com os papéis, tipos, referências e normal verificados pelos passes comuns.
+Cardinalidade fechada contraditória continua INVALID_IR. Argumentos compostos,
+posições materializadas e provas de transmissão ainda não migradas não recebem
+certificado por essa regra; permanecem INCOMPLETE_VALIDATION. Não convertem campos
+não verificados em validade. A proteção inicial de `7e3d0f0` era excessiva nesse
+caso aberto e regredia uma obrigação da CLI; o oracle antigo foi preservado.
+Os limites completos de admissão permanecem; isto não é suporte geral de dataflow.
+Oráculos positivos e negativos incluem tags com colisão Aa/BB, cinco geometrias,
+tipos/papéis/modos/cardinalidades e posição de 4.097 dígitos. Os resultados residentes
+são comparados, mas I-60/I-08/I-11 e os sites esperados são escritos independentemente.
+
+## Snapshot: conjunto geral de regras sobre views tipadas (2026-10-09)
+
+O limite de admissão dos perfis acima foi substituído prospectivamente: fora dos
+certificados direct/correlated, `SnapshotValidator` executa o mesmo conjunto de
+ReferenceChecks, TypeResolver, DomainProofEngine e OperationChecks de AirValidator
+sobre `ValidationProgram`. As views nativas e índices de endereços emprestam o
+snapshot; não reconstruem Publication, Unit, Sequence ou Coverage agregadas.
+`SnapshotOccurrenceReader` é a leitura oficial explícita de uma ocorrência.
+
+Não se infere validade da ausência de diagnósticos do passe parcial. Entradas
+localmente inválidas, capacidades não suportadas e limites operacionais não são
+promovidos. Obrigações indecididas continuam INCOMPLETE_VALIDATION. Os contratos
+cobrem múltiplas definições, política de nome declarada, target.possibilities,
+unknown_type sem prova sameDomain e a obrigação real de um slice calculado.
+Known(INT) não vira target TEXT e incerteza compartilhada não é prova de domínio.
+
+Limite PARTIAL: índices de IDs/endereços e caches da prova geral ainda são
+residentes; uma ocorrência solicitada é materializada temporariamente. A extensão
+de admissão não qualifica heap/spill global nem implementa dataflow. FAST local:
+277 contratos do modelo, 145 contratos do transporte e fronteiras compiladas.

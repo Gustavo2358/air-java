@@ -135,6 +135,9 @@ final class BindingWriter {
                 "terminator", operation(s.terminator()), "origin", id(s.origin()));
     }
     private Value operation(Terminator t) {
+        if (t instanceof Operations.Halt h)
+            return object("kind", "halt", "header", header(h.header()), "haltKind",
+                    switch(h.haltKind()){case NORMAL -> "NORMAL";case ABNORMAL -> "ABNORMAL";});
         if (t instanceof Operations.Jump j)
             return object("kind", "jump", "header", header(j.header()), "destination", id(j.destination()));
         if (t instanceof Operations.Branch b)

@@ -13,7 +13,8 @@ final class ValidationContext {
     boolean traversalCompleted=true;
     final Set<Capabilities.Capability> required;
     final Set<Capabilities.Capability> namePolicies;
-    ValidationContext(Publication p,ValidationOptions options) { this.options=options; this.index=new PublicationIndex(p,this); this.required=new HashSet<>(p.capabilities().required()); this.namePolicies=NamePolicies.extensions(p); }
+    ValidationContext(Publication p,ValidationOptions options) {this(ValidationProgram.resident(p),options);}
+    ValidationContext(ValidationProgram p,ValidationOptions options) { this.options=options; this.index=new PublicationIndex(p,this); this.required=new HashSet<>(p.capabilities().required()); this.namePolicies=p.namePolicies(); }
     void depth(long depth) { if(depth>options.maximumNesting()) throw new Limit("nesting limit"); }
     void error(String rule,Id id,String message) { issue(ValidationIssue.Kind.INVALID_IR,rule,id,message); }
     void obligation(String rule,Id id,String message) { issue(ValidationIssue.Kind.SEMANTIC_OBLIGATION,rule,id,message); }

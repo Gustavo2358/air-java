@@ -55,6 +55,7 @@ final class BindingReader {
             var known=cachedObject;if(known!=null)return known;
             if (value instanceof Json.Obj o) return cachedObject=o.fields();
             if (value instanceof Utf8Input.Node n && n.object()) return cachedObject=n.fields();
+            if (value instanceof PagedJson.Node n && n.object()) return cachedObject=n.fields();
             throw Json.input(path(), "Expected object");
         }
         At child(String key) {
@@ -80,16 +81,19 @@ final class BindingReader {
         String text() {
             if (value instanceof Json.Text t) return t.value();
             if (value instanceof Utf8Input.Node n) { var text=n.text();if(text!=null)return text; }
+            if (value instanceof PagedJson.Node n && n.textValue())return n.text();
             throw Json.input(path(), "Expected string");
         }
         boolean bool() {
             if (value instanceof Json.Bool b) return b.value();
             if (value instanceof Utf8Input.Node n) { var bool=n.bool();if(bool!=null)return bool; }
+            if (value instanceof PagedJson.Node n) {var bool=n.bool();if(bool!=null)return bool;}
             throw Json.input(path(), "Expected boolean");
         }
         List<Json.Value> array() {
             if (value instanceof Json.Arr a) return a.values();
             if (value instanceof Utf8Input.Node n && n.array())return n.values();
+            if (value instanceof PagedJson.Node n && n.array())return n.values();
             throw Json.input(path(), "Expected array");
         }
         At element(List<Json.Value> values, int index) { return new At(values.get(index), this, null, index); }
@@ -345,6 +349,8 @@ final class BindingReader {
         String kind = operationFields(a);
         if (Set.of("assign", "havoc.must", "havoc.may", "nop", "copy_bytes").contains(kind))
             throw a.invalid("I-04", "AIR 01 §3: ordinary operation as terminator");
+        if (kind.equals("halt")) return new Operations.Halt(header(a.child("header")),
+                switch(a.child("haltKind").text()){case "NORMAL" -> Operations.HaltKind.NORMAL;case "ABNORMAL" -> Operations.HaltKind.ABNORMAL;default -> throw Json.input(a.child("haltKind").path(),"Unknown HaltKind");});
         if (kind.equals("jump")) return new Operations.Jump(header(a.child("header")), labelId(a.child("destination")));
         if (kind.equals("branch")) return new Operations.Branch(header(a.child("header")), expression(a.child("predicate")),
                 labelId(a.child("trueDestination")), labelId(a.child("falseDestination")));

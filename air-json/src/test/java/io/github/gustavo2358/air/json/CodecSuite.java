@@ -33,6 +33,7 @@ public final class CodecSuite {
         tree = Json.parse(golden, AirJson.Limits.defaults());
         check("bounded ASCII runs preserve literal bytes", AsciiRunOutputChecks::run);
         check("stream output golden admission and ownership", StreamingOutputChecks::run);
+        check("managed stream input physical binding admission and ownership", PagedInputChecks::run);
         check("decode scopes have exact per-read ownership", ScopedIdentityChecks::run);
         check("decode scheduling preserves facts diagnostics and isolation", DecodeSchedulingChecks::run);
         check("binding record field indexes have bounded ownership", FieldIndexOwnershipChecks::run);
@@ -229,12 +230,39 @@ public final class CodecSuite {
                 fails(INPUT_ERROR, changed("publication", new Json.Obj(fields)));
             }
         });
-        check("valid Halt unsupported and Return never silently changed", () -> {
-            var h = Json.object("kind", "halt", "header", at("publication.units.0.sequences.0.terminator.header"), "haltKind", "NORMAL");
-            fails(IMPLEMENTATION_LIMIT, changed("publication.units.0.sequences.0.terminator", h));
+        check("Halt literal NORMAL ABNORMAL wire and snapshot preserve every field", () -> {
             var u = EXPECTED.units().get(0); var s = u.sequences().get(0);
-            var halt = new Sequence(s.label(), List.of(), new Operations.Halt(s.terminator().header(), Operations.HaltKind.NORMAL), s.origin());
-            failure(IMPLEMENTATION_LIMIT, () -> CODEC.encode(withSequences(List.of(halt))));
+            for(var token:List.of(java.util.Map.entry("NORMAL",Operations.HaltKind.NORMAL),java.util.Map.entry("ABNORMAL",Operations.HaltKind.ABNORMAL))) {
+                var h=Json.object("kind","halt","header",at("publication.units.0.sequences.0.terminator.header"),"haltKind",token.getKey());
+                byte[] wire=changed("publication.units.0.sequences.0.terminator",h);
+                var halt=new Sequence(s.label(),List.of(),new Operations.Halt(s.terminator().header(),token.getValue()),s.origin());
+                var expected=withSequences(List.of(halt));equal(expected,CODEC.decode(wire));bytes(wire,CODEC.encode(expected));snapshotEquals(expected,wire);
+            }
+            bytes(golden,CODEC.encode(EXPECTED));equal(EXPECTED,CODEC.decode(golden));
+        });
+        check("Halt multiplicity strict fields and instruction placement", () -> {
+            var s=EXPECTED.units().getFirst().sequences().getFirst();
+            for(int count:new int[]{1,4,16,64,256}) {
+                var model=new ArrayList<Sequence>();var wire=new ArrayList<Json.Value>();
+                for(int i=0;i<count;i++) {
+                    String name=i==0?s.label().localId():"halt-"+i;String operation=i==0?s.terminator().header().id().localId():"stop-"+i;
+                    var old=s.terminator().header();var header=new Operations.Header(new OperationId(old.id().unit(),operation),old.origin(),old.coverage(),old.precision(),old.uncertainties());
+                    model.add(new Sequence(new LabelId(s.label().unit(),name),List.of(),new Operations.Halt(header,i%2==0?Operations.HaltKind.NORMAL:Operations.HaltKind.ABNORMAL),s.origin()));
+                    var labelFields=new LinkedHashMap<>(((Json.Obj)at("publication.units.0.sequences.0.label")).fields());labelFields.put("localId",Json.value(name));
+                    var idFields=new LinkedHashMap<>(((Json.Obj)at("publication.units.0.sequences.0.terminator.header.id")).fields());idFields.put("localId",Json.value(operation));
+                    var headerFields=new LinkedHashMap<>(((Json.Obj)at("publication.units.0.sequences.0.terminator.header")).fields());headerFields.put("id",new Json.Obj(idFields));
+                    wire.add(Json.object("label",new Json.Obj(labelFields),"instructions",new Json.Arr(List.of()),"terminator",Json.object("kind","halt","header",new Json.Obj(headerFields),"haltKind",i%2==0?"NORMAL":"ABNORMAL"),"origin",at("publication.units.0.sequences.0.origin")));
+                }
+                Collections.reverse(model);Collections.reverse(wire);var expected=withSequences(model);var bytes=changed("publication.units.0.sequences",new Json.Arr(wire));
+                equal(expected,CODEC.decode(bytes));bytes(bytes,CODEC.encode(expected));snapshotEquals(expected,bytes);
+            }
+            var header=at("publication.units.0.sequences.0.terminator.header");
+            for(var token:List.<Json.Value>of(Json.value("normal"),Json.value("Abnormal"),Json.value("UNKNOWN"),Json.value(""),Json.value(true),Json.Nil.INSTANCE))
+                failsBoth(INPUT_ERROR,changed("publication.units.0.sequences.0.terminator",Json.object("kind","halt","header",header,"haltKind",token)));
+            failsBoth(INPUT_ERROR,changed("publication.units.0.sequences.0.terminator",Json.object("kind","halt","header",header)));
+            failsBoth(INPUT_ERROR,changed("publication.units.0.sequences.0.terminator",Json.object("kind","halt","header",header,"haltKind","NORMAL","values",new Json.Arr(List.of()))));
+            var halt=Json.object("kind","halt","header",header,"haltKind","NORMAL");
+            failsBoth(INVALID_IR,changed("publication.units.0.sequences.0.instructions",new Json.Arr(List.of(halt))));
         });
         check("ordinary operation as terminator and Return as instruction invalid", () -> {
             fails(INVALID_IR, changed("publication.units.0.sequences.0.instructions", new Json.Arr(List.of(at("publication.units.0.sequences.0.terminator")))));
@@ -418,6 +446,19 @@ public final class CodecSuite {
     }
     private static void check(String name, Runnable body) {
         body.run(); System.out.println("json-ok " + (++checks) + " - " + name);
+    }
+    private static void snapshotEquals(Publication expected,byte[] wire) {
+        var input=new PagedInputChecks.Store();var output=new PagedInputChecks.SnapshotStore();
+        try(var reference=AirSnapshot.fromPublication(expected);
+            var snapshot=CODEC.decodeSnapshot(new java.io.ByteArrayInputStream(wire),input,output)) {
+            PagedInputChecks.compare(reference,reference.root(),snapshot,snapshot.root(),null);
+        } catch(java.io.IOException failure){throw new AssertionError(failure);}
+        equal(0L,input.claimed);equal(0L,output.claimed);require(input.closed&&output.closed,"snapshot ports not closed");
+    }
+    private static void failsBoth(AirJsonException.Code code,byte[] wire) {
+        fails(code,wire);var input=new PagedInputChecks.Store();var output=new PagedInputChecks.SnapshotStore();
+        failure(code,()->{try(var snapshot=CODEC.decodeSnapshot(new java.io.ByteArrayInputStream(wire),input,output)){snapshot.root();}catch(java.io.IOException error){throw new AssertionError(error);}});
+        equal(0L,input.claimed);equal(0L,output.claimed);require(input.closed&&output.closed,"failed snapshot ports not closed");
     }
     private static void require(boolean condition, String message) { if (!condition) throw new AssertionError(message); }
     private static void equal(Object expected, Object actual) { if (!expected.equals(actual)) throw new AssertionError("Expected " + expected + ", actual " + actual); }

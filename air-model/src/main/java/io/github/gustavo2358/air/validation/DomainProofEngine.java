@@ -13,7 +13,10 @@ import java.util.*;
  */
 final class DomainProofEngine {
     private sealed interface Key permits SubjectKey, TypeKey {}
-    private record SubjectKey(DomainSubject subject) implements Key {}
+    private record SubjectKey(Object subject) implements Key {}
+    private enum SubjectKind { OBJECT,CELL,OPERAND,PARAMETER,RESULT,CALL_PARAMETER,CALL_RESULT,EXTERNAL_PARAMETER,EXTERNAL_RESULT }
+    private record SubjectAddress(SubjectKind kind,Object owner,Object entry,BigInteger position) {}
+    private record RegionAddress(ScopeRules.Kind kind,Object identity) {}
     private record TypeKey(Type type) implements Key {}
     private record Scoped(Proofs.Premise premise,SameDomain assertion,ScopeRules.Region scope) {}
 
@@ -21,37 +24,35 @@ final class DomainProofEngine {
     private final TypeResolver types;
     final ScopeRules scopes;
     private final Graph global = new Graph();
-    private final Set<DomainSubject> registered=new HashSet<>();
+    private final Set<Object> registered=new HashSet<>();
     private final Map<ScopeRules.Region,List<Scoped>> byScope=new LinkedHashMap<>();
     private final Map<DomainSubject,List<Scoped>> bySubject=new LinkedHashMap<>();
-    private final Map<ScopeRules.Region,Graph> regionGraphs=new HashMap<>();
-    private final Map<EntryId,Map<BigInteger,TypeRef>> entryParameterTypes=new HashMap<>();
-    private final Map<EntryId,Map<BigInteger,TypeRef>> entryResultTypes=new HashMap<>();
-    private final Map<OperationId,Map<BigInteger,TypeRef>> invocationParameterTypes=new HashMap<>();
-    private final Map<OperationId,Map<BigInteger,TypeRef>> invocationResultTypes=new HashMap<>();
+    private final Map<Object,Graph> regionGraphs=new HashMap<>();
+    private final Map<Object,Map<BigInteger,TypeRef>> entryParameterTypes=new HashMap<>();
+    private final Map<Object,Map<BigInteger,TypeRef>> entryResultTypes=new HashMap<>();
+    private final Map<Object,Map<BigInteger,TypeRef>> invocationParameterTypes=new HashMap<>();
+    private final Map<Object,Map<BigInteger,TypeRef>> invocationResultTypes=new HashMap<>();
 
     DomainProofEngine(ValidationContext c,TypeResolver types) {
         this.c=c; this.types=types; this.scopes=new ScopeRules(c);
     }
 
     void initialize() {
-        for(ObjectId id:c.index.objects.keySet()) register(new ObjectDomain(id));
-        for(Memory.Storage s:c.index.storage.values())
-            if(s instanceof Memory.Cell cell) register(new CellDomain(cell.header().id()));
-        for(OperandId id:c.index.operands.keySet()) register(new OperandDomain(id));
-
+        // The reference/type passes still inspect every declaration. An isolated subject is
+        // not a proof edge: materialize its exact domain only when a relation or query needs it.
+        // Every binding, operand link and premise below continues to contribute its full edges.
         for(Entries.Entry entry:c.index.entries.values()) {
             Map<BigInteger,TypeRef> parameters=slotMap(entry.signature().parameters().known());
             Map<BigInteger,TypeRef> results=resultSlotMap(entry.signature().results().known());
-            entryParameterTypes.put(entry.id(),parameters);
-            entryResultTypes.put(entry.id(),results);
+            entryParameterTypes.put(c.index.identityAddress(entry.id()),parameters);
+            entryResultTypes.put(c.index.identityAddress(entry.id()),results);
             for(BigInteger position:parameters.keySet()) register(new ParameterDomain(entry.id(),position));
             for(BigInteger position:results.keySet()) register(new ResultDomain(entry.id(),position));
         }
         for(Operation operation:c.index.operations.values()) if(operation instanceof Operations.Invoke invoke) {
             SignatureSlots slots=slots(invoke.signature());
-            invocationParameterTypes.put(invoke.header().id(),slots.parameters());
-            invocationResultTypes.put(invoke.header().id(),slots.results());
+            invocationParameterTypes.put(c.index.identityAddress(invoke.header().id()),slots.parameters());
+            invocationResultTypes.put(c.index.identityAddress(invoke.header().id()),slots.results());
             switch(invoke.signature()) {
                 case Interactions.EntrySignature entry -> {
                     for(BigInteger position:slots.parameters().keySet())
@@ -116,6 +117,7 @@ final class DomainProofEngine {
 
     boolean universalChoiceDomain(OperandId choice,Type domain,ProofSite site) {
         DomainSubject subject=new OperandDomain(choice);
+        register(subject);
         Graph graph=graph(site);
         Key expected=graph.root(new TypeKey(canonical(domain)));
         for(Scoped proof:bySubject.getOrDefault(subject,List.of())) {
@@ -146,7 +148,7 @@ final class DomainProofEngine {
 
     private Graph graphForRegion(ScopeRules.Region region) {
         if(region.equals(ScopeRules.ALL) || region.equals(ScopeRules.EMPTY)) return global;
-        Graph cached=regionGraphs.get(region); if(cached!=null) return cached;
+        Object address=regionAddress(region);Graph cached=regionGraphs.get(address); if(cached!=null) return cached;
         Id id=region.id().orElseThrow();
         Graph parent=global;
         if(region.kind()==ScopeRules.Kind.INVOCATION)
@@ -156,10 +158,10 @@ final class DomainProofEngine {
         else if(region.kind()==ScopeRules.Kind.ENTRY)
             parent=graphForRegion(ScopeRules.region(ScopeRules.Kind.UNIT,((EntryId)id).unit()));
         List<Scoped> list=byScope.getOrDefault(region,List.of());
-        if(list.isEmpty()) { regionGraphs.put(region,parent); return parent; }
+        if(list.isEmpty()) { regionGraphs.put(address,parent); return parent; }
         Graph graph=new Graph(parent);
         for(Scoped proof:list) apply(graph,proof);
-        regionGraphs.put(region,graph);
+        regionGraphs.put(address,graph);
         return graph;
     }
 
@@ -204,7 +206,7 @@ final class DomainProofEngine {
         Set<DomainSubject> visited=new HashSet<>();
         Walk.run(subject,depth,node -> choiceChildren(node,true),new Walk.Visitor<DomainSubject>() {
             public boolean enter(DomainSubject node,long nesting) {
-                c.depth(nesting); return visited.add(node);
+                c.depth(nesting);register(node);return visited.add(node);
             }
             public void exit(DomainSubject node,long nesting) {
                 if(!(node instanceof OperandDomain domain)
@@ -219,10 +221,12 @@ final class DomainProofEngine {
     }
 
     private void register(DomainSubject subject) {
-        if(!registered.add(subject)) return;
+        if(!registered.add(subjectAddress(subject))) return;
         global.ensure(key(subject));
         type(subject).filter(Known.class::isInstance).map(Known.class::cast)
-                .ifPresent(known -> global.union(key(subject),new TypeKey(canonical(known.type()))));
+                // Append a singleton to the existing type component without renaming that
+                // component's root (including a tie). Cached scoped overlays borrow those roots.
+                .ifPresent(known -> global.union(new TypeKey(canonical(known.type())),key(subject)));
     }
 
     Optional<TypeRef> type(DomainSubject subject) {
@@ -232,12 +236,12 @@ final class DomainProofEngine {
             case CellDomain storage -> c.index.storage.get(storage.cell()) instanceof Memory.Cell cell
                     ? Optional.of(cell.typeRef()) : Optional.empty();
             case OperandDomain operand -> Optional.ofNullable(c.index.operands.get(operand.operand())).flatMap(types::type);
-            case ParameterDomain parameter -> slot(entryParameterTypes.get(parameter.entry()),parameter.position());
-            case ResultDomain result -> slot(entryResultTypes.get(result.entry()),result.position());
-            case CallParameterDomain parameter -> slot(invocationParameterTypes.get(parameter.invocation()),parameter.position());
-            case CallResultDomain result -> slot(invocationResultTypes.get(result.invocation()),result.position());
-            case ExternalParameterDomain parameter -> slot(invocationParameterTypes.get(parameter.invocation()),parameter.position());
-            case ExternalResultDomain result -> slot(invocationResultTypes.get(result.invocation()),result.position());
+            case ParameterDomain parameter -> slot(entryParameterTypes.get(c.index.identityAddress(parameter.entry())),parameter.position());
+            case ResultDomain result -> slot(entryResultTypes.get(c.index.identityAddress(result.entry())),result.position());
+            case CallParameterDomain parameter -> slot(invocationParameterTypes.get(c.index.identityAddress(parameter.invocation())),parameter.position());
+            case CallResultDomain result -> slot(invocationResultTypes.get(c.index.identityAddress(result.invocation())),result.position());
+            case ExternalParameterDomain parameter -> slot(invocationParameterTypes.get(c.index.identityAddress(parameter.invocation())),parameter.position());
+            case ExternalResultDomain result -> slot(invocationResultTypes.get(c.index.identityAddress(result.invocation())),result.position());
         };
     }
 
@@ -314,7 +318,26 @@ final class DomainProofEngine {
     }
     private record SignatureSlots(Map<BigInteger,TypeRef> parameters,Map<BigInteger,TypeRef> results) {}
 
-    private static Key key(DomainSubject subject) { return new SubjectKey(subject); }
+    private Key key(DomainSubject subject) { return new SubjectKey(subjectAddress(subject)); }
+    /** Same semantic subject,using only owner-local canonical identity addresses
+     * on native admission. Kind,direction,Entry and full position never disappear. */
+    private Object subjectAddress(DomainSubject subject) {
+        if(!c.index.nativeIdentityAddresses())return subject;
+        return switch(subject) {
+            case ObjectDomain object -> new SubjectAddress(SubjectKind.OBJECT,c.index.identityAddress(object.object()),null,null);
+            case CellDomain cell -> new SubjectAddress(SubjectKind.CELL,c.index.identityAddress(cell.cell()),null,null);
+            case OperandDomain operand -> new SubjectAddress(SubjectKind.OPERAND,c.index.identityAddress(operand.operand()),null,null);
+            case ParameterDomain parameter -> new SubjectAddress(SubjectKind.PARAMETER,c.index.identityAddress(parameter.entry()),null,parameter.position());
+            case ResultDomain result -> new SubjectAddress(SubjectKind.RESULT,c.index.identityAddress(result.entry()),null,result.position());
+            case CallParameterDomain parameter -> new SubjectAddress(SubjectKind.CALL_PARAMETER,c.index.identityAddress(parameter.invocation()),c.index.identityAddress(parameter.entry()),parameter.position());
+            case CallResultDomain result -> new SubjectAddress(SubjectKind.CALL_RESULT,c.index.identityAddress(result.invocation()),c.index.identityAddress(result.entry()),result.position());
+            case ExternalParameterDomain parameter -> new SubjectAddress(SubjectKind.EXTERNAL_PARAMETER,c.index.identityAddress(parameter.invocation()),null,parameter.position());
+            case ExternalResultDomain result -> new SubjectAddress(SubjectKind.EXTERNAL_RESULT,c.index.identityAddress(result.invocation()),null,result.position());
+        };
+    }
+    private Object regionAddress(ScopeRules.Region region) {
+        return c.index.nativeIdentityAddresses()?new RegionAddress(region.kind(),region.id().map(c.index::identityAddress).orElse(null)):region;
+    }
     private static Type canonical(Type type) {
         if(type instanceof LabelType labels) return new LabelType(labels.unit(),labels.labels().stream()
                 .sorted(Comparator.comparing(LabelId::localId)).toList());
